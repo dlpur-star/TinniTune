@@ -1306,59 +1306,63 @@ Great session! Help us track your progress by rating your tinnitus.
       padding: '16px 24px',
       borderRadius: '20px',
       marginBottom: '24px',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
       backdropFilter: 'blur(20px) saturate(180%)',
       border: '1px solid rgba(255, 255, 255, 0.1)',
       boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
     }}>
-      <div>
-        <h1 style={{ 
-          color: '#4ECDC4', 
-          margin: 0, 
-          fontSize: '22px',
-          fontWeight: '600',
-          letterSpacing: '-0.5px'
-        }}>
-          TinniTune
-        </h1>
-        <p style={{ 
-          color: 'rgba(255,255,255,0.5)', 
-          margin: '2px 0 0 0', 
-          fontSize: '12px',
-          fontWeight: '500',
-          letterSpacing: '0.3px'
-        }}>
-          {frequency} Hz • {ear === 'left' ? '👂 Left' : ear === 'right' ? 'Right 👂' : '👂 Both'}
-        </p>
-      </div>
-      {isPlaying && (
-        <div style={{ 
-          fontSize: '20px', 
-          fontWeight: '700', 
-          color: '#4ECDC4',
-          textShadow: '0 0 20px rgba(78, 205, 196, 0.4)',
-          fontVariantNumeric: 'tabular-nums',
-          letterSpacing: '1px'
-        }}>
-          {formatTime(sessionTime)}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '12px'
+      }}>
+        <div>
+          <h1 style={{
+            color: '#4ECDC4',
+            margin: 0,
+            fontSize: '22px',
+            fontWeight: '600',
+            letterSpacing: '-0.5px'
+          }}>
+            TinniTune
+          </h1>
+          <p style={{
+            color: 'rgba(255,255,255,0.5)',
+            margin: '2px 0 0 0',
+            fontSize: '12px',
+            fontWeight: '500',
+            letterSpacing: '0.3px'
+          }}>
+            {frequency} Hz • {ear === 'left' ? '👂 Left' : ear === 'right' ? 'Right 👂' : '👂 Both'}
+          </p>
         </div>
-      )}
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        {isPlaying && (
+          <div style={{
+            fontSize: '20px',
+            fontWeight: '700',
+            color: '#4ECDC4',
+            textShadow: '0 0 20px rgba(78, 205, 196, 0.4)',
+            fontVariantNumeric: 'tabular-nums',
+            letterSpacing: '1px'
+          }}>
+            {formatTime(sessionTime)}
+          </div>
+        )}
+      </div>
+      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-start' }}>
         <button
           onClick={() => {
             if (isPlaying) stopAudio();
             setStep('history');
           }}
           style={{
-            padding: '8px 12px',
+            padding: '8px 16px',
             background: 'rgba(255,255,255,0.1)',
             color: 'rgba(255,255,255,0.9)',
             border: '1px solid rgba(255,255,255,0.15)',
             borderRadius: '12px',
             cursor: 'pointer',
-            fontSize: '12px',
+            fontSize: '13px',
             fontWeight: '600',
             backdropFilter: 'blur(10px)',
             transition: 'all 0.2s',
@@ -1382,13 +1386,13 @@ Great session! Help us track your progress by rating your tinnitus.
             setStep('setup');
           }}
           style={{
-            padding: '8px 12px',
+            padding: '8px 16px',
             background: 'rgba(255,255,255,0.1)',
             color: 'rgba(255,255,255,0.9)',
             border: '1px solid rgba(255,255,255,0.15)',
             borderRadius: '12px',
             cursor: 'pointer',
-            fontSize: '12px',
+            fontSize: '13px',
             fontWeight: '600',
             backdropFilter: 'blur(10px)',
             transition: 'all 0.2s',
