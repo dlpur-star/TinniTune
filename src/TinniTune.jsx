@@ -1345,24 +1345,25 @@ Great session! Help us track your progress by rating your tinnitus.
           {formatTime(sessionTime)}
         </div>
       )}
-      <div style={{ display: 'flex', gap: '10px' }}>
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         <button
           onClick={() => {
             if (isPlaying) stopAudio();
             setStep('history');
           }}
           style={{
-            padding: '8px 18px',
+            padding: '8px 12px',
             background: 'rgba(255,255,255,0.1)',
             color: 'rgba(255,255,255,0.9)',
             border: '1px solid rgba(255,255,255,0.15)',
             borderRadius: '12px',
             cursor: 'pointer',
-            fontSize: '13px',
+            fontSize: '12px',
             fontWeight: '600',
             backdropFilter: 'blur(10px)',
             transition: 'all 0.2s',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+            whiteSpace: 'nowrap'
           }}
           onMouseEnter={(e) => {
             e.target.style.background = 'rgba(255,255,255,0.15)';
@@ -1381,17 +1382,18 @@ Great session! Help us track your progress by rating your tinnitus.
             setStep('setup');
           }}
           style={{
-            padding: '8px 18px',
+            padding: '8px 12px',
             background: 'rgba(255,255,255,0.1)',
             color: 'rgba(255,255,255,0.9)',
             border: '1px solid rgba(255,255,255,0.15)',
             borderRadius: '12px',
             cursor: 'pointer',
-            fontSize: '13px',
+            fontSize: '12px',
             fontWeight: '600',
             backdropFilter: 'blur(10px)',
             transition: 'all 0.2s',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+            whiteSpace: 'nowrap'
           }}
           onMouseEnter={(e) => {
             e.target.style.background = 'rgba(255,255,255,0.15)';
@@ -1586,20 +1588,21 @@ Great session! Help us track your progress by rating your tinnitus.
             }
           }}
           style={{
-            padding: '10px 20px',
-            background: notchEnabled 
-              ? 'linear-gradient(135deg, #4ECDC4, #44B3AA)' 
+            padding: '12px 28px',
+            background: notchEnabled
+              ? 'linear-gradient(135deg, #4ECDC4, #44B3AA)'
               : 'rgba(255,255,255,0.15)',
             color: 'white',
             border: 'none',
-            borderRadius: '10px',
+            borderRadius: '12px',
             cursor: 'pointer',
-            fontSize: '14px',
+            fontSize: '15px',
             fontWeight: '700',
-            boxShadow: notchEnabled 
-              ? '0 4px 16px rgba(78, 205, 196, 0.3)' 
+            boxShadow: notchEnabled
+              ? '0 4px 16px rgba(78, 205, 196, 0.3)'
               : 'none',
-            transition: 'all 0.3s'
+            transition: 'all 0.3s',
+            minWidth: '80px'
           }}
           onMouseEnter={(e) => {
             e.target.style.transform = 'translateY(-2px)';
