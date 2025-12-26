@@ -22,11 +22,22 @@ distress: 5,
 notes: ''
 });
 
+// Calm Mode states
+const [isCalmMode, setIsCalmMode] = useState(false);
+const [heartbeatVolume, setHeartbeatVolume] = useState(-15);
+const [heartbeatBPM, setHeartbeatBPM] = useState(55); // 55 = very calm
+const [breathingPhase, setBreathingPhase] = useState('in'); // 'in', 'hold', 'out'
+const [breathCount, setBreathCount] = useState(4);
+
 const synthsRef = useRef([]);
 const pannerLeftRef = useRef(null);
 const pannerRightRef = useRef(null);
 const notchFiltersRef = useRef([]); // Store notch filters separately
 const timerRef = useRef(null);
+
+// Calm Mode refs
+const heartbeatSynthsRef = useRef([]);
+const breathingTimerRef = useRef(null);
 
 // Load session history from localStorage on mount
 React.useEffect(() => {
@@ -57,6 +68,11 @@ clearInterval(timerRef.current);
 }
 };
 }, [isPlaying]);
+
+// Cleanup Calm Mode on unmount
+React.useEffect(() => {
+  return () => stopCalmMode();
+}, []);
 
 const formatTime = (seconds) => {
 const mins = Math.floor(seconds / 60);
@@ -365,6 +381,11 @@ if (finalDuration >= 60) {
   saveSession(finalDuration);
 }
 
+// Also stop calm mode if active
+if (isCalmMode) {
+  stopCalmMode();
+}
+
 console.log('Audio stopped - Session length:', formatTime(sessionTime));
 
 };
@@ -394,6 +415,140 @@ await Tone.start();
   alert('Error: ' + error.message);
 }
 
+};
+
+// ========================================
+// CALM MODE FUNCTIONS
+// ========================================
+
+const startHeartbeat = async () => {
+  try {
+    await Tone.start();
+    console.log('Starting heartbeat at', heartbeatBPM, 'BPM');
+
+    stopHeartbeat();
+
+    const interval = 60 / heartbeatBPM;
+
+    const lub = new Tone.MembraneSynth({
+      pitchDecay: 0.05,
+      octaves: 2,
+      oscillator: { type: 'sine' },
+      envelope: { attack: 0.001, decay: 0.4, sustain: 0.01, release: 0.1 }
+    }).toDestination();
+    lub.volume.value = heartbeatVolume;
+
+    const dub = new Tone.MembraneSynth({
+      pitchDecay: 0.03,
+      octaves: 1.5,
+      oscillator: { type: 'sine' },
+      envelope: { attack: 0.001, decay: 0.2, sustain: 0, release: 0.05 }
+    }).toDestination();
+    dub.volume.value = heartbeatVolume + 3;
+
+    heartbeatSynthsRef.current = [lub, dub];
+
+    Tone.Transport.cancel();
+    Tone.Transport.scheduleRepeat((time) => {
+      lub.triggerAttackRelease(45, '16n', time);
+      dub.triggerAttackRelease(65, '32n', time + 0.12);
+    }, interval);
+
+    Tone.Transport.start();
+    console.log('Heartbeat started');
+  } catch (error) {
+    console.error('Error starting heartbeat:', error);
+  }
+};
+
+const stopHeartbeat = () => {
+  if (Tone.Transport.state === 'started') {
+    Tone.Transport.stop();
+    Tone.Transport.cancel();
+  }
+  heartbeatSynthsRef.current.forEach(synth => {
+    try { synth.dispose(); } catch (e) {}
+  });
+  heartbeatSynthsRef.current = [];
+};
+
+const updateHeartbeatVolume = (newVolume) => {
+  setHeartbeatVolume(newVolume);
+  if (heartbeatSynthsRef.current.length > 0) {
+    heartbeatSynthsRef.current[0].volume.value = newVolume;
+    if (heartbeatSynthsRef.current[1]) heartbeatSynthsRef.current[1].volume.value = newVolume + 3;
+  }
+};
+
+const updateHeartbeatBPM = (newBPM) => {
+  setHeartbeatBPM(newBPM);
+  if (isCalmMode && heartbeatSynthsRef.current.length > 0) {
+    stopHeartbeat();
+    setTimeout(() => startHeartbeat(), 100);
+  }
+};
+
+const startBreathingGuide = () => {
+  stopBreathingGuide();
+  const breathCycle = () => {
+    setBreathingPhase('in');
+    let count = 4;
+    setBreathCount(4);
+    const inhaleInterval = setInterval(() => {
+      count--;
+      setBreathCount(count);
+      if (count === 0) {
+        clearInterval(inhaleInterval);
+        setBreathingPhase('hold');
+        setBreathCount(2);
+        setTimeout(() => {
+          setBreathingPhase('out');
+          let outCount = 6;
+          setBreathCount(6);
+          const exhaleInterval = setInterval(() => {
+            outCount--;
+            setBreathCount(outCount);
+            if (outCount === 0) {
+              clearInterval(exhaleInterval);
+              breathingTimerRef.current = setTimeout(breathCycle, 500);
+            }
+          }, 1000);
+        }, 2000);
+      }
+    }, 1000);
+  };
+  breathCycle();
+};
+
+const stopBreathingGuide = () => {
+  if (breathingTimerRef.current) {
+    clearTimeout(breathingTimerRef.current);
+    breathingTimerRef.current = null;
+  }
+  setBreathingPhase('in');
+  setBreathCount(4);
+};
+
+const startCalmMode = async () => {
+  setIsCalmMode(true);
+  await startHeartbeat();
+  startBreathingGuide();
+  console.log('Calm Mode activated');
+};
+
+const stopCalmMode = () => {
+  setIsCalmMode(false);
+  stopHeartbeat();
+  stopBreathingGuide();
+  console.log('Calm Mode deactivated');
+};
+
+const toggleCalmMode = async () => {
+  if (isCalmMode) {
+    stopCalmMode();
+  } else {
+    await startCalmMode();
+  }
 };
 
 if (step === 'welcome') {
@@ -1400,6 +1555,263 @@ Great session! Help us track your progress by rating your tinnitus.
         </button>
       </div>
     </div>
+
+    {/* Calm Mode Button - Prominent placement */}
+    <div style={{
+      background: isCalmMode
+        ? 'linear-gradient(135deg, rgba(255, 183, 77, 0.3), rgba(255, 138, 101, 0.3))'
+        : 'linear-gradient(135deg, rgba(255, 183, 77, 0.2), rgba(255, 138, 101, 0.2))',
+      padding: '20px',
+      borderRadius: '16px',
+      marginBottom: '24px',
+      border: isCalmMode ? '2px solid rgba(255, 183, 77, 0.6)' : '1px solid rgba(255, 183, 77, 0.3)',
+      backdropFilter: 'blur(10px)',
+      boxShadow: isCalmMode ? '0 8px 24px rgba(255, 183, 77, 0.3)' : '0 4px 12px rgba(0,0,0,0.15)',
+      cursor: 'pointer',
+      transition: 'all 0.3s'
+    }}
+    onClick={toggleCalmMode}
+    onMouseEnter={(e) => {
+      if (!isCalmMode) {
+        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 183, 77, 0.25), rgba(255, 138, 101, 0.25))';
+        e.currentTarget.style.transform = 'translateY(-2px)';
+      }
+    }}
+    onMouseLeave={(e) => {
+      if (!isCalmMode) {
+        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 183, 77, 0.2), rgba(255, 138, 101, 0.2))';
+        e.currentTarget.style.transform = 'translateY(0)';
+      }
+    }}
+    >
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center'
+      }}>
+        <div>
+          <div style={{
+            color: 'white',
+            fontSize: '18px',
+            fontWeight: '700',
+            marginBottom: '6px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px'
+          }}>
+            🫀 CALM MODE
+            {isCalmMode && (
+              <span style={{
+                fontSize: '11px',
+                background: 'rgba(255, 183, 77, 0.3)',
+                padding: '4px 10px',
+                borderRadius: '8px',
+                fontWeight: '600',
+                color: '#FFB74D',
+                animation: 'gentlePulse 2s ease-in-out infinite'
+              }}>
+                ACTIVE
+              </span>
+            )}
+          </div>
+          <div style={{
+            color: 'rgba(255,255,255,0.8)',
+            fontSize: '13px',
+            lineHeight: '1.5'
+          }}>
+            {isCalmMode
+              ? `Heartbeat at ${heartbeatBPM} BPM • Follow the breathing guide`
+              : 'Feeling anxious? Tinnitus spike? Tap for instant calm'}
+          </div>
+        </div>
+
+        <div style={{
+          fontSize: '48px',
+          opacity: 0.9,
+          filter: 'drop-shadow(0 4px 8px rgba(255, 183, 77, 0.3))'
+        }}>
+          {isCalmMode ? '❤️' : '🫀'}
+        </div>
+      </div>
+    </div>
+
+    {/* Calm Mode Breathing Guide - Full Interface */}
+    {isCalmMode && (
+      <div style={{
+        background: 'linear-gradient(135deg, rgba(255, 183, 77, 0.15), rgba(255, 138, 101, 0.15))',
+        padding: '40px 30px',
+        borderRadius: '24px',
+        marginBottom: '24px',
+        border: '2px solid rgba(255, 183, 77, 0.4)',
+        backdropFilter: 'blur(20px)',
+        boxShadow: '0 16px 48px rgba(255, 183, 77, 0.2)',
+        textAlign: 'center'
+      }}>
+        {/* Breathing Circle */}
+        <div style={{
+          width: '200px',
+          height: '200px',
+          margin: '0 auto 30px auto',
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          {/* Outer pulsing circle */}
+          <div style={{
+            position: 'absolute',
+            width: breathingPhase === 'in' ? '200px' : breathingPhase === 'hold' ? '200px' : '120px',
+            height: breathingPhase === 'in' ? '200px' : breathingPhase === 'hold' ? '200px' : '120px',
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(255, 183, 77, 0.3), rgba(255, 138, 101, 0.2))',
+            border: '3px solid rgba(255, 183, 77, 0.5)',
+            transition: breathingPhase === 'in' ? 'all 4s cubic-bezier(0.4, 0, 0.2, 1)' : breathingPhase === 'out' ? 'all 6s cubic-bezier(0.4, 0, 0.2, 1)' : 'all 2s ease',
+            boxShadow: '0 0 40px rgba(255, 183, 77, 0.3)'
+          }} />
+
+          {/* Inner circle with count */}
+          <div style={{
+            position: 'relative',
+            width: '140px',
+            height: '140px',
+            borderRadius: '50%',
+            background: 'rgba(255, 183, 77, 0.2)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: '2px solid rgba(255, 183, 77, 0.4)',
+            zIndex: 1
+          }}>
+            <div style={{
+              fontSize: '48px',
+              fontWeight: '700',
+              color: '#FFB74D',
+              marginBottom: '5px'
+            }}>
+              {breathCount}
+            </div>
+            <div style={{
+              fontSize: '14px',
+              color: 'rgba(255,255,255,0.9)',
+              fontWeight: '600',
+              textTransform: 'uppercase',
+              letterSpacing: '1px'
+            }}>
+              {breathingPhase === 'in' ? 'Breathe In' : breathingPhase === 'hold' ? 'Hold' : 'Breathe Out'}
+            </div>
+          </div>
+        </div>
+
+        {/* Breathing instructions */}
+        <div style={{
+          color: 'rgba(255,255,255,0.8)',
+          fontSize: '16px',
+          marginBottom: '20px',
+          fontWeight: '500'
+        }}>
+          {breathingPhase === 'in' && '💨 Breathe in slowly through your nose...'}
+          {breathingPhase === 'hold' && '⏸️ Hold your breath gently...'}
+          {breathingPhase === 'out' && '💨 Breathe out slowly through your mouth...'}
+        </div>
+
+        {/* Heartbeat control */}
+        <div style={{
+          background: 'rgba(0,0,0,0.2)',
+          padding: '20px',
+          borderRadius: '12px',
+          marginBottom: '20px'
+        }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            marginBottom: '12px',
+            color: 'white',
+            fontSize: '14px',
+            fontWeight: '600'
+          }}>
+            <span>❤️ Heartbeat Volume</span>
+            <span style={{ color: '#FFB74D' }}>
+              {Math.round((heartbeatVolume + 40) / 35 * 100)}%
+            </span>
+          </div>
+          <input
+            type="range"
+            min="-40"
+            max="-5"
+            step="1"
+            value={heartbeatVolume}
+            onChange={(e) => updateHeartbeatVolume(parseInt(e.target.value))}
+            style={{
+              width: '100%',
+              height: '6px',
+              borderRadius: '3px',
+              cursor: 'pointer',
+              appearance: 'none',
+              background: `linear-gradient(to right,
+                #FFB74D 0%,
+                #FFB74D ${((heartbeatVolume + 40) / 35) * 100}%,
+                rgba(255, 255, 255, 0.15) ${((heartbeatVolume + 40) / 35) * 100}%,
+                rgba(255, 255, 255, 0.15) 100%)`
+            }}
+          />
+
+          {/* BPM Control */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            marginTop: '15px',
+            marginBottom: '8px',
+            color: 'white',
+            fontSize: '14px',
+            fontWeight: '600'
+          }}>
+            <span>💓 Heart Rate</span>
+            <span style={{ color: '#FFB74D' }}>{heartbeatBPM} BPM</span>
+          </div>
+          <input
+            type="range"
+            min="50"
+            max="70"
+            step="1"
+            value={heartbeatBPM}
+            onChange={(e) => updateHeartbeatBPM(parseInt(e.target.value))}
+            style={{
+              width: '100%',
+              height: '6px',
+              borderRadius: '3px',
+              cursor: 'pointer',
+              appearance: 'none',
+              background: `linear-gradient(to right,
+                #FFB74D 0%,
+                #FFB74D ${((heartbeatBPM - 50) / 20) * 100}%,
+                rgba(255, 255, 255, 0.15) ${((heartbeatBPM - 50) / 20) * 100}%,
+                rgba(255, 255, 255, 0.15) 100%)`
+            }}
+          />
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            color: 'rgba(255,255,255,0.5)',
+            fontSize: '11px',
+            marginTop: '5px'
+          }}>
+            <span>Very Calm (50)</span>
+            <span>Resting (70)</span>
+          </div>
+        </div>
+
+        {/* Calm mode message */}
+        <div style={{
+          color: 'rgba(255,255,255,0.7)',
+          fontSize: '13px',
+          fontStyle: 'italic',
+          marginTop: '15px'
+        }}>
+          💡 Your heart rate naturally syncs with the heartbeat sound, promoting calm
+        </div>
+      </div>
+    )}
 
     {/* Mode Selection - Premium cards with better depth */}
     <div style={{
