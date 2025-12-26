@@ -520,7 +520,10 @@ const playCalibrationTone = async (freq, duration = 3500) => {
     osc.connect(analyserNode);
     analyserNode.connect(panner);
     osc.volume.value = testVolume;
+
+    // Start with explicit stop time for safety
     osc.start();
+    osc.stop(Tone.now() + (duration / 1000)); // Auto-stop at Tone.js level
 
     setIsPlayingCalibration(true);
     setCalibrationOscRef({ osc, panner, analyserNode });
@@ -549,7 +552,7 @@ const playCalibrationTone = async (freq, duration = 3500) => {
     };
     updateWaveform();
 
-    // Store timeout ID so we can cancel it
+    // Store timeout ID so we can cancel it (for cleanup, not stopping)
     calibrationTimeoutRef.current = setTimeout(() => {
       stopCalibrationTone();
     }, duration);
