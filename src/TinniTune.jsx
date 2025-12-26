@@ -1100,7 +1100,10 @@ if (step === 'setup') {
                 ← Back
               </button>
               <button
-                onClick={() => setCalibrationStage('ear')}
+                onClick={() => {
+                  stopCalibrationTone();
+                  setCalibrationStage('ear');
+                }}
                 style={{
                   flex: 2,
                   padding: '15px',
