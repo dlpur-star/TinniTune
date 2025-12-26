@@ -132,6 +132,13 @@ React.useEffect(() => {
   }
 }, [step, calibrationStage, coarseFreq, mediumFreq, fineFreq, ear, testVolume]);
 
+// Stop calibration tone when changing stages or leaving setup
+React.useEffect(() => {
+  return () => {
+    stopCalibrationTone();
+  };
+}, [calibrationStage, step]);
+
 const formatTime = (seconds) => {
 const mins = Math.floor(seconds / 60);
 const secs = seconds % 60;
@@ -997,21 +1004,20 @@ if (step === 'setup') {
             </div>
 
             <button
-              onClick={() => playCalibrationTone(1000, 2000)}
-              disabled={isPlayingCalibration}
+              onClick={() => isPlayingCalibration ? stopCalibrationTone() : playCalibrationTone(1000, 2000)}
               style={{
                 width: '100%',
                 padding: '15px',
-                background: isPlayingCalibration ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.2)',
+                background: isPlayingCalibration ? 'linear-gradient(135deg, #f093fb, #f5576c)' : 'rgba(255,255,255,0.2)',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
-                cursor: isPlayingCalibration ? 'not-allowed' : 'pointer',
+                cursor: 'pointer',
                 fontSize: '16px',
                 marginBottom: '10px'
               }}
             >
-              {isPlayingCalibration ? '▶ Playing...' : '🔊 Test Volume (2 seconds)'}
+              {isPlayingCalibration ? '⏹ Stop' : '🔊 Test Volume (2 seconds)'}
             </button>
 
             <WaveformAnimation />
@@ -1148,21 +1154,20 @@ if (step === 'setup') {
             </div>
 
             <button
-              onClick={() => playCalibrationTone(coarseFreq)}
-              disabled={isPlayingCalibration}
+              onClick={() => isPlayingCalibration ? stopCalibrationTone() : playCalibrationTone(coarseFreq)}
               style={{
                 width: '100%',
                 padding: '15px',
-                background: isPlayingCalibration ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.2)',
+                background: isPlayingCalibration ? 'linear-gradient(135deg, #f093fb, #f5576c)' : 'rgba(255,255,255,0.2)',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
-                cursor: isPlayingCalibration ? 'not-allowed' : 'pointer',
+                cursor: 'pointer',
                 fontSize: '16px',
                 marginBottom: '10px'
               }}
             >
-              {isPlayingCalibration ? '▶ Playing...' : '🔊 Play Tone (3.5 seconds)'}
+              {isPlayingCalibration ? '⏹ Stop' : '🔊 Play Tone (3.5 seconds)'}
             </button>
 
             <WaveformAnimation />
@@ -1296,21 +1301,20 @@ if (step === 'setup') {
             </div>
 
             <button
-              onClick={() => playCalibrationTone(mediumFreq)}
-              disabled={isPlayingCalibration}
+              onClick={() => isPlayingCalibration ? stopCalibrationTone() : playCalibrationTone(mediumFreq)}
               style={{
                 width: '100%',
                 padding: '15px',
-                background: isPlayingCalibration ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.2)',
+                background: isPlayingCalibration ? 'linear-gradient(135deg, #f093fb, #f5576c)' : 'rgba(255,255,255,0.2)',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
-                cursor: isPlayingCalibration ? 'not-allowed' : 'pointer',
+                cursor: 'pointer',
                 fontSize: '16px',
                 marginBottom: '10px'
               }}
             >
-              {isPlayingCalibration ? '▶ Playing...' : '🔊 Play Tone (3.5 seconds)'}
+              {isPlayingCalibration ? '⏹ Stop' : '🔊 Play Tone (3.5 seconds)'}
             </button>
 
             <WaveformAnimation />
@@ -1479,21 +1483,20 @@ if (step === 'setup') {
             </div>
 
             <button
-              onClick={() => playCalibrationTone(fineFreq)}
-              disabled={isPlayingCalibration}
+              onClick={() => isPlayingCalibration ? stopCalibrationTone() : playCalibrationTone(fineFreq)}
               style={{
                 width: '100%',
                 padding: '15px',
-                background: isPlayingCalibration ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.2)',
+                background: isPlayingCalibration ? 'linear-gradient(135deg, #f093fb, #f5576c)' : 'rgba(255,255,255,0.2)',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
-                cursor: isPlayingCalibration ? 'not-allowed' : 'pointer',
+                cursor: 'pointer',
                 fontSize: '16px',
                 marginBottom: '10px'
               }}
             >
-              {isPlayingCalibration ? '▶ Playing...' : '🔊 Play Tone (3.5 seconds)'}
+              {isPlayingCalibration ? '⏹ Stop' : '🔊 Play Tone (3.5 seconds)'}
             </button>
 
             <WaveformAnimation />
@@ -1595,7 +1598,6 @@ if (step === 'setup') {
             <div style={{ marginBottom: '30px' }}>
               <button
                 onClick={() => playCalibrationTone(fineFreq)}
-                disabled={isPlayingCalibration}
                 style={{
                   width: '100%',
                   padding: '20px',
@@ -1603,7 +1605,7 @@ if (step === 'setup') {
                   color: 'white',
                   border: 'none',
                   borderRadius: '8px',
-                  cursor: isPlayingCalibration ? 'not-allowed' : 'pointer',
+                  cursor: 'pointer',
                   fontSize: '16px',
                   marginBottom: '15px',
                   fontWeight: 'bold'
@@ -1614,7 +1616,6 @@ if (step === 'setup') {
 
               <button
                 onClick={() => playCalibrationTone(fineFreq / 2)}
-                disabled={isPlayingCalibration}
                 style={{
                   width: '100%',
                   padding: '15px',
@@ -1622,7 +1623,7 @@ if (step === 'setup') {
                   color: 'white',
                   border: 'none',
                   borderRadius: '8px',
-                  cursor: isPlayingCalibration ? 'not-allowed' : 'pointer',
+                  cursor: 'pointer',
                   fontSize: '16px',
                   marginBottom: '10px'
                 }}
@@ -1632,7 +1633,6 @@ if (step === 'setup') {
 
               <button
                 onClick={() => playCalibrationTone(fineFreq * 2)}
-                disabled={isPlayingCalibration}
                 style={{
                   width: '100%',
                   padding: '15px',
@@ -1640,7 +1640,7 @@ if (step === 'setup') {
                   color: 'white',
                   border: 'none',
                   borderRadius: '8px',
-                  cursor: isPlayingCalibration ? 'not-allowed' : 'pointer',
+                  cursor: 'pointer',
                   fontSize: '16px'
                 }}
               >
@@ -1758,21 +1758,20 @@ if (step === 'setup') {
             </div>
 
             <button
-              onClick={() => playCalibrationTone(fineFreq)}
-              disabled={isPlayingCalibration}
+              onClick={() => isPlayingCalibration ? stopCalibrationTone() : playCalibrationTone(fineFreq)}
               style={{
                 width: '100%',
                 padding: '15px',
-                background: 'rgba(255,255,255,0.2)',
+                background: isPlayingCalibration ? 'linear-gradient(135deg, #f093fb, #f5576c)' : 'rgba(255,255,255,0.2)',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
-                cursor: isPlayingCalibration ? 'not-allowed' : 'pointer',
+                cursor: 'pointer',
                 fontSize: '16px',
                 marginBottom: '30px'
               }}
             >
-              {isPlayingCalibration ? '▶ Playing...' : '🔊 Test Your Match'}
+              {isPlayingCalibration ? '⏹ Stop' : '🔊 Test Your Match'}
             </button>
 
             <div style={{ display: 'flex', gap: '10px' }}>
