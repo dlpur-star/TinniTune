@@ -1853,37 +1853,21 @@ Great session! Help us track your progress by rating your tinnitus.
           borderRadius: '16px',
           border: '1px solid rgba(78, 205, 196, 0.15)'
         }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            marginBottom: '14px',
-            alignItems: 'center',
-            gap: '16px'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{
-                fontSize: '24px',
-                display: 'inline-block',
-                transform: 'scaleX(-1)',
-                filter: 'grayscale(0)'
-              }}>
-                👂
-              </span>
-              <span style={{
-                color: 'white',
-                fontSize: '15px',
-                fontWeight: '600'
-              }}>
-                Left Ear
-              </span>
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
             <span style={{
-              color: '#4ECDC4',
-              fontSize: '18px',
-              fontWeight: '700',
-              fontVariantNumeric: 'tabular-nums'
+              fontSize: '24px',
+              display: 'inline-block',
+              transform: 'scaleX(-1)',
+              filter: 'grayscale(0)'
             }}>
-              {Math.round((volumeLeft + 40) / 30 * 100)}%
+              👂
+            </span>
+            <span style={{
+              color: 'white',
+              fontSize: '15px',
+              fontWeight: '600'
+            }}>
+              Left Ear
             </span>
           </div>
           <input
@@ -1922,6 +1906,16 @@ Great session! Help us track your progress by rating your tinnitus.
                 rgba(255, 255, 255, 0.15) 100%)`
             }}
           />
+          <div style={{
+            textAlign: 'center',
+            marginTop: '12px',
+            color: '#4ECDC4',
+            fontSize: '18px',
+            fontWeight: '700',
+            fontVariantNumeric: 'tabular-nums'
+          }}>
+            {Math.round((volumeLeft + 40) / 30 * 100)}%
+          </div>
         </div>
 
         {/* Right Ear Volume */}
@@ -1931,34 +1925,18 @@ Great session! Help us track your progress by rating your tinnitus.
           borderRadius: '16px',
           border: '1px solid rgba(102, 126, 234, 0.15)'
         }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            marginBottom: '14px',
-            alignItems: 'center',
-            gap: '16px'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{
-                fontSize: '24px'
-              }}>
-                👂
-              </span>
-              <span style={{
-                color: 'white',
-                fontSize: '15px',
-                fontWeight: '600'
-              }}>
-                Right Ear
-              </span>
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
             <span style={{
-              color: '#667eea',
-              fontSize: '18px',
-              fontWeight: '700',
-              fontVariantNumeric: 'tabular-nums'
+              fontSize: '24px'
             }}>
-              {Math.round((volumeRight + 40) / 30 * 100)}%
+              👂
+            </span>
+            <span style={{
+              color: 'white',
+              fontSize: '15px',
+              fontWeight: '600'
+            }}>
+              Right Ear
             </span>
           </div>
           <input
@@ -1997,6 +1975,16 @@ Great session! Help us track your progress by rating your tinnitus.
                 rgba(255, 255, 255, 0.15) 100%)`
             }}
           />
+          <div style={{
+            textAlign: 'center',
+            marginTop: '12px',
+            color: '#667eea',
+            fontSize: '18px',
+            fontWeight: '700',
+            fontVariantNumeric: 'tabular-nums'
+          }}>
+            {Math.round((volumeRight + 40) / 30 * 100)}%
+          </div>
         </div>
 
         <style>{`
