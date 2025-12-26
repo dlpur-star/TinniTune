@@ -43,12 +43,15 @@ const [testVolume, setTestVolume] = useState(-15);
 const [isPlayingCalibration, setIsPlayingCalibration] = useState(false);
 const [calibrationOscRef, setCalibrationOscRef] = useState(null);
 const [showRetryPrompt, setShowRetryPrompt] = useState(false);
+const [waveformData, setWaveformData] = useState(new Array(20).fill(0));
 
 const synthsRef = useRef([]);
 const pannerLeftRef = useRef(null);
 const pannerRightRef = useRef(null);
 const notchFiltersRef = useRef([]); // Store notch filters separately
 const timerRef = useRef(null);
+const analyserRef = useRef(null);
+const animationFrameRef = useRef(null);
 
 // Calm Mode refs
 const heartbeatSynthsRef = useRef([]);
@@ -498,15 +501,42 @@ const playCalibrationTone = async (freq, duration = 3500) => {
     if (ear === 'left') panValue = -1;
     if (ear === 'right') panValue = 1;
 
+    // Create analyser for waveform visualization
+    const analyser = Tone.context.createAnalyser();
+    analyser.fftSize = 64; // Small size for 20 bars
+    analyser.smoothingTimeConstant = 0.8;
+    analyserRef.current = analyser;
+
+    // Connect: Oscillator -> Analyser -> Panner -> Destination
     const panner = new Tone.Panner(panValue).toDestination();
-    const osc = new Tone.Oscillator(freq, 'sine').connect(panner);
+    const analyserNode = new Tone.Analyser('waveform', 32);
+    const osc = new Tone.Oscillator(freq, 'sine');
+    osc.connect(analyserNode);
+    analyserNode.connect(panner);
     osc.volume.value = testVolume;
     osc.start();
 
     setIsPlayingCalibration(true);
-    setCalibrationOscRef({ osc, panner });
+    setCalibrationOscRef({ osc, panner, analyserNode });
 
     console.log('Calibration tone playing at', freq, 'Hz in', ear, 'ear for', duration, 'ms');
+
+    // Start waveform animation loop
+    const updateWaveform = () => {
+      if (analyserNode && isPlayingCalibration) {
+        const values = analyserNode.getValue();
+        // Sample 20 evenly spaced points from the waveform
+        const sampledData = [];
+        const step = Math.floor(values.length / 20);
+        for (let i = 0; i < 20; i++) {
+          const index = i * step;
+          sampledData.push(values[index]);
+        }
+        setWaveformData(sampledData);
+        animationFrameRef.current = requestAnimationFrame(updateWaveform);
+      }
+    };
+    updateWaveform();
 
     setTimeout(() => {
       stopCalibrationTone();
@@ -518,16 +548,30 @@ const playCalibrationTone = async (freq, duration = 3500) => {
 };
 
 const stopCalibrationTone = () => {
+  // Stop animation loop
+  if (animationFrameRef.current) {
+    cancelAnimationFrame(animationFrameRef.current);
+    animationFrameRef.current = null;
+  }
+
+  // Reset waveform data
+  setWaveformData(new Array(20).fill(0));
+
   if (calibrationOscRef) {
     try {
       calibrationOscRef.osc.stop();
       calibrationOscRef.osc.dispose();
+      if (calibrationOscRef.analyserNode) {
+        calibrationOscRef.analyserNode.dispose();
+      }
       calibrationOscRef.panner.dispose();
     } catch (error) {
       console.error('Error stopping calibration tone:', error);
     }
     setCalibrationOscRef(null);
   }
+
+  analyserRef.current = null;
   setIsPlayingCalibration(false);
 };
 
@@ -880,40 +924,50 @@ if (step === 'setup') {
   }
 
   // Advanced Calibration Wizard
-  const WaveformAnimation = () => (
-    <div style={{
-      width: '100%',
-      height: '60px',
-      background: 'rgba(0,0,0,0.3)',
-      borderRadius: '8px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '4px',
-      padding: '10px',
-      marginTop: '15px'
-    }}>
-      {isPlayingCalibration ? (
-        Array.from({ length: 20 }).map((_, i) => (
-          <div
-            key={i}
-            style={{
-              width: '8px',
-              height: `${20 + Math.sin((Date.now() / 100) + i) * 20}px`,
-              background: '#4ECDC4',
-              borderRadius: '4px',
-              animation: 'wave 1s ease-in-out infinite',
-              animationDelay: `${i * 0.05}s`
-            }}
-          />
-        ))
-      ) : (
-        <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px' }}>
-          Click play to see waveform
-        </div>
-      )}
-    </div>
-  );
+  const WaveformAnimation = () => {
+    const maxHeight = 40; // Max bar height in pixels
+    const minHeight = 4; // Min bar height in pixels
+
+    return (
+      <div style={{
+        width: '100%',
+        height: '60px',
+        background: 'rgba(0,0,0,0.3)',
+        borderRadius: '8px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '4px',
+        padding: '10px',
+        marginTop: '15px'
+      }}>
+        {isPlayingCalibration ? (
+          waveformData.map((value, i) => {
+            // Convert waveform value (-1 to 1) to bar height
+            const normalizedValue = Math.abs(value);
+            const barHeight = minHeight + (normalizedValue * maxHeight);
+
+            return (
+              <div
+                key={i}
+                style={{
+                  width: '8px',
+                  height: `${barHeight}px`,
+                  background: '#4ECDC4',
+                  borderRadius: '4px',
+                  transition: 'height 0.05s ease-out'
+                }}
+              />
+            );
+          })
+        ) : (
+          <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px' }}>
+            Click play to see waveform
+          </div>
+        )}
+      </div>
+    );
+  };
 
   // Progress bar
   const stages = ['volume', 'ear', 'coarse', 'medium', 'fine', 'octave', 'complete'];
