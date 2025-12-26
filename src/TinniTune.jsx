@@ -29,6 +29,21 @@ const [heartbeatBPM, setHeartbeatBPM] = useState(55); // 55 = very calm
 const [breathingPhase, setBreathingPhase] = useState('in'); // 'in', 'hold', 'out'
 const [breathCount, setBreathCount] = useState(4);
 
+// Advanced Calibration Wizard states
+const [useAdvancedCalibration, setUseAdvancedCalibration] = useState(true);
+const [calibrationStage, setCalibrationStage] = useState('volume'); // 'volume', 'ear', 'coarse', 'medium', 'fine', 'octave', 'complete'
+const [calibrationRound, setCalibrationRound] = useState(1);
+const [coarseFreq, setCoarseFreq] = useState(4000);
+const [mediumFreq, setMediumFreq] = useState(4000);
+const [fineFreq, setFineFreq] = useState(4000);
+const [confidence, setConfidence] = useState(3);
+const [lastConfidence, setLastConfidence] = useState(3);
+const [octaveCheckAttempt, setOctaveCheckAttempt] = useState(0);
+const [testVolume, setTestVolume] = useState(-15);
+const [isPlayingCalibration, setIsPlayingCalibration] = useState(false);
+const [calibrationOscRef, setCalibrationOscRef] = useState(null);
+const [showRetryPrompt, setShowRetryPrompt] = useState(false);
+
 const synthsRef = useRef([]);
 const pannerLeftRef = useRef(null);
 const pannerRightRef = useRef(null);
@@ -50,6 +65,42 @@ setSessions(JSON.parse(savedSessions));
 console.error('Error loading sessions:', error);
 }
 }, []);
+
+// Load calibration progress from localStorage
+React.useEffect(() => {
+try {
+const savedCalibration = localStorage.getItem('tinnitune_calibration_progress');
+if (savedCalibration) {
+const data = JSON.parse(savedCalibration);
+setCalibrationStage(data.stage || 'volume');
+setCoarseFreq(data.coarseFreq || 4000);
+setMediumFreq(data.mediumFreq || 4000);
+setFineFreq(data.fineFreq || 4000);
+setEar(data.ear || 'both');
+setTestVolume(data.testVolume || -15);
+}
+} catch (error) {
+console.error('Error loading calibration progress:', error);
+}
+}, []);
+
+// Save calibration progress to localStorage
+const saveCalibrationProgress = () => {
+try {
+const data = {
+stage: calibrationStage,
+coarseFreq,
+mediumFreq,
+fineFreq,
+ear,
+testVolume,
+timestamp: Date.now()
+};
+localStorage.setItem('tinnitune_calibration_progress', JSON.stringify(data));
+} catch (error) {
+console.error('Error saving calibration progress:', error);
+}
+};
 
 // Timer for session tracking
 React.useEffect(() => {
@@ -398,14 +449,14 @@ await Tone.start();
   let panValue = 0;
   if (ear === 'left') panValue = -1;
   if (ear === 'right') panValue = 1;
-  
+
   const panner = new Tone.Panner(panValue).toDestination();
   const osc = new Tone.Oscillator(frequency, 'sine').connect(panner);
   osc.volume.value = -15;
   osc.start();
-  
+
   console.log('Test tone playing at', frequency, 'Hz in', ear, 'ear');
-  
+
   setTimeout(() => {
     osc.stop();
     osc.dispose();
@@ -415,6 +466,70 @@ await Tone.start();
   alert('Error: ' + error.message);
 }
 
+};
+
+// ========================================
+// ADVANCED CALIBRATION FUNCTIONS
+// ========================================
+
+const playCalibrationTone = async (freq, duration = 3500) => {
+  try {
+    await Tone.start();
+
+    // Stop any existing calibration tone
+    stopCalibrationTone();
+
+    // Determine pan value
+    let panValue = 0;
+    if (ear === 'left') panValue = -1;
+    if (ear === 'right') panValue = 1;
+
+    const panner = new Tone.Panner(panValue).toDestination();
+    const osc = new Tone.Oscillator(freq, 'sine').connect(panner);
+    osc.volume.value = testVolume;
+    osc.start();
+
+    setIsPlayingCalibration(true);
+    setCalibrationOscRef({ osc, panner });
+
+    console.log('Calibration tone playing at', freq, 'Hz in', ear, 'ear for', duration, 'ms');
+
+    setTimeout(() => {
+      stopCalibrationTone();
+    }, duration);
+  } catch (error) {
+    console.error('Error playing calibration tone:', error);
+    setIsPlayingCalibration(false);
+  }
+};
+
+const stopCalibrationTone = () => {
+  if (calibrationOscRef) {
+    try {
+      calibrationOscRef.osc.stop();
+      calibrationOscRef.osc.dispose();
+      calibrationOscRef.panner.dispose();
+    } catch (error) {
+      console.error('Error stopping calibration tone:', error);
+    }
+    setCalibrationOscRef(null);
+  }
+  setIsPlayingCalibration(false);
+};
+
+const handleCalibrationComplete = () => {
+  // Set the final frequency based on what was matched
+  let finalFreq = frequency;
+  if (calibrationStage === 'complete') {
+    finalFreq = fineFreq || mediumFreq || coarseFreq;
+  }
+  setFrequency(finalFreq);
+
+  // Clear calibration progress
+  localStorage.removeItem('tinnitune_calibration_progress');
+
+  // Move to therapy
+  setStep('therapy');
 };
 
 // ========================================
@@ -608,129 +723,1095 @@ Begin Setup
 }
 
 if (step === 'setup') {
-return (
-<div style={{
-minHeight: '100vh',
-background: 'linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%)',
-display: 'flex',
-alignItems: 'center',
-justifyContent: 'center',
-padding: '20px',
-fontFamily: 'system-ui, sans-serif'
-}}>
-<div style={{
-maxWidth: '600px',
-background: 'rgba(255, 255, 255, 0.1)',
-padding: '50px 40px',
-borderRadius: '20px',
-backdropFilter: 'blur(10px)'
-}}>
-<h2 style={{ color: 'white', fontSize: '32px', marginBottom: '30px' }}>
-Setup Your Therapy
-</h2>
+  // Save progress whenever calibration stage changes
+  React.useEffect(() => {
+    if (step === 'setup') {
+      saveCalibrationProgress();
+    }
+  }, [calibrationStage, coarseFreq, mediumFreq, fineFreq, ear, testVolume]);
 
-      <div style={{ marginBottom: '40px' }}>
-        <h3 style={{ color: 'white', fontSize: '18px', marginBottom: '15px' }}>
-          Which ear has tinnitus?
-        </h3>
-        <div style={{ display: 'flex', gap: '10px' }}>
-          {['left', 'both', 'right'].map(e => (
+  // Simple mode (original setup)
+  if (!useAdvancedCalibration) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px',
+        fontFamily: 'system-ui, sans-serif'
+      }}>
+        <div style={{
+          maxWidth: '600px',
+          background: 'rgba(255, 255, 255, 0.1)',
+          padding: '50px 40px',
+          borderRadius: '20px',
+          backdropFilter: 'blur(10px)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h2 style={{ color: 'white', fontSize: '32px', margin: 0 }}>
+              Setup Your Therapy
+            </h2>
             <button
-              key={e}
-              onClick={() => setEar(e)}
+              onClick={() => setUseAdvancedCalibration(true)}
+              style={{
+                padding: '8px 16px',
+                background: 'rgba(255,255,255,0.2)',
+                color: '#4ECDC4',
+                border: '1px solid #4ECDC4',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '12px'
+              }}
+            >
+              Advanced Mode
+            </button>
+          </div>
+
+          <div style={{ marginBottom: '40px' }}>
+            <h3 style={{ color: 'white', fontSize: '18px', marginBottom: '15px' }}>
+              Which ear has tinnitus?
+            </h3>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              {['left', 'both', 'right'].map(e => (
+                <button
+                  key={e}
+                  onClick={() => setEar(e)}
+                  style={{
+                    flex: 1,
+                    padding: '15px',
+                    background: ear === e ? '#4ECDC4' : 'rgba(255,255,255,0.2)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    fontWeight: ear === e ? 'bold' : 'normal'
+                  }}
+                >
+                  {e === 'left' ? '👂 Left' : e === 'right' ? 'Right 👂' : '👂 Both'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ marginBottom: '40px' }}>
+            <h3 style={{ color: 'white', fontSize: '18px', marginBottom: '15px' }}>
+              Match Your Frequency: {frequency} Hz
+            </h3>
+            <input
+              type="range"
+              min="500"
+              max="16000"
+              step="100"
+              value={frequency}
+              onChange={(e) => setFrequency(parseInt(e.target.value))}
+              style={{
+                width: '100%',
+                height: '8px',
+                borderRadius: '4px',
+                marginBottom: '15px'
+              }}
+            />
+            <button
+              onClick={testTone}
+              style={{
+                width: '100%',
+                padding: '15px',
+                background: 'rgba(255,255,255,0.2)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '16px'
+              }}
+            >
+              🔊 Test Tone (3 seconds)
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button
+              onClick={() => setStep('welcome')}
               style={{
                 flex: 1,
                 padding: '15px',
-                background: ear === e ? '#4ECDC4' : 'rgba(255,255,255,0.2)',
+                background: 'rgba(255,255,255,0.2)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '16px'
+              }}
+            >
+              ← Back
+            </button>
+            <button
+              onClick={() => {
+                console.log('Continue clicked');
+                setStep('therapy');
+              }}
+              style={{
+                flex: 2,
+                padding: '15px',
+                background: 'linear-gradient(135deg, #667eea, #764ba2)',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
                 cursor: 'pointer',
                 fontSize: '16px',
-                fontWeight: ear === e ? 'bold' : 'normal'
+                fontWeight: 'bold'
               }}
             >
-              {e === 'left' ? '👂 Left' : e === 'right' ? 'Right 👂' : '👂 Both'}
+              Start Therapy →
             </button>
-          ))}
+          </div>
         </div>
       </div>
+    );
+  }
 
-      <div style={{ marginBottom: '40px' }}>
-        <h3 style={{ color: 'white', fontSize: '18px', marginBottom: '15px' }}>
-          Match Your Frequency: {frequency} Hz
-        </h3>
-        <input
-          type="range"
-          min="500"
-          max="16000"
-          step="100"
-          value={frequency}
-          onChange={(e) => setFrequency(parseInt(e.target.value))}
-          style={{
-            width: '100%',
-            height: '8px',
-            borderRadius: '4px',
-            marginBottom: '15px'
-          }}
-        />
-        <button
-          onClick={testTone}
-          style={{
-            width: '100%',
-            padding: '15px',
-            background: 'rgba(255,255,255,0.2)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '16px'
-          }}
-        >
-          🔊 Test Tone (3 seconds)
-        </button>
-      </div>
+  // Advanced Calibration Wizard
+  const WaveformAnimation = () => (
+    <div style={{
+      width: '100%',
+      height: '60px',
+      background: 'rgba(0,0,0,0.3)',
+      borderRadius: '8px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '4px',
+      padding: '10px',
+      marginTop: '15px'
+    }}>
+      {isPlayingCalibration ? (
+        Array.from({ length: 20 }).map((_, i) => (
+          <div
+            key={i}
+            style={{
+              width: '8px',
+              height: `${20 + Math.sin((Date.now() / 100) + i) * 20}px`,
+              background: '#4ECDC4',
+              borderRadius: '4px',
+              animation: 'wave 1s ease-in-out infinite',
+              animationDelay: `${i * 0.05}s`
+            }}
+          />
+        ))
+      ) : (
+        <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '14px' }}>
+          Click play to see waveform
+        </div>
+      )}
+    </div>
+  );
 
-      <div style={{ display: 'flex', gap: '10px' }}>
-        <button
-          onClick={() => setStep('welcome')}
-          style={{
-            flex: 1,
-            padding: '15px',
+  // Progress bar
+  const stages = ['volume', 'ear', 'coarse', 'medium', 'fine', 'octave', 'complete'];
+  const currentStageIndex = stages.indexOf(calibrationStage);
+  const progress = ((currentStageIndex + 1) / stages.length) * 100;
+
+  return (
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '20px',
+      fontFamily: 'system-ui, sans-serif'
+    }}>
+      <div style={{
+        maxWidth: '700px',
+        background: 'rgba(255, 255, 255, 0.1)',
+        padding: '40px',
+        borderRadius: '20px',
+        backdropFilter: 'blur(10px)'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h2 style={{ color: 'white', fontSize: '28px', margin: 0 }}>
+            Precision Calibration
+          </h2>
+          <button
+            onClick={() => setUseAdvancedCalibration(false)}
+            style={{
+              padding: '8px 16px',
+              background: 'rgba(255,255,255,0.2)',
+              color: 'rgba(255,255,255,0.7)',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '12px'
+            }}
+          >
+            Simple Mode
+          </button>
+        </div>
+
+        {/* Progress Bar */}
+        <div style={{ marginBottom: '30px' }}>
+          <div style={{
+            width: '100%',
+            height: '6px',
             background: 'rgba(255,255,255,0.2)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '16px'
-          }}
-        >
-          ← Back
-        </button>
-        <button
-          onClick={() => {
-            console.log('Continue clicked');
-            setStep('therapy');
-          }}
-          style={{
-            flex: 2,
-            padding: '15px',
-            background: 'linear-gradient(135deg, #667eea, #764ba2)',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '16px',
-            fontWeight: 'bold'
-          }}
-        >
-          Start Therapy →
-        </button>
+            borderRadius: '3px',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              width: `${progress}%`,
+              height: '100%',
+              background: 'linear-gradient(90deg, #4ECDC4, #44A08D)',
+              transition: 'width 0.3s ease'
+            }} />
+          </div>
+          <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', marginTop: '5px' }}>
+            Step {currentStageIndex + 1} of {stages.length}
+          </div>
+        </div>
+
+        {/* Volume Calibration Stage */}
+        {calibrationStage === 'volume' && (
+          <div>
+            <h3 style={{ color: 'white', fontSize: '20px', marginBottom: '15px' }}>
+              Volume Calibration
+            </h3>
+            <p style={{ color: 'rgba(255,255,255,0.8)', marginBottom: '20px', lineHeight: '1.6' }}>
+              First, let's set a comfortable listening volume. The tone should be clearly audible but not uncomfortable.
+            </p>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ color: 'white', display: 'block', marginBottom: '10px' }}>
+                Volume: {testVolume} dB
+              </label>
+              <input
+                type="range"
+                min="-40"
+                max="-5"
+                step="1"
+                value={testVolume}
+                onChange={(e) => setTestVolume(parseInt(e.target.value))}
+                style={{ width: '100%', marginBottom: '15px' }}
+              />
+            </div>
+
+            <button
+              onClick={() => playCalibrationTone(1000, 2000)}
+              disabled={isPlayingCalibration}
+              style={{
+                width: '100%',
+                padding: '15px',
+                background: isPlayingCalibration ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.2)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: isPlayingCalibration ? 'not-allowed' : 'pointer',
+                fontSize: '16px',
+                marginBottom: '10px'
+              }}
+            >
+              {isPlayingCalibration ? '▶ Playing...' : '🔊 Test Volume (2 seconds)'}
+            </button>
+
+            <WaveformAnimation />
+
+            <div style={{ marginTop: '30px', display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => setStep('welcome')}
+                style={{
+                  flex: 1,
+                  padding: '15px',
+                  background: 'rgba(255,255,255,0.2)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                ← Back
+              </button>
+              <button
+                onClick={() => setCalibrationStage('ear')}
+                style={{
+                  flex: 2,
+                  padding: '15px',
+                  background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold'
+                }}
+              >
+                Next →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Ear Selection Stage */}
+        {calibrationStage === 'ear' && (
+          <div>
+            <h3 style={{ color: 'white', fontSize: '20px', marginBottom: '15px' }}>
+              Ear Selection
+            </h3>
+            <p style={{ color: 'rgba(255,255,255,0.8)', marginBottom: '20px', lineHeight: '1.6' }}>
+              Which ear(s) experience tinnitus?
+            </p>
+
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '30px' }}>
+              {['left', 'both', 'right'].map(e => (
+                <button
+                  key={e}
+                  onClick={() => setEar(e)}
+                  style={{
+                    flex: 1,
+                    padding: '20px',
+                    background: ear === e ? '#4ECDC4' : 'rgba(255,255,255,0.2)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: '16px',
+                    fontWeight: ear === e ? 'bold' : 'normal'
+                  }}
+                >
+                  {e === 'left' ? '👂 Left' : e === 'right' ? 'Right 👂' : '👂 Both'}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => setCalibrationStage('volume')}
+                style={{
+                  flex: 1,
+                  padding: '15px',
+                  background: 'rgba(255,255,255,0.2)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                ← Back
+              </button>
+              <button
+                onClick={() => setCalibrationStage('coarse')}
+                style={{
+                  flex: 2,
+                  padding: '15px',
+                  background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold'
+                }}
+              >
+                Begin Matching →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Coarse Frequency Matching */}
+        {calibrationStage === 'coarse' && (
+          <div>
+            <div style={{ marginBottom: '20px' }}>
+              <h3 style={{ color: 'white', fontSize: '20px', marginBottom: '10px' }}>
+                Round 1: Coarse Match
+              </h3>
+              <p style={{ color: 'rgba(255,255,255,0.8)', marginBottom: '20px', lineHeight: '1.6' }}>
+                Find the general pitch range. Adjust the slider to match your tinnitus pitch. Don't worry about being exact yet.
+              </p>
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ color: 'white', display: 'block', marginBottom: '10px', fontSize: '18px' }}>
+                Frequency: {coarseFreq} Hz
+              </label>
+              <input
+                type="range"
+                min="500"
+                max="16000"
+                step="500"
+                value={coarseFreq}
+                onChange={(e) => setCoarseFreq(parseInt(e.target.value))}
+                style={{ width: '100%', marginBottom: '15px' }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', color: 'rgba(255,255,255,0.6)', fontSize: '12px' }}>
+                <span>Lower pitch</span>
+                <span>Higher pitch</span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => playCalibrationTone(coarseFreq)}
+              disabled={isPlayingCalibration}
+              style={{
+                width: '100%',
+                padding: '15px',
+                background: isPlayingCalibration ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.2)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: isPlayingCalibration ? 'not-allowed' : 'pointer',
+                fontSize: '16px',
+                marginBottom: '10px'
+              }}
+            >
+              {isPlayingCalibration ? '▶ Playing...' : '🔊 Play Tone (3.5 seconds)'}
+            </button>
+
+            <WaveformAnimation />
+
+            <div style={{ marginTop: '20px' }}>
+              <label style={{ color: 'white', display: 'block', marginBottom: '10px' }}>
+                How confident are you? (1 = Not sure, 5 = Very sure)
+              </label>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+                {[1, 2, 3, 4, 5].map(rating => (
+                  <button
+                    key={rating}
+                    onClick={() => setConfidence(rating)}
+                    style={{
+                      flex: 1,
+                      padding: '12px',
+                      background: confidence === rating ? '#4ECDC4' : 'rgba(255,255,255,0.2)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontWeight: confidence === rating ? 'bold' : 'normal'
+                    }}
+                  >
+                    {rating}
+                  </button>
+                ))}
+              </div>
+
+              {confidence < 3 && (
+                <div style={{
+                  padding: '15px',
+                  background: 'rgba(255, 193, 7, 0.2)',
+                  borderLeft: '4px solid #FFC107',
+                  borderRadius: '4px',
+                  color: 'white',
+                  marginBottom: '15px',
+                  fontSize: '14px'
+                }}>
+                  💡 Tip: Make sure your headphones are on and volume is comfortable. Try playing the tone multiple times.
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => setCalibrationStage('ear')}
+                style={{
+                  flex: 1,
+                  padding: '15px',
+                  background: 'rgba(255,255,255,0.2)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                ← Back
+              </button>
+              {confidence < 3 && (
+                <button
+                  onClick={() => {
+                    setCoarseFreq(4000);
+                    setConfidence(3);
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '15px',
+                    background: 'rgba(255, 193, 7, 0.3)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Reset
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  setMediumFreq(coarseFreq);
+                  setCalibrationStage('medium');
+                  setLastConfidence(confidence);
+                }}
+                style={{
+                  flex: 2,
+                  padding: '15px',
+                  background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold'
+                }}
+              >
+                Next Round →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Medium Frequency Matching */}
+        {calibrationStage === 'medium' && (
+          <div>
+            <div style={{ marginBottom: '20px' }}>
+              <h3 style={{ color: 'white', fontSize: '20px', marginBottom: '10px' }}>
+                Round 2: Medium Match
+              </h3>
+              <p style={{ color: 'rgba(255,255,255,0.8)', marginBottom: '20px', lineHeight: '1.6' }}>
+                Fine-tune within a narrower range around {coarseFreq} Hz. Listen carefully for the closest match.
+              </p>
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ color: 'white', display: 'block', marginBottom: '10px', fontSize: '18px' }}>
+                Frequency: {mediumFreq} Hz
+              </label>
+              <input
+                type="range"
+                min={Math.max(500, coarseFreq - 2000)}
+                max={Math.min(16000, coarseFreq + 2000)}
+                step="100"
+                value={mediumFreq}
+                onChange={(e) => setMediumFreq(parseInt(e.target.value))}
+                style={{ width: '100%', marginBottom: '15px' }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', color: 'rgba(255,255,255,0.6)', fontSize: '12px' }}>
+                <span>Lower pitch</span>
+                <span>Higher pitch</span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => playCalibrationTone(mediumFreq)}
+              disabled={isPlayingCalibration}
+              style={{
+                width: '100%',
+                padding: '15px',
+                background: isPlayingCalibration ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.2)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: isPlayingCalibration ? 'not-allowed' : 'pointer',
+                fontSize: '16px',
+                marginBottom: '10px'
+              }}
+            >
+              {isPlayingCalibration ? '▶ Playing...' : '🔊 Play Tone (3.5 seconds)'}
+            </button>
+
+            <WaveformAnimation />
+
+            <div style={{ marginTop: '20px' }}>
+              <label style={{ color: 'white', display: 'block', marginBottom: '10px' }}>
+                How confident are you? (1 = Not sure, 5 = Very sure)
+              </label>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+                {[1, 2, 3, 4, 5].map(rating => (
+                  <button
+                    key={rating}
+                    onClick={() => setConfidence(rating)}
+                    style={{
+                      flex: 1,
+                      padding: '12px',
+                      background: confidence === rating ? '#4ECDC4' : 'rgba(255,255,255,0.2)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontWeight: confidence === rating ? 'bold' : 'normal'
+                    }}
+                  >
+                    {rating}
+                  </button>
+                ))}
+              </div>
+
+              {confidence < 3 && (
+                <div style={{
+                  padding: '15px',
+                  background: 'rgba(255, 193, 7, 0.2)',
+                  borderLeft: '4px solid #FFC107',
+                  borderRadius: '4px',
+                  color: 'white',
+                  marginBottom: '15px',
+                  fontSize: '14px'
+                }}>
+                  💡 Tip: Try comparing with nearby frequencies. The difference might be subtle.
+                </div>
+              )}
+
+              {confidence >= 4 && (
+                <div style={{
+                  padding: '15px',
+                  background: 'rgba(76, 175, 80, 0.2)',
+                  borderLeft: '4px solid #4CAF50',
+                  borderRadius: '4px',
+                  color: 'white',
+                  marginBottom: '15px',
+                  fontSize: '14px'
+                }}>
+                  ✓ Great! You can skip fine-tuning and proceed to verification.
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => setCalibrationStage('coarse')}
+                style={{
+                  flex: 1,
+                  padding: '15px',
+                  background: 'rgba(255,255,255,0.2)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                ← Back
+              </button>
+              {confidence < 3 && (
+                <button
+                  onClick={() => {
+                    setMediumFreq(coarseFreq);
+                    setConfidence(3);
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '15px',
+                    background: 'rgba(255, 193, 7, 0.3)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Retry
+                </button>
+              )}
+              {confidence >= 4 ? (
+                <button
+                  onClick={() => {
+                    setFineFreq(mediumFreq);
+                    setCalibrationStage('octave');
+                  }}
+                  style={{
+                    flex: 2,
+                    padding: '15px',
+                    background: 'linear-gradient(135deg, #4CAF50, #45a049)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  Skip to Verification →
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setFineFreq(mediumFreq);
+                    setCalibrationStage('fine');
+                    setLastConfidence(confidence);
+                  }}
+                  style={{
+                    flex: 2,
+                    padding: '15px',
+                    background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  Fine-Tune →
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Fine Frequency Matching */}
+        {calibrationStage === 'fine' && (
+          <div>
+            <div style={{ marginBottom: '20px' }}>
+              <h3 style={{ color: 'white', fontSize: '20px', marginBottom: '10px' }}>
+                Round 3: Fine Match
+              </h3>
+              <p style={{ color: 'rgba(255,255,255,0.8)', marginBottom: '20px', lineHeight: '1.6' }}>
+                Final precision adjustment. Make small changes to find the exact match around {mediumFreq} Hz.
+              </p>
+            </div>
+
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ color: 'white', display: 'block', marginBottom: '10px', fontSize: '18px' }}>
+                Frequency: {fineFreq} Hz
+              </label>
+              <input
+                type="range"
+                min={Math.max(500, mediumFreq - 500)}
+                max={Math.min(16000, mediumFreq + 500)}
+                step="10"
+                value={fineFreq}
+                onChange={(e) => setFineFreq(parseInt(e.target.value))}
+                style={{ width: '100%', marginBottom: '15px' }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', color: 'rgba(255,255,255,0.6)', fontSize: '12px' }}>
+                <span>Slightly lower</span>
+                <span>Slightly higher</span>
+              </div>
+            </div>
+
+            <button
+              onClick={() => playCalibrationTone(fineFreq)}
+              disabled={isPlayingCalibration}
+              style={{
+                width: '100%',
+                padding: '15px',
+                background: isPlayingCalibration ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.2)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: isPlayingCalibration ? 'not-allowed' : 'pointer',
+                fontSize: '16px',
+                marginBottom: '10px'
+              }}
+            >
+              {isPlayingCalibration ? '▶ Playing...' : '🔊 Play Tone (3.5 seconds)'}
+            </button>
+
+            <WaveformAnimation />
+
+            <div style={{ marginTop: '20px' }}>
+              <label style={{ color: 'white', display: 'block', marginBottom: '10px' }}>
+                How confident are you? (1 = Not sure, 5 = Very sure)
+              </label>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
+                {[1, 2, 3, 4, 5].map(rating => (
+                  <button
+                    key={rating}
+                    onClick={() => setConfidence(rating)}
+                    style={{
+                      flex: 1,
+                      padding: '12px',
+                      background: confidence === rating ? '#4ECDC4' : 'rgba(255,255,255,0.2)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontWeight: confidence === rating ? 'bold' : 'normal'
+                    }}
+                  >
+                    {rating}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => setCalibrationStage('medium')}
+                style={{
+                  flex: 1,
+                  padding: '15px',
+                  background: 'rgba(255,255,255,0.2)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                ← Back
+              </button>
+              {confidence < 3 && (
+                <button
+                  onClick={() => {
+                    setFineFreq(mediumFreq);
+                    setConfidence(3);
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '15px',
+                    background: 'rgba(255, 193, 7, 0.3)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Retry
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  setCalibrationStage('octave');
+                  setLastConfidence(confidence);
+                }}
+                style={{
+                  flex: 2,
+                  padding: '15px',
+                  background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold'
+                }}
+              >
+                Verify Match →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Octave Check */}
+        {calibrationStage === 'octave' && (
+          <div>
+            <div style={{ marginBottom: '20px' }}>
+              <h3 style={{ color: 'white', fontSize: '20px', marginBottom: '10px' }}>
+                Octave Verification
+              </h3>
+              <p style={{ color: 'rgba(255,255,255,0.8)', marginBottom: '20px', lineHeight: '1.6' }}>
+                Let's verify your match. Which tone sounds closer to your tinnitus?
+              </p>
+            </div>
+
+            <div style={{ marginBottom: '30px' }}>
+              <button
+                onClick={() => playCalibrationTone(fineFreq)}
+                disabled={isPlayingCalibration}
+                style={{
+                  width: '100%',
+                  padding: '20px',
+                  background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: isPlayingCalibration ? 'not-allowed' : 'pointer',
+                  fontSize: '16px',
+                  marginBottom: '15px',
+                  fontWeight: 'bold'
+                }}
+              >
+                🔊 Your Match: {fineFreq} Hz
+              </button>
+
+              <button
+                onClick={() => playCalibrationTone(fineFreq / 2)}
+                disabled={isPlayingCalibration}
+                style={{
+                  width: '100%',
+                  padding: '15px',
+                  background: 'rgba(255,255,255,0.2)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: isPlayingCalibration ? 'not-allowed' : 'pointer',
+                  fontSize: '16px',
+                  marginBottom: '10px'
+                }}
+              >
+                🔊 Lower Octave: {Math.round(fineFreq / 2)} Hz
+              </button>
+
+              <button
+                onClick={() => playCalibrationTone(fineFreq * 2)}
+                disabled={isPlayingCalibration}
+                style={{
+                  width: '100%',
+                  padding: '15px',
+                  background: 'rgba(255,255,255,0.2)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: isPlayingCalibration ? 'not-allowed' : 'pointer',
+                  fontSize: '16px'
+                }}
+              >
+                🔊 Higher Octave: {Math.round(fineFreq * 2)} Hz
+              </button>
+
+              <WaveformAnimation />
+            </div>
+
+            <div style={{
+              padding: '15px',
+              background: 'rgba(78, 205, 196, 0.2)',
+              borderLeft: '4px solid #4ECDC4',
+              borderRadius: '4px',
+              color: 'white',
+              marginBottom: '20px',
+              fontSize: '14px'
+            }}>
+              💡 If one of the other tones sounds more accurate, we'll ask you to re-match using that range.
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => {
+                  if (octaveCheckAttempt === 0 && lastConfidence < 4) {
+                    setOctaveCheckAttempt(1);
+                    setCalibrationStage('coarse');
+                    setCoarseFreq(Math.round(fineFreq / 2));
+                  } else {
+                    setFineFreq(Math.round(fineFreq / 2));
+                    setCalibrationStage('complete');
+                  }
+                }}
+                style={{
+                  flex: 1,
+                  padding: '15px',
+                  background: 'rgba(255,255,255,0.2)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                Lower is closer
+              </button>
+              <button
+                onClick={() => {
+                  setCalibrationStage('complete');
+                }}
+                style={{
+                  flex: 1,
+                  padding: '15px',
+                  background: 'linear-gradient(135deg, #4CAF50, #45a049)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold'
+                }}
+              >
+                This is correct ✓
+              </button>
+              <button
+                onClick={() => {
+                  if (octaveCheckAttempt === 0 && lastConfidence < 4) {
+                    setOctaveCheckAttempt(1);
+                    setCalibrationStage('coarse');
+                    setCoarseFreq(Math.round(fineFreq * 2));
+                  } else {
+                    setFineFreq(Math.round(fineFreq * 2));
+                    setCalibrationStage('complete');
+                  }
+                }}
+                style={{
+                  flex: 1,
+                  padding: '15px',
+                  background: 'rgba(255,255,255,0.2)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                Higher is closer
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Complete */}
+        {calibrationStage === 'complete' && (
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: '64px', marginBottom: '20px' }}>✓</div>
+            <h3 style={{ color: 'white', fontSize: '24px', marginBottom: '15px' }}>
+              Calibration Complete!
+            </h3>
+            <p style={{ color: 'rgba(255,255,255,0.8)', marginBottom: '30px', lineHeight: '1.6' }}>
+              Your tinnitus frequency has been matched to <strong style={{ color: '#4ECDC4' }}>{fineFreq} Hz</strong>
+            </p>
+
+            <div style={{
+              padding: '20px',
+              background: 'rgba(78, 205, 196, 0.2)',
+              borderRadius: '8px',
+              marginBottom: '30px'
+            }}>
+              <div style={{ color: 'white', marginBottom: '10px' }}>
+                <strong>Your Settings:</strong>
+              </div>
+              <div style={{ color: 'rgba(255,255,255,0.8)' }}>
+                Ear: {ear === 'left' ? '👂 Left' : ear === 'right' ? 'Right 👂' : '👂 Both'}<br />
+                Frequency: {fineFreq} Hz<br />
+                Volume: {testVolume} dB
+              </div>
+            </div>
+
+            <button
+              onClick={() => playCalibrationTone(fineFreq)}
+              disabled={isPlayingCalibration}
+              style={{
+                width: '100%',
+                padding: '15px',
+                background: 'rgba(255,255,255,0.2)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: isPlayingCalibration ? 'not-allowed' : 'pointer',
+                fontSize: '16px',
+                marginBottom: '30px'
+              }}
+            >
+              {isPlayingCalibration ? '▶ Playing...' : '🔊 Test Your Match'}
+            </button>
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => setCalibrationStage('octave')}
+                style={{
+                  flex: 1,
+                  padding: '15px',
+                  background: 'rgba(255,255,255,0.2)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer'
+                }}
+              >
+                ← Re-verify
+              </button>
+              <button
+                onClick={handleCalibrationComplete}
+                style={{
+                  flex: 2,
+                  padding: '15px',
+                  background: 'linear-gradient(135deg, #4CAF50, #45a049)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  fontSize: '16px'
+                }}
+              >
+                Start Therapy →
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
-  </div>
-);
-
+  );
 }
 
 // History screen
