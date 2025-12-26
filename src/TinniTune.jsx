@@ -1,17 +1,17 @@
-import React, { useState, useRef } from ‘react’;
-import * as Tone from ‘tone’;
+import React, { useState, useRef } from 'react';
+import * as Tone from 'tone';
 
 export default function TinniTune() {
-const [step, setStep] = useState(‘welcome’); // ‘welcome’, ‘setup’, ‘therapy’, ‘history’
+const [step, setStep] = useState('welcome'); // 'welcome', 'setup', 'therapy', 'history'
 const [frequency, setFrequency] = useState(4000);
-const [ear, setEar] = useState(‘left’);
+const [ear, setEar] = useState('left');
 const [isPlaying, setIsPlaying] = useState(false);
-const [mode, setMode] = useState(‘daytime’);
+const [mode, setMode] = useState('daytime');
 const [volumeLeft, setVolumeLeft] = useState(-25);
 const [volumeRight, setVolumeRight] = useState(-25);
 const [sessionTime, setSessionTime] = useState(0);
 const [notchEnabled, setNotchEnabled] = useState(true); // Notch therapy ON by default
-const [notchIntensity, setNotchIntensity] = useState(‘standard’); // ‘gentle’, ‘standard’, ‘strong’
+const [notchIntensity, setNotchIntensity] = useState('standard'); // 'gentle', 'standard', 'strong'
 const [sessionStartTime, setSessionStartTime] = useState(null); // Track when session started
 const [sessions, setSessions] = useState([]); // Array of past sessions
 const [showRatingModal, setShowRatingModal] = useState(false); // Show post-session rating
@@ -19,7 +19,7 @@ const [currentRatings, setCurrentRatings] = useState({
 loudnessBefore: 5,
 loudnessAfter: 5,
 distress: 5,
-notes: ‘’
+notes: ''
 });
 
 const synthsRef = useRef([]);
@@ -31,12 +31,12 @@ const timerRef = useRef(null);
 // Load session history from localStorage on mount
 React.useEffect(() => {
 try {
-const savedSessions = localStorage.getItem(‘tinnitune_sessions’);
+const savedSessions = localStorage.getItem('tinnitune_sessions');
 if (savedSessions) {
 setSessions(JSON.parse(savedSessions));
 }
 } catch (error) {
-console.error(‘Error loading sessions:’, error);
+console.error('Error loading sessions:', error);
 }
 }, []);
 
@@ -66,9 +66,9 @@ return `${mins}:${secs.toString().padStart(2, '0')}`;
 
 const getModeConfig = (m) => {
 const modes = {
-daytime: { name: ‘Daytime Focus’, freq: 10, color: ‘#667eea’, emoji: ‘☀️’ },
-evening: { name: ‘Evening Calm’, freq: 6, color: ‘#f093fb’, emoji: ‘🌅’ },
-sleep: { name: ‘Deep Sleep’, freq: 2, color: ‘#4ECDC4’, emoji: ‘🌙’ }
+daytime: { name: 'Daytime Focus', freq: 10, color: '#667eea', emoji: '☀️' },
+evening: { name: 'Evening Calm', freq: 6, color: '#f093fb', emoji: '🌅' },
+sleep: { name: 'Deep Sleep', freq: 2, color: '#4ECDC4', emoji: '🌙' }
 };
 return modes[m];
 };
@@ -88,9 +88,8 @@ return qValues[intensity] || 1.41;
 
 // Save completed session to localStorage
 const saveSession = (duration, ratings = null) => {
-if (duration < 30) return; // Don’t save sessions shorter than 30 seconds
+if (duration < 30) return; // Don't save sessions shorter than 30 seconds
 
-```
 const session = {
   id: Date.now(),
   date: new Date().toISOString(),
@@ -117,7 +116,6 @@ try {
 } catch (error) {
   console.error('Error saving session:', error);
 }
-```
 
 };
 
@@ -128,12 +126,11 @@ return {
 totalSessions: 0,
 totalTime: 0,
 avgDuration: 0,
-mostUsedMode: ‘none’,
+mostUsedMode: 'none',
 streak: 0
 };
 }
 
-```
 const totalTime = sessions.reduce((sum, s) => sum + s.duration, 0);
 const avgDuration = Math.round(totalTime / sessions.length);
 
@@ -174,7 +171,6 @@ return {
   mostUsedMode: mostUsedMode,
   streak: streak
 };
-```
 
 };
 
@@ -183,7 +179,6 @@ const getMilestones = () => {
 const stats = getStats();
 const milestones = [];
 
-```
 // Session count milestones
 if (stats.totalSessions === 1) milestones.push({ emoji: '🎉', text: 'First session complete!' });
 if (stats.totalSessions === 5) milestones.push({ emoji: '⭐', text: '5 sessions milestone!' });
@@ -207,16 +202,14 @@ if (totalHours === 25) milestones.push({ emoji: '⏰', text: '25 hours - Serious
 if (totalHours === 50) milestones.push({ emoji: '⏰', text: '50 hours - You\'re healing!' });
 
 return milestones;
-```
 
 };
 
 const startAudio = async () => {
 try {
 await Tone.start();
-console.log(‘Audio context started’);
+console.log('Audio context started');
 
-```
   // Stop any existing sounds
   synthsRef.current.forEach(synth => {
     try {
@@ -332,7 +325,6 @@ console.log(‘Audio context started’);
   console.error('Error starting audio:', error);
   alert('Error starting therapy: ' + error.message);
 }
-```
 
 };
 
@@ -345,7 +337,6 @@ synth.dispose();
 });
 synthsRef.current = [];
 
-```
 // Clean up notch filters
 notchFiltersRef.current.forEach(filter => {
   try {
@@ -375,7 +366,6 @@ if (finalDuration >= 60) {
 }
 
 console.log('Audio stopped - Session length:', formatTime(sessionTime));
-```
 
 };
 
@@ -383,7 +373,6 @@ const testTone = async () => {
 try {
 await Tone.start();
 
-```
   // Determine pan value
   let panValue = 0;
   if (ear === 'left') panValue = -1;
@@ -404,57 +393,56 @@ await Tone.start();
 } catch (error) {
   alert('Error: ' + error.message);
 }
-```
 
 };
 
-if (step === ‘welcome’) {
+if (step === 'welcome') {
 return (
 <div style={{
-minHeight: ‘100vh’,
-background: ‘linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%)’,
-display: ‘flex’,
-alignItems: ‘center’,
-justifyContent: ‘center’,
-padding: ‘20px’,
-fontFamily: ‘system-ui, sans-serif’
+minHeight: '100vh',
+background: 'linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%)',
+display: 'flex',
+alignItems: 'center',
+justifyContent: 'center',
+padding: '20px',
+fontFamily: 'system-ui, sans-serif'
 }}>
 <div style={{
-maxWidth: ‘500px’,
-background: ‘rgba(255, 255, 255, 0.1)’,
-padding: ‘60px 40px’,
-borderRadius: ‘20px’,
-textAlign: ‘center’,
-backdropFilter: ‘blur(10px)’
+maxWidth: '500px',
+background: 'rgba(255, 255, 255, 0.1)',
+padding: '60px 40px',
+borderRadius: '20px',
+textAlign: 'center',
+backdropFilter: 'blur(10px)'
 }}>
-<div style={{ fontSize: ‘64px’, marginBottom: ‘20px’ }}>🎧</div>
+<div style={{ fontSize: '64px', marginBottom: '20px' }}>🎧</div>
 <h1 style={{
-fontSize: ‘48px’,
-color: ‘#4ECDC4’,
-margin: ‘0 0 20px 0’,
-fontWeight: ‘bold’
+fontSize: '48px',
+color: '#4ECDC4',
+margin: '0 0 20px 0',
+fontWeight: 'bold'
 }}>TinniTune</h1>
 <p style={{
-color: ‘rgba(255, 255, 255, 0.8)’,
-fontSize: ‘16px’,
-marginBottom: ‘40px’
+color: 'rgba(255, 255, 255, 0.8)',
+fontSize: '16px',
+marginBottom: '40px'
 }}>
 Sound therapy for tinnitus relief
 </p>
 <button
 onClick={() => {
-console.log(‘Begin button clicked’);
-setStep(‘setup’);
+console.log('Begin button clicked');
+setStep('setup');
 }}
 style={{
-background: ‘linear-gradient(135deg, #667eea, #764ba2)’,
-color: ‘white’,
-border: ‘none’,
-padding: ‘18px 48px’,
-fontSize: ‘18px’,
-borderRadius: ‘12px’,
-cursor: ‘pointer’,
-fontWeight: ‘bold’
+background: 'linear-gradient(135deg, #667eea, #764ba2)',
+color: 'white',
+border: 'none',
+padding: '18px 48px',
+fontSize: '18px',
+borderRadius: '12px',
+cursor: 'pointer',
+fontWeight: 'bold'
 }}
 >
 Begin Setup
@@ -464,29 +452,28 @@ Begin Setup
 );
 }
 
-if (step === ‘setup’) {
+if (step === 'setup') {
 return (
 <div style={{
-minHeight: ‘100vh’,
-background: ‘linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%)’,
-display: ‘flex’,
-alignItems: ‘center’,
-justifyContent: ‘center’,
-padding: ‘20px’,
-fontFamily: ‘system-ui, sans-serif’
+minHeight: '100vh',
+background: 'linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%)',
+display: 'flex',
+alignItems: 'center',
+justifyContent: 'center',
+padding: '20px',
+fontFamily: 'system-ui, sans-serif'
 }}>
 <div style={{
-maxWidth: ‘600px’,
-background: ‘rgba(255, 255, 255, 0.1)’,
-padding: ‘50px 40px’,
-borderRadius: ‘20px’,
-backdropFilter: ‘blur(10px)’
+maxWidth: '600px',
+background: 'rgba(255, 255, 255, 0.1)',
+padding: '50px 40px',
+borderRadius: '20px',
+backdropFilter: 'blur(10px)'
 }}>
-<h2 style={{ color: ‘white’, fontSize: ‘32px’, marginBottom: ‘30px’ }}>
+<h2 style={{ color: 'white', fontSize: '32px', marginBottom: '30px' }}>
 Setup Your Therapy
 </h2>
 
-```
       <div style={{ marginBottom: '40px' }}>
         <h3 style={{ color: 'white', fontSize: '18px', marginBottom: '15px' }}>
           Which ear has tinnitus?
@@ -588,21 +575,19 @@ Setup Your Therapy
     </div>
   </div>
 );
-```
 
 }
 
 // History screen
-if (step === ‘history’) {
+if (step === 'history') {
 const stats = getStats();
 const milestones = getMilestones();
 const modeNames = {
-daytime: ‘☀️ Daytime’,
-evening: ‘🌅 Evening’,
-sleep: ‘🌙 Sleep’
+daytime: '☀️ Daytime',
+evening: '🌅 Evening',
+sleep: '🌙 Sleep'
 };
 
-```
 // Get sessions with ratings for progress chart
 const ratedSessions = sessions.filter(s => s.loudnessAfter !== null).reverse();
 
@@ -1042,64 +1027,62 @@ return (
     </div>
   </div>
 );
-```
 
 }
 
 // Therapy screen
 return (
 <div style={{
-minHeight: ‘100vh’,
-background: ‘linear-gradient(135deg, #0f1419 0%, #1a2332 50%, #253447 100%)’,
-padding: ‘20px’,
-fontFamily: ‘-apple-system, BlinkMacSystemFont, “SF Pro Display”, “Segoe UI”, sans-serif’,
-position: ‘relative’,
-overflow: ‘hidden’
+minHeight: '100vh',
+background: 'linear-gradient(135deg, #0f1419 0%, #1a2332 50%, #253447 100%)',
+padding: '20px',
+fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif',
+position: 'relative',
+overflow: 'hidden'
 }}>
 {/* Rating Modal Overlay */}
 {showRatingModal && (
 <div style={{
-position: ‘fixed’,
+position: 'fixed',
 top: 0,
 left: 0,
 right: 0,
 bottom: 0,
-background: ‘rgba(0, 0, 0, 0.85)’,
-backdropFilter: ‘blur(10px)’,
-display: ‘flex’,
-alignItems: ‘center’,
-justifyContent: ‘center’,
+background: 'rgba(0, 0, 0, 0.85)',
+backdropFilter: 'blur(10px)',
+display: 'flex',
+alignItems: 'center',
+justifyContent: 'center',
 zIndex: 1000,
-padding: ‘20px’
+padding: '20px'
 }}>
 <div style={{
-background: ‘linear-gradient(135deg, #1a2332 0%, #253447 100%)’,
-padding: ‘32px’,
-borderRadius: ‘24px’,
-maxWidth: ‘500px’,
-width: ‘100%’,
-border: ‘1px solid rgba(78, 205, 196, 0.3)’,
-boxShadow: ‘0 20px 60px rgba(0, 0, 0, 0.5)’
+background: 'linear-gradient(135deg, #1a2332 0%, #253447 100%)',
+padding: '32px',
+borderRadius: '24px',
+maxWidth: '500px',
+width: '100%',
+border: '1px solid rgba(78, 205, 196, 0.3)',
+boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)'
 }}>
 <h2 style={{
-color: ‘#4ECDC4’,
-fontSize: ‘24px’,
-fontWeight: ‘700’,
-marginBottom: ‘8px’,
-textAlign: ‘center’
+color: '#4ECDC4',
+fontSize: '24px',
+fontWeight: '700',
+marginBottom: '8px',
+textAlign: 'center'
 }}>
 How Do You Feel?
 </h2>
 <p style={{
-color: ‘rgba(255,255,255,0.6)’,
-fontSize: ‘14px’,
-marginBottom: ‘24px’,
-textAlign: ‘center’
+color: 'rgba(255,255,255,0.6)',
+fontSize: '14px',
+marginBottom: '24px',
+textAlign: 'center'
 }}>
 Great session! Help us track your progress by rating your tinnitus.
 </p>
 
-```
         {/* Loudness After Rating */}
         <div style={{ marginBottom: '24px' }}>
           <label style={{ 
@@ -1982,7 +1965,6 @@ Great session! Help us track your progress by rating your tinnitus.
     </div>
   </div>
 </div>
-```
 
 );
 }
