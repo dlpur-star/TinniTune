@@ -4,7 +4,7 @@ import * as Tone from 'tone';
 export default function TinniTune() {
 const [step, setStep] = useState('welcome'); // 'welcome', 'setup', 'therapy', 'history'
 const [frequency, setFrequency] = useState(4000);
-const [ear, setEar] = useState('left');
+const [ear, setEar] = useState('both');
 const [isPlaying, setIsPlaying] = useState(false);
 const [mode, setMode] = useState('daytime');
 const [volumeLeft, setVolumeLeft] = useState(-25);
