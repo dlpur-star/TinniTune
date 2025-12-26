@@ -594,6 +594,9 @@ const stopCalibrationTone = () => {
 };
 
 const handleCalibrationComplete = () => {
+  // Stop any playing calibration tone
+  stopCalibrationTone();
+
   // Set the final frequency based on what was matched
   let finalFreq = frequency;
   if (calibrationStage === 'complete') {
@@ -1852,7 +1855,10 @@ if (step === 'setup') {
 
             <div style={{ display: 'flex', gap: '10px' }}>
               <button
-                onClick={() => setCalibrationStage('octave')}
+                onClick={() => {
+                  stopCalibrationTone();
+                  setCalibrationStage('octave');
+                }}
                 style={{
                   flex: 1,
                   padding: '15px',
