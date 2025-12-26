@@ -125,6 +125,13 @@ React.useEffect(() => {
   return () => stopCalmMode();
 }, []);
 
+// Save calibration progress whenever it changes (only during setup)
+React.useEffect(() => {
+  if (step === 'setup') {
+    saveCalibrationProgress();
+  }
+}, [step, calibrationStage, coarseFreq, mediumFreq, fineFreq, ear, testVolume]);
+
 const formatTime = (seconds) => {
 const mins = Math.floor(seconds / 60);
 const secs = seconds % 60;
@@ -723,13 +730,6 @@ Begin Setup
 }
 
 if (step === 'setup') {
-  // Save progress whenever calibration stage changes
-  React.useEffect(() => {
-    if (step === 'setup') {
-      saveCalibrationProgress();
-    }
-  }, [calibrationStage, coarseFreq, mediumFreq, fineFreq, ear, testVolume]);
-
   // Simple mode (original setup)
   if (!useAdvancedCalibration) {
     return (
