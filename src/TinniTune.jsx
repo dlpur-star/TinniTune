@@ -1513,7 +1513,7 @@ Great session! Help us track your progress by rating your tinnitus.
       </div>
     )}
 
-    {/* Notch Therapy Controls - Simple & Easy */}
+    {/* Notch Therapy Controls - Clean Mobile Layout */}
     <div style={{
       background: 'linear-gradient(135deg, rgba(78, 205, 196, 0.15), rgba(78, 205, 196, 0.08))',
       padding: '20px',
@@ -1521,54 +1521,71 @@ Great session! Help us track your progress by rating your tinnitus.
       marginBottom: '24px',
       border: notchEnabled ? '2px solid rgba(78, 205, 196, 0.4)' : '1px solid rgba(255,255,255,0.1)',
       backdropFilter: 'blur(10px)',
-      boxShadow: notchEnabled 
-        ? '0 8px 24px rgba(78, 205, 196, 0.2)' 
+      boxShadow: notchEnabled
+        ? '0 8px 24px rgba(78, 205, 196, 0.2)'
         : '0 4px 12px rgba(0,0,0,0.15)'
     }}>
+      {/* Title and Description */}
+      <div style={{ marginBottom: '16px' }}>
+        <div style={{
+          color: 'white',
+          fontSize: '18px',
+          fontWeight: '700',
+          marginBottom: '8px'
+        }}>
+          🎯 Notch Therapy
+        </div>
+        <div style={{
+          color: 'rgba(255,255,255,0.7)',
+          fontSize: '13px',
+          lineHeight: '1.5'
+        }}>
+          {notchEnabled
+            ? frequency > 8000
+              ? 'Clinically proven to reduce tinnitus over time'
+              : 'Optimal frequency range for therapy'
+            : 'Enable for clinically-proven relief'
+          }
+        </div>
+      </div>
+
+      {/* Status Badge and Toggle Button */}
       <div style={{
         display: 'flex',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: '12px'
+        justifyContent: 'space-between',
+        gap: '12px',
+        marginBottom: notchEnabled ? '16px' : '0'
       }}>
-        <div>
-          <div style={{ 
-            color: 'white', 
-            fontSize: '16px', 
-            fontWeight: '700',
-            marginBottom: '4px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
+        {notchEnabled && (
+          <div style={{
+            flex: 1,
+            background: 'rgba(78, 205, 196, 0.2)',
+            padding: '10px 16px',
+            borderRadius: '10px',
+            border: '1px solid rgba(78, 205, 196, 0.3)',
+            textAlign: 'center'
           }}>
-            🎯 Notch Therapy
-            {notchEnabled && (
-              <span style={{
-                fontSize: '11px',
-                background: 'rgba(78, 205, 196, 0.3)',
-                padding: '3px 8px',
-                borderRadius: '6px',
-                fontWeight: '600',
-                color: '#4ECDC4'
-              }}>
-                ACTIVE at {frequency}Hz
-              </span>
-            )}
+            <div style={{
+              fontSize: '11px',
+              color: 'rgba(255,255,255,0.6)',
+              fontWeight: '600',
+              marginBottom: '2px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}>
+              Active at
+            </div>
+            <div style={{
+              fontSize: '18px',
+              fontWeight: '700',
+              color: '#4ECDC4'
+            }}>
+              {frequency}Hz
+            </div>
           </div>
-          <div style={{ 
-            color: 'rgba(255,255,255,0.7)', 
-            fontSize: '12px',
-            lineHeight: '1.4'
-          }}>
-            {notchEnabled 
-              ? frequency > 8000 
-                ? 'Clinically proven to reduce tinnitus over time'
-                : 'Optimal frequency range for therapy'
-              : 'Enable for clinically-proven relief'
-            }
-          </div>
-        </div>
-        
+        )}
+
         <button
           onClick={() => {
             if (isPlaying) {
@@ -1580,7 +1597,7 @@ Great session! Help us track your progress by rating your tinnitus.
             }
           }}
           style={{
-            padding: '12px 28px',
+            padding: '14px 32px',
             background: notchEnabled
               ? 'linear-gradient(135deg, #4ECDC4, #44B3AA)'
               : 'rgba(255,255,255,0.15)',
@@ -1588,14 +1605,14 @@ Great session! Help us track your progress by rating your tinnitus.
             border: 'none',
             borderRadius: '12px',
             cursor: 'pointer',
-            fontSize: '15px',
+            fontSize: '16px',
             fontWeight: '700',
             boxShadow: notchEnabled
               ? '0 4px 16px rgba(78, 205, 196, 0.3)'
               : 'none',
             transition: 'all 0.3s',
-            minWidth: '80px',
-            marginLeft: '12px'
+            minWidth: notchEnabled ? '100px' : '100%',
+            flex: notchEnabled ? '0 0 auto' : '1'
           }}
           onMouseEnter={(e) => {
             e.target.style.transform = 'translateY(-2px)';
@@ -1604,7 +1621,7 @@ Great session! Help us track your progress by rating your tinnitus.
             e.target.style.transform = 'translateY(0)';
           }}
         >
-          {notchEnabled ? 'ON ✓' : 'OFF'}
+          {notchEnabled ? 'ON ✓' : 'Turn ON'}
         </button>
       </div>
 
