@@ -1857,7 +1857,8 @@ Great session! Help us track your progress by rating your tinnitus.
             display: 'flex',
             justifyContent: 'space-between',
             marginBottom: '14px',
-            alignItems: 'center'
+            alignItems: 'center',
+            gap: '16px'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{
@@ -1934,7 +1935,8 @@ Great session! Help us track your progress by rating your tinnitus.
             display: 'flex',
             justifyContent: 'space-between',
             marginBottom: '14px',
-            alignItems: 'center'
+            alignItems: 'center',
+            gap: '16px'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span style={{
