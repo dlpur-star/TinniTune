@@ -1815,53 +1815,70 @@ Great session! Help us track your progress by rating your tinnitus.
 
       {/* Volume Control - Independent Left/Right */}
       <div style={{
-        maxWidth: '480px',
+        maxWidth: '500px',
         margin: '0 auto',
-        background: 'rgba(0, 0, 0, 0.2)',
-        padding: '24px',
-        borderRadius: '16px',
-        border: '1px solid rgba(255, 255, 255, 0.06)',
-        boxShadow: 'inset 0 2px 8px rgba(0, 0, 0, 0.2)'
+        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03))',
+        padding: '28px 24px',
+        borderRadius: '20px',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)'
       }}>
         <div style={{
-          marginBottom: '8px',
+          marginBottom: '24px',
           textAlign: 'center'
         }}>
-          <span style={{ 
-            color: 'rgba(255,255,255,0.7)', 
-            fontSize: '13px', 
-            fontWeight: '600',
+          <div style={{
+            color: 'white',
+            fontSize: '16px',
+            fontWeight: '700',
             letterSpacing: '0.5px',
-            textTransform: 'uppercase'
+            marginBottom: '4px'
           }}>
             Volume Control
-          </span>
+          </div>
+          <div style={{
+            color: 'rgba(255,255,255,0.5)',
+            fontSize: '12px',
+            fontWeight: '500'
+          }}>
+            💡 Adjust each ear independently for optimal balance
+          </div>
         </div>
 
         {/* Left Ear Volume */}
         <div style={{
-          marginBottom: '20px',
-          padding: '16px',
-          background: 'rgba(255, 255, 255, 0.03)',
-          borderRadius: '12px',
-          border: '1px solid rgba(255, 255, 255, 0.05)'
+          marginBottom: '24px',
+          padding: '20px',
+          background: 'rgba(78, 205, 196, 0.08)',
+          borderRadius: '16px',
+          border: '1px solid rgba(78, 205, 196, 0.15)'
         }}>
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
-            marginBottom: '10px',
+            marginBottom: '14px',
             alignItems: 'center'
           }}>
-            <span style={{ 
-              color: 'rgba(255,255,255,0.9)', 
-              fontSize: '14px', 
-              fontWeight: '600'
-            }}>
-              👂 Left Ear
-            </span>
-            <span style={{ 
-              color: '#4ECDC4', 
-              fontSize: '15px', 
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{
+                fontSize: '24px',
+                display: 'inline-block',
+                transform: 'scaleX(-1)',
+                filter: 'grayscale(0)'
+              }}>
+                👂
+              </span>
+              <span style={{
+                color: 'white',
+                fontSize: '15px',
+                fontWeight: '600'
+              }}>
+                Left Ear
+              </span>
+            </div>
+            <span style={{
+              color: '#4ECDC4',
+              fontSize: '18px',
               fontWeight: '700',
               fontVariantNumeric: 'tabular-nums'
             }}>
@@ -1893,14 +1910,14 @@ Great session! Help us track your progress by rating your tinnitus.
             }}
             style={{
               width: '100%',
-              height: '6px',
-              borderRadius: '3px',
+              height: '8px',
+              borderRadius: '4px',
               cursor: 'pointer',
               appearance: 'none',
-              background: `linear-gradient(to right, 
-                #4ECDC4 0%, 
-                #4ECDC4 ${((volumeLeft + 40) / 30) * 100}%, 
-                rgba(255, 255, 255, 0.15) ${((volumeLeft + 40) / 30) * 100}%, 
+              background: `linear-gradient(to right,
+                #4ECDC4 0%,
+                #4ECDC4 ${((volumeLeft + 40) / 30) * 100}%,
+                rgba(255, 255, 255, 0.15) ${((volumeLeft + 40) / 30) * 100}%,
                 rgba(255, 255, 255, 0.15) 100%)`
             }}
           />
@@ -1908,27 +1925,34 @@ Great session! Help us track your progress by rating your tinnitus.
 
         {/* Right Ear Volume */}
         <div style={{
-          padding: '16px',
-          background: 'rgba(255, 255, 255, 0.03)',
-          borderRadius: '12px',
-          border: '1px solid rgba(255, 255, 255, 0.05)'
+          padding: '20px',
+          background: 'rgba(102, 126, 234, 0.08)',
+          borderRadius: '16px',
+          border: '1px solid rgba(102, 126, 234, 0.15)'
         }}>
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
-            marginBottom: '10px',
+            marginBottom: '14px',
             alignItems: 'center'
           }}>
-            <span style={{ 
-              color: 'rgba(255,255,255,0.9)', 
-              fontSize: '14px', 
-              fontWeight: '600'
-            }}>
-              Right Ear 👂
-            </span>
-            <span style={{ 
-              color: '#4ECDC4', 
-              fontSize: '15px', 
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{
+                fontSize: '24px'
+              }}>
+                👂
+              </span>
+              <span style={{
+                color: 'white',
+                fontSize: '15px',
+                fontWeight: '600'
+              }}>
+                Right Ear
+              </span>
+            </div>
+            <span style={{
+              color: '#667eea',
+              fontSize: '18px',
               fontWeight: '700',
               fontVariantNumeric: 'tabular-nums'
             }}>
@@ -1960,27 +1984,17 @@ Great session! Help us track your progress by rating your tinnitus.
             }}
             style={{
               width: '100%',
-              height: '6px',
-              borderRadius: '3px',
+              height: '8px',
+              borderRadius: '4px',
               cursor: 'pointer',
               appearance: 'none',
-              background: `linear-gradient(to right, 
-                #667eea 0%, 
-                #667eea ${((volumeRight + 40) / 30) * 100}%, 
-                rgba(255, 255, 255, 0.15) ${((volumeRight + 40) / 30) * 100}%, 
+              background: `linear-gradient(to right,
+                #667eea 0%,
+                #667eea ${((volumeRight + 40) / 30) * 100}%,
+                rgba(255, 255, 255, 0.15) ${((volumeRight + 40) / 30) * 100}%,
                 rgba(255, 255, 255, 0.15) 100%)`
             }}
           />
-        </div>
-
-        <div style={{
-          marginTop: '16px',
-          textAlign: 'center',
-          color: 'rgba(255,255,255,0.5)',
-          fontSize: '11px',
-          fontWeight: '500'
-        }}>
-          💡 Adjust each ear independently for optimal balance
         </div>
 
         <style>{`
