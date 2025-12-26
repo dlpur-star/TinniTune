@@ -52,6 +52,7 @@ const notchFiltersRef = useRef([]); // Store notch filters separately
 const timerRef = useRef(null);
 const analyserRef = useRef(null);
 const animationFrameRef = useRef(null);
+const calibrationTimeoutRef = useRef(null);
 
 // Calm Mode refs
 const heartbeatSynthsRef = useRef([]);
@@ -537,7 +538,8 @@ const playCalibrationTone = async (freq, duration = 3500) => {
     };
     updateWaveform();
 
-    setTimeout(() => {
+    // Store timeout ID so we can cancel it
+    calibrationTimeoutRef.current = setTimeout(() => {
       stopCalibrationTone();
     }, duration);
   } catch (error) {
@@ -547,6 +549,12 @@ const playCalibrationTone = async (freq, duration = 3500) => {
 };
 
 const stopCalibrationTone = () => {
+  // Cancel auto-stop timeout
+  if (calibrationTimeoutRef.current) {
+    clearTimeout(calibrationTimeoutRef.current);
+    calibrationTimeoutRef.current = null;
+  }
+
   // Stop animation loop
   if (animationFrameRef.current) {
     cancelAnimationFrame(animationFrameRef.current);
