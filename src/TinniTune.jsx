@@ -1336,20 +1336,8 @@ Great session! Help us track your progress by rating your tinnitus.
             {frequency} Hz • {ear === 'left' ? '👂 Left' : ear === 'right' ? 'Right 👂' : '👂 Both'}
           </p>
         </div>
-        {isPlaying && (
-          <div style={{
-            fontSize: '20px',
-            fontWeight: '700',
-            color: '#4ECDC4',
-            textShadow: '0 0 20px rgba(78, 205, 196, 0.4)',
-            fontVariantNumeric: 'tabular-nums',
-            letterSpacing: '1px'
-          }}>
-            {formatTime(sessionTime)}
-          </div>
-        )}
       </div>
-      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-start' }}>
+      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-start', paddingLeft: '8px' }}>
         <button
           onClick={() => {
             if (isPlaying) stopAudio();
@@ -1755,6 +1743,57 @@ Great session! Help us track your progress by rating your tinnitus.
       >
         {isPlaying ? '⏸ Stop Therapy' : '▶ Start Therapy'}
       </button>
+
+      {/* Session Timer and Progress */}
+      {isPlaying && (
+        <div style={{
+          marginBottom: '32px',
+          maxWidth: '400px',
+          margin: '0 auto 32px auto'
+        }}>
+          <div style={{
+            fontSize: '32px',
+            fontWeight: '700',
+            color: '#4ECDC4',
+            textShadow: '0 0 20px rgba(78, 205, 196, 0.4)',
+            fontVariantNumeric: 'tabular-nums',
+            letterSpacing: '1px',
+            marginBottom: '12px'
+          }}>
+            {formatTime(sessionTime)}
+          </div>
+
+          {/* Progress bar */}
+          <div style={{
+            width: '100%',
+            height: '8px',
+            background: 'rgba(255, 255, 255, 0.1)',
+            borderRadius: '4px',
+            overflow: 'hidden',
+            position: 'relative'
+          }}>
+            <div style={{
+              height: '100%',
+              background: 'linear-gradient(90deg, #4ECDC4, #44B3AA)',
+              borderRadius: '4px',
+              width: `${Math.min((sessionTime / 900) * 100, 100)}%`,
+              transition: 'width 1s linear',
+              boxShadow: '0 0 10px rgba(78, 205, 196, 0.5)'
+            }}/>
+          </div>
+
+          <div style={{
+            color: 'rgba(255,255,255,0.5)',
+            fontSize: '12px',
+            marginTop: '8px',
+            fontWeight: '500'
+          }}>
+            {sessionTime < 900
+              ? `${Math.floor((900 - sessionTime) / 60)} min remaining in recommended session`
+              : '✓ Recommended session length completed!'}
+          </div>
+        </div>
+      )}
 
       {/* Volume Control - Independent Left/Right */}
       <div style={{
