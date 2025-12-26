@@ -1599,7 +1599,7 @@ Great session! Help us track your progress by rating your tinnitus.
             alignItems: 'center',
             gap: '10px'
           }}>
-            🫀 CALM MODE
+            ❤️ CALM MODE
             {isCalmMode && (
               <span style={{
                 fontSize: '11px',
@@ -1630,7 +1630,7 @@ Great session! Help us track your progress by rating your tinnitus.
           opacity: 0.9,
           filter: 'drop-shadow(0 4px 8px rgba(255, 183, 77, 0.3))'
         }}>
-          {isCalmMode ? '❤️' : '🫀'}
+          {isCalmMode ? '💓' : '❤️'}
         </div>
       </div>
     </div>
