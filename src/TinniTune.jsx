@@ -143,6 +143,17 @@ React.useEffect(() => {
   };
 }, [calibrationStage, step]);
 
+// Update calibration tone volume in real-time when slider changes
+React.useEffect(() => {
+  if (calibrationOscRef && calibrationOscRef.osc) {
+    try {
+      calibrationOscRef.osc.volume.value = testVolume;
+    } catch (error) {
+      console.error('Error updating calibration volume:', error);
+    }
+  }
+}, [testVolume]);
+
 const formatTime = (seconds) => {
 const mins = Math.floor(seconds / 60);
 const secs = seconds % 60;
@@ -1066,7 +1077,7 @@ if (step === 'setup') {
             </div>
 
             <button
-              onClick={() => isPlayingCalibration ? stopCalibrationTone() : playCalibrationTone(1000, 2000)}
+              onClick={() => isPlayingCalibration ? stopCalibrationTone() : playCalibrationTone(1000, 5000)}
               style={{
                 width: '100%',
                 padding: '15px',
@@ -1079,7 +1090,7 @@ if (step === 'setup') {
                 marginBottom: '10px'
               }}
             >
-              {isPlayingCalibration ? '⏹ Stop' : '🔊 Test Volume (2 seconds)'}
+              {isPlayingCalibration ? '⏹ Stop' : '🔊 Test Volume (5 seconds)'}
             </button>
 
             <WaveformAnimation />
