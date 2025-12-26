@@ -501,15 +501,9 @@ const playCalibrationTone = async (freq, duration = 3500) => {
     if (ear === 'left') panValue = -1;
     if (ear === 'right') panValue = 1;
 
-    // Create analyser for waveform visualization
-    const analyser = Tone.context.createAnalyser();
-    analyser.fftSize = 64; // Small size for 20 bars
-    analyser.smoothingTimeConstant = 0.8;
-    analyserRef.current = analyser;
-
     // Connect: Oscillator -> Analyser -> Panner -> Destination
     const panner = new Tone.Panner(panValue).toDestination();
-    const analyserNode = new Tone.Analyser('waveform', 32);
+    const analyserNode = new Tone.Analyser('waveform', 64);
     const osc = new Tone.Oscillator(freq, 'sine');
     osc.connect(analyserNode);
     analyserNode.connect(panner);
@@ -518,22 +512,27 @@ const playCalibrationTone = async (freq, duration = 3500) => {
 
     setIsPlayingCalibration(true);
     setCalibrationOscRef({ osc, panner, analyserNode });
+    analyserRef.current = analyserNode;
 
     console.log('Calibration tone playing at', freq, 'Hz in', ear, 'ear for', duration, 'ms');
 
     // Start waveform animation loop
     const updateWaveform = () => {
-      if (analyserNode && isPlayingCalibration) {
-        const values = analyserNode.getValue();
-        // Sample 20 evenly spaced points from the waveform
-        const sampledData = [];
-        const step = Math.floor(values.length / 20);
-        for (let i = 0; i < 20; i++) {
-          const index = i * step;
-          sampledData.push(values[index]);
+      if (analyserRef.current) {
+        try {
+          const values = analyserRef.current.getValue();
+          // Sample 20 evenly spaced points from the waveform
+          const sampledData = [];
+          const step = Math.max(1, Math.floor(values.length / 20));
+          for (let i = 0; i < 20; i++) {
+            const index = Math.min(i * step, values.length - 1);
+            sampledData.push(values[index]);
+          }
+          setWaveformData(sampledData);
+          animationFrameRef.current = requestAnimationFrame(updateWaveform);
+        } catch (error) {
+          console.error('Error updating waveform:', error);
         }
-        setWaveformData(sampledData);
-        animationFrameRef.current = requestAnimationFrame(updateWaveform);
       }
     };
     updateWaveform();
@@ -925,13 +924,13 @@ if (step === 'setup') {
 
   // Advanced Calibration Wizard
   const WaveformAnimation = () => {
-    const maxHeight = 40; // Max bar height in pixels
-    const minHeight = 4; // Min bar height in pixels
+    const maxHeight = 50; // Max bar height in pixels
+    const minHeight = 8; // Min bar height in pixels
 
     return (
       <div style={{
         width: '100%',
-        height: '60px',
+        height: '80px',
         background: 'rgba(0,0,0,0.3)',
         borderRadius: '8px',
         display: 'flex',
@@ -953,9 +952,10 @@ if (step === 'setup') {
                 style={{
                   width: '8px',
                   height: `${barHeight}px`,
-                  background: '#4ECDC4',
+                  background: `linear-gradient(to top, #4ECDC4, #44A08D)`,
                   borderRadius: '4px',
-                  transition: 'height 0.05s ease-out'
+                  transition: 'height 0.08s ease-out',
+                  boxShadow: '0 2px 4px rgba(78, 205, 196, 0.3)'
                 }}
               />
             );
