@@ -1594,7 +1594,8 @@ Great session! Help us track your progress by rating your tinnitus.
               ? '0 4px 16px rgba(78, 205, 196, 0.3)'
               : 'none',
             transition: 'all 0.3s',
-            minWidth: '80px'
+            minWidth: '80px',
+            marginLeft: '12px'
           }}
           onMouseEnter={(e) => {
             e.target.style.transform = 'translateY(-2px)';
