@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tinnitune-v1';
+const CACHE_NAME = 'tinnitune-v2';
 
 // Determine base path from service worker location
 const getBasePath = () => {
