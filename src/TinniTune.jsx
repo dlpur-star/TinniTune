@@ -431,24 +431,22 @@ console.log('Audio context started');
   synthsRef.current.push(ambienceRight);
   
   console.log('Left channel:', volumeLeft, 'dB | Right channel:', volumeRight, 'dB');
-  
-  // Add binaural beats if both ears selected
-  if (ear === 'both') {
-    const modeConfig = getModeConfig(mode);
-    const baseFreq = 200;
-    const binauralDiff = modeConfig.freq;
-    
-    const oscLeft = new Tone.Oscillator(baseFreq, 'sine').start();
-    const oscRight = new Tone.Oscillator(baseFreq + binauralDiff, 'sine').start();
-    
-    oscLeft.connect(leftDestination);
-    oscRight.connect(rightDestination);
-    oscLeft.volume.value = volumeLeft + 12;
-    oscRight.volume.value = volumeRight + 12;
-    
-    synthsRef.current.push(oscLeft, oscRight);
-    console.log('Binaural beats added');
-  }
+
+  // Add binaural beats for therapy
+  const modeConfig = getModeConfig(mode);
+  const baseFreq = 200;
+  const binauralDiff = modeConfig.freq;
+
+  const oscLeft = new Tone.Oscillator(baseFreq, 'sine').start();
+  const oscRight = new Tone.Oscillator(baseFreq + binauralDiff, 'sine').start();
+
+  oscLeft.connect(leftDestination);
+  oscRight.connect(rightDestination);
+  oscLeft.volume.value = volumeLeft + 12;
+  oscRight.volume.value = volumeRight + 12;
+
+  synthsRef.current.push(oscLeft, oscRight);
+  console.log('Binaural beats added');
   
   setIsPlaying(true);
   setSessionTime(0);
@@ -3212,28 +3210,6 @@ Great session! Help us track your progress by rating your tinnitus.
       })}
     </div>
 
-    {ear !== 'both' && (
-      <div style={{
-        background: 'linear-gradient(135deg, rgba(231, 111, 81, 0.15), rgba(231, 111, 81, 0.08))',
-        padding: '12px 16px',
-        borderRadius: '14px',
-        marginBottom: '24px',
-        border: '1px solid rgba(231, 111, 81, 0.25)',
-        backdropFilter: 'blur(10px)',
-        boxShadow: '0 4px 16px rgba(231, 111, 81, 0.1)'
-      }}>
-        <p style={{ 
-          color: 'rgba(255,255,255,0.9)', 
-          margin: 0, 
-          fontSize: '13px',
-          lineHeight: '1.5',
-          fontWeight: '500'
-        }}>
-          <span style={{ fontWeight: '700' }}>ℹ️ Mono Mode:</span> Binaural beats disabled. 
-          Optimized therapy for your {ear} ear.
-        </p>
-      </div>
-    )}
 
     {/* Notch Therapy Controls - Clean Mobile Layout */}
     <div style={{
