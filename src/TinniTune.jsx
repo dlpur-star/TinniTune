@@ -792,7 +792,7 @@ backdropFilter: 'blur(10px)'
 }}>
 <div style={{ marginBottom: '20px' }}>
   <img
-    src="/icon-192.PNG"
+    src={`${import.meta.env.BASE_URL}icon-192.PNG`}
     alt="TinniTune Logo"
     style={{
       width: '120px',
