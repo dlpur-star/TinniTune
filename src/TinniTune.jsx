@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import * as Tone from 'tone';
-import logo from './assets/logo.png';
+import logo from './assets/logo.PNG';
 
 export default function TinniTune() {
 const [step, setStep] = useState('welcome'); // 'welcome', 'setup', 'therapy', 'history'
