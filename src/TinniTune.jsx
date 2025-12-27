@@ -790,7 +790,17 @@ borderRadius: '20px',
 textAlign: 'center',
 backdropFilter: 'blur(10px)'
 }}>
-<div style={{ fontSize: '64px', marginBottom: '20px' }}>🎧</div>
+<div style={{ marginBottom: '20px' }}>
+  <img
+    src="/icon-192.PNG"
+    alt="TinniTune Logo"
+    style={{
+      width: '120px',
+      height: '120px',
+      borderRadius: '20px'
+    }}
+  />
+</div>
 <h1 style={{
 fontSize: '48px',
 color: '#4ECDC4',
