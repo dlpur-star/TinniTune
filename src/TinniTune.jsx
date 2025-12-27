@@ -96,19 +96,33 @@ console.error('Error loading calibration progress:', error);
 
 // Detect iOS and check if already installed
 React.useEffect(() => {
-const userAgent = window.navigator.userAgent.toLowerCase();
-const isIOSDevice = /iphone|ipad|ipod/.test(userAgent);
-const isInStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+try {
+  const userAgent = window.navigator.userAgent.toLowerCase();
+  const isIOSDevice = /iphone|ipad|ipod/.test(userAgent);
 
-setIsIOS(isIOSDevice);
-setIsStandalone(isInStandaloneMode);
-
-// Show install prompt if on iOS and not already installed
-if (isIOSDevice && !isInStandaloneMode) {
-  const hasSeenPrompt = localStorage.getItem('tinnitune_seen_install_prompt');
-  if (!hasSeenPrompt) {
-    setShowInstallPrompt(true);
+  // Safely check for standalone mode (some browsers don't support matchMedia)
+  let isInStandaloneMode = false;
+  try {
+    isInStandaloneMode = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+                         (window.navigator.standalone === true);
+  } catch (e) {
+    // matchMedia not supported, assume not standalone
+    isInStandaloneMode = false;
   }
+
+  setIsIOS(isIOSDevice);
+  setIsStandalone(isInStandaloneMode);
+
+  // Show install prompt if on iOS and not already installed
+  if (isIOSDevice && !isInStandaloneMode) {
+    const hasSeenPrompt = localStorage.getItem('tinnitune_seen_install_prompt');
+    if (!hasSeenPrompt) {
+      setShowInstallPrompt(true);
+    }
+  }
+} catch (error) {
+  // If anything fails, just don't show install prompt - app still works
+  console.log('Install prompt detection failed (app works normally):', error);
 }
 }, []);
 
