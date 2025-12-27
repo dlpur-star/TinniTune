@@ -1275,10 +1275,17 @@ if (step === 'setup') {
                     borderRadius: '8px',
                     cursor: 'pointer',
                     fontSize: '16px',
-                    fontWeight: ear === e ? 'bold' : 'normal'
+                    fontWeight: ear === e ? 'bold' : 'normal',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '8px'
                   }}
                 >
-                  {e === 'left' ? '👂 Left' : e === 'right' ? 'Right 👂' : '👂 Both'}
+                  <div style={{ fontSize: '32px' }}>
+                    {e === 'left' ? '👂' : e === 'right' ? '👂' : '👂👂'}
+                  </div>
+                  <div>{e === 'left' ? 'Left' : e === 'right' ? 'Right' : 'Both'}</div>
                 </button>
               ))}
             </div>
