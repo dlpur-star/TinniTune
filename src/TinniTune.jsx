@@ -22,6 +22,11 @@ distress: 5,
 notes: ''
 });
 
+// Install prompt state
+const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+const [isIOS, setIsIOS] = useState(false);
+const [isStandalone, setIsStandalone] = useState(false);
+
 // Calm Mode states
 const [isCalmMode, setIsCalmMode] = useState(false);
 const [heartbeatVolume, setHeartbeatVolume] = useState(-15);
@@ -85,6 +90,24 @@ setTestVolume(data.testVolume || -15);
 }
 } catch (error) {
 console.error('Error loading calibration progress:', error);
+}
+}, []);
+
+// Detect iOS and check if already installed
+React.useEffect(() => {
+const userAgent = window.navigator.userAgent.toLowerCase();
+const isIOSDevice = /iphone|ipad|ipod/.test(userAgent);
+const isInStandaloneMode = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+setIsIOS(isIOSDevice);
+setIsStandalone(isInStandaloneMode);
+
+// Show install prompt if on iOS and not already installed
+if (isIOSDevice && !isInStandaloneMode) {
+  const hasSeenPrompt = localStorage.getItem('tinnitune_seen_install_prompt');
+  if (!hasSeenPrompt) {
+    setShowInstallPrompt(true);
+  }
 }
 }, []);
 
@@ -781,6 +804,71 @@ marginBottom: '40px'
 }}>
 Sound therapy for tinnitus relief
 </p>
+
+{/* iOS Install Prompt */}
+{showInstallPrompt && isIOS && !isStandalone && (
+  <div style={{
+    background: 'rgba(78, 205, 196, 0.15)',
+    border: '2px solid #4ECDC4',
+    borderRadius: '12px',
+    padding: '20px',
+    marginBottom: '30px',
+    textAlign: 'left',
+    position: 'relative'
+  }}>
+    <button
+      onClick={() => {
+        setShowInstallPrompt(false);
+        localStorage.setItem('tinnitune_seen_install_prompt', 'true');
+      }}
+      style={{
+        position: 'absolute',
+        top: '10px',
+        right: '10px',
+        background: 'transparent',
+        border: 'none',
+        color: 'rgba(255, 255, 255, 0.6)',
+        fontSize: '20px',
+        cursor: 'pointer',
+        padding: '0',
+        width: '24px',
+        height: '24px'
+      }}
+    >
+      ✕
+    </button>
+
+    <div style={{ fontSize: '24px', marginBottom: '10px' }}>📱</div>
+    <h3 style={{
+      color: '#4ECDC4',
+      margin: '0 0 10px 0',
+      fontSize: '18px',
+      fontWeight: 'bold'
+    }}>
+      Install TinniTune
+    </h3>
+    <p style={{
+      color: 'rgba(255, 255, 255, 0.9)',
+      fontSize: '14px',
+      margin: '0 0 15px 0',
+      lineHeight: '1.5'
+    }}>
+      Add TinniTune to your home screen for the best experience:
+    </p>
+    <ol style={{
+      color: 'rgba(255, 255, 255, 0.8)',
+      fontSize: '13px',
+      paddingLeft: '20px',
+      margin: '0',
+      lineHeight: '1.6'
+    }}>
+      <li>Tap the Share button <span style={{ fontSize: '16px' }}>⬆️</span> at the bottom</li>
+      <li>Scroll and tap "Add to Home Screen"</li>
+      <li>Tap "Add"</li>
+    </ol>
+  </div>
+)}
+
 <button
 onClick={() => {
 console.log('Begin button clicked');
