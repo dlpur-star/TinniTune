@@ -1282,8 +1282,17 @@ if (step === 'setup') {
                     gap: '8px'
                   }}
                 >
-                  <div style={{ fontSize: '32px' }}>
-                    {e === 'left' ? '👂' : e === 'right' ? '👂' : '👂👂'}
+                  <div style={{ fontSize: '32px', display: 'flex', gap: '4px' }}>
+                    {e === 'left' ? (
+                      <span style={{ display: 'inline-block', transform: 'scaleX(-1)' }}>👂</span>
+                    ) : e === 'right' ? (
+                      '👂'
+                    ) : (
+                      <>
+                        <span style={{ display: 'inline-block', transform: 'scaleX(-1)' }}>👂</span>
+                        <span>👂</span>
+                      </>
+                    )}
                   </div>
                   <div>{e === 'left' ? 'Left' : e === 'right' ? 'Right' : 'Both'}</div>
                 </button>
