@@ -1,8 +1,16 @@
 const CACHE_NAME = 'tinnitune-v1';
+
+// Determine base path from service worker location
+const getBasePath = () => {
+  const swPath = self.location.pathname;
+  return swPath.substring(0, swPath.lastIndexOf('/') + 1);
+};
+
+const basePath = getBasePath();
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json'
+  basePath,
+  `${basePath}index.html`,
+  `${basePath}manifest.json`
 ];
 
 // Install event - cache app shell
@@ -11,6 +19,7 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('Opened cache');
+        console.log('Caching URLs:', urlsToCache);
         return cache.addAll(urlsToCache);
       })
       .catch((error) => {
