@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import * as Tone from 'tone';
+import logo from './assets/logo.png';
 
 export default function TinniTune() {
 const [step, setStep] = useState('welcome'); // 'welcome', 'setup', 'therapy', 'history'
@@ -792,7 +793,7 @@ backdropFilter: 'blur(10px)'
 }}>
 <div style={{ marginBottom: '20px' }}>
   <img
-    src={`${import.meta.env.BASE_URL}icon-192.PNG`}
+    src={logo}
     alt="TinniTune Logo"
     style={{
       width: '120px',
