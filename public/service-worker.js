@@ -1,4 +1,4 @@
-const CACHE_NAME = 'tinnitune-v3';
+const CACHE_NAME = 'tinnitune-v4';
 
 // Determine base path from service worker location
 const getBasePath = () => {
@@ -15,6 +15,7 @@ const urlsToCache = [
 
 // Install event - cache app shell
 self.addEventListener('install', (event) => {
+  console.log('New service worker installing...');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
@@ -26,11 +27,13 @@ self.addEventListener('install', (event) => {
         console.error('Cache installation failed:', error);
       })
   );
+  // Force the waiting service worker to become the active service worker
   self.skipWaiting();
 });
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
+  console.log('Service worker activated, taking control...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
@@ -43,7 +46,8 @@ self.addEventListener('activate', (event) => {
       );
     })
   );
-  self.clients.claim();
+  // Take control of all clients immediately
+  return self.clients.claim();
 });
 
 // Fetch event - serve from cache, fallback to network

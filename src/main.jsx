@@ -13,16 +13,31 @@ if ('serviceWorker' in navigator && 'caches' in window) {
         .then((registration) => {
           console.log('Service Worker registered successfully:', registration.scope);
 
-          // Check for updates every hour
+          // Immediate update check on registration
+          registration.update();
+
+          // Check for updates when user returns to the app
+          document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+              registration.update();
+            }
+          });
+
+          // Also check when window regains focus
+          window.addEventListener('focus', () => {
+            registration.update();
+          });
+
+          // Check for updates every 5 minutes (as backup)
           setInterval(() => {
             registration.update();
-          }, 60 * 60 * 1000);
+          }, 5 * 60 * 1000);
 
-          // Listen for updates
+          // Listen for updates and reload automatically
           registration.addEventListener('updatefound', () => {
             const newWorker = registration.installing;
             newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'activated') {
+              if (newWorker.state === 'activated' && navigator.serviceWorker.controller) {
                 // New service worker activated - reload to get latest version
                 console.log('New version available! Reloading...');
                 window.location.reload();
