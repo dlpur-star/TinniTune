@@ -1,9 +1,11 @@
 import React, { useState, useRef } from 'react';
 import * as Tone from 'tone';
 import logo from './assets/logo.PNG';
+import TherapySetupWizard from './components/therapy/TherapySetupWizard';
 
 export default function TinniTune() {
 const [step, setStep] = useState('welcome'); // 'welcome', 'setup', 'therapy', 'history'
+const [showWizard, setShowWizard] = useState(false); // Show therapy setup wizard
 const [frequency, setFrequency] = useState(4000);
 const [ear, setEar] = useState('both');
 const [isPlaying, setIsPlaying] = useState(false);
@@ -646,7 +648,8 @@ const handleCalibrationComplete = () => {
   // Clear calibration progress
   localStorage.removeItem('tinnitune_calibration_progress');
 
-  // Move to therapy
+  // Show wizard before therapy
+  setShowWizard(true);
   setStep('therapy');
 };
 
@@ -2491,6 +2494,38 @@ return (
   </div>
 );
 
+}
+
+// Show Therapy Setup Wizard
+if (showWizard) {
+  return (
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #0f1419 0%, #1a2332 50%, #253447 100%)',
+      padding: '20px',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif',
+      paddingTop: '60px'
+    }}>
+      <TherapySetupWizard
+        frequency={frequency}
+        ear={ear}
+        onComplete={(config) => {
+          // Apply wizard configuration
+          setMode(config.therapyMode);
+          setNotchEnabled(config.notchEnabled);
+          setNotchIntensity(config.notchIntensity);
+          setIsCalmMode(config.calmMode);
+          setHeartbeatBPM(config.heartbeatBPM);
+
+          // Hide wizard and show therapy
+          setShowWizard(false);
+        }}
+        onCancel={() => {
+          setShowWizard(false);
+        }}
+      />
+    </div>
+  );
 }
 
 // Therapy screen
