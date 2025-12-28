@@ -2519,6 +2519,16 @@ if (showWizard) {
 
           // Hide wizard and show therapy
           setShowWizard(false);
+
+          // Start therapy automatically after wizard
+          setTimeout(() => {
+            if (config.calmMode) {
+              // Start calm mode first
+              startCalmMode();
+            }
+            // Start the main therapy
+            startAudio();
+          }, 100);
         }}
         onCancel={() => {
           setShowWizard(false);
