@@ -53,6 +53,7 @@ const [isTestingFrequency, setIsTestingFrequency] = useState(false);
 const [currentTestSet, setCurrentTestSet] = useState(null);
 const [testIteration, setTestIteration] = useState(0);
 const [testReady, setTestReady] = useState(false); // New: track if test is initialized and ready
+const [testHistory, setTestHistory] = useState([]); // Track all completed steps for progressive UI
 
 // Calm Mode states
 const [isCalmMode, setIsCalmMode] = useState(false);
@@ -1376,6 +1377,8 @@ if (step === 'setup') {
                   // Update UI to show selection buttons
                   setCurrentTestSet(afcTester.currentSet);
                   setTestReady(false);
+                  setTestIteration(1);
+                  setTestHistory([]); // Reset history
                 }}
                 style={{
                   width: '100%',
@@ -1429,127 +1432,221 @@ if (step === 'setup') {
             </div>
           )}
 
-          {/* Test In Progress */}
+          {/* Test In Progress - Progressive Step-by-Step UI */}
           {isTestingFrequency && !testReady && currentTestSet && (
             <div>
-              {/* Progress */}
-              <div style={{ marginBottom: '30px' }}>
+              {/* Progress Header */}
+              <div style={{
+                background: 'linear-gradient(135deg, rgba(78, 205, 196, 0.2), rgba(68, 160, 141, 0.15))',
+                padding: '20px',
+                borderRadius: '16px',
+                marginBottom: '24px',
+                border: '2px solid rgba(78, 205, 196, 0.4)'
+              }}>
                 <div style={{
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  marginBottom: '10px'
+                  marginBottom: '12px'
                 }}>
-                  <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px' }}>
-                    Round {testIteration} of ~12
+                  <span style={{ color: 'white', fontSize: '18px', fontWeight: '700' }}>
+                    Step {testIteration} of ~12
                   </span>
-                  <span style={{ color: '#4ECDC4', fontSize: '14px', fontWeight: '600' }}>
+                  <span style={{ color: '#4ECDC4', fontSize: '16px', fontWeight: '600' }}>
                     {Math.round((testIteration / 12) * 100)}% Complete
                   </span>
                 </div>
                 <div style={{
                   width: '100%',
-                  height: '6px',
+                  height: '8px',
                   background: 'rgba(255,255,255,0.2)',
-                  borderRadius: '3px',
+                  borderRadius: '4px',
                   overflow: 'hidden'
                 }}>
                   <div style={{
                     width: `${(testIteration / 12) * 100}%`,
                     height: '100%',
-                    background: 'linear-gradient(90deg, #F38181, #FCE38A)',
+                    background: 'linear-gradient(90deg, #4ECDC4, #44A08D)',
                     transition: 'width 0.3s'
                   }} />
                 </div>
               </div>
 
-              {/* Clearer Instructions */}
-              <div style={{
-                background: 'linear-gradient(135deg, rgba(78, 205, 196, 0.2), rgba(68, 160, 141, 0.15))',
-                padding: '24px',
-                borderRadius: '16px',
-                marginBottom: '24px',
-                border: '2px solid rgba(78, 205, 196, 0.4)',
-                textAlign: 'center'
-              }}>
-                <div style={{ fontSize: '32px', marginBottom: '12px' }}>🎧</div>
-                <p style={{ color: 'white', fontSize: '20px', fontWeight: '700', margin: 0, marginBottom: '12px' }}>
-                  3 tones just played in sequence
-                </p>
-                <p style={{ color: '#4ECDC4', fontSize: '16px', fontWeight: '600', margin: 0, marginBottom: '8px' }}>
-                  Which ONE sounded most like your tinnitus?
-                </p>
-                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', margin: 0 }}>
-                  Click the button for the tone that matched best
-                </p>
-              </div>
-
-              {/* Tone Selection Buttons - MUCH CLEARER */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '16px',
-                marginBottom: '20px'
-              }}>
-                {[0, 1, 2].map(index => (
-                  <button
-                    key={index}
-                    onClick={async () => {
-                      if (!afcTester || !afcTester.isRunning) return;
-
-                      console.log(`User selected tone ${index + 1}`);
-                      afcTester.submitSelection(index);
-
-                      // If test continues, play next set
-                      if (afcTester.isRunning) {
-                        const nextSet = afcTester.currentSet;
-                        setCurrentTestSet(nextSet);
-                        setTestIteration(prev => prev + 1);
-                        await afcTester.playTestSet();
-                      }
-                    }}
+              {/* All Steps List - Shows history + current step */}
+              <div style={{ marginBottom: '20px', maxHeight: '500px', overflowY: 'auto' }}>
+                {/* Previous Steps */}
+                {testHistory.map((historyItem, stepNum) => (
+                  <div
+                    key={stepNum}
                     style={{
-                      padding: '28px 20px',
-                      background: 'linear-gradient(135deg, rgba(78, 205, 196, 0.25), rgba(68, 160, 141, 0.25))',
-                      color: 'white',
-                      border: '3px solid rgba(78, 205, 196, 0.5)',
-                      borderRadius: '16px',
-                      cursor: 'pointer',
-                      fontSize: '18px',
-                      fontWeight: '700',
-                      transition: 'all 0.2s',
-                      boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
-                      position: 'relative'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.target.style.transform = 'translateY(-6px) scale(1.02)';
-                      e.target.style.boxShadow = '0 12px 32px rgba(78, 205, 196, 0.4)';
-                      e.target.style.borderColor = '#4ECDC4';
-                      e.target.style.background = 'linear-gradient(135deg, rgba(78, 205, 196, 0.4), rgba(68, 160, 141, 0.4))';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.transform = 'translateY(0) scale(1)';
-                      e.target.style.boxShadow = '0 4px 16px rgba(0,0,0,0.3)';
-                      e.target.style.borderColor = 'rgba(78, 205, 196, 0.5)';
-                      e.target.style.background = 'linear-gradient(135deg, rgba(78, 205, 196, 0.25), rgba(68, 160, 141, 0.25))';
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      padding: '16px',
+                      borderRadius: '12px',
+                      marginBottom: '12px',
+                      border: '2px solid rgba(255, 255, 255, 0.1)',
+                      opacity: 0.7
                     }}
                   >
-                    <div style={{ fontSize: '48px', marginBottom: '8px' }}>
-                      {index === 0 ? '1️⃣' : index === 1 ? '2️⃣' : '3️⃣'}
+                    <div style={{
+                      color: 'rgba(255,255,255,0.6)',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      marginBottom: '12px',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}>
+                      <span>✓ Step {stepNum + 1} Complete</span>
+                      <button
+                        onClick={async () => {
+                          // Go back to this step
+                          alert('Go back feature coming soon!');
+                        }}
+                        style={{
+                          padding: '4px 12px',
+                          background: 'rgba(255, 255, 255, 0.1)',
+                          color: 'rgba(255, 255, 255, 0.6)',
+                          border: '1px solid rgba(255, 255, 255, 0.2)',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          fontSize: '12px'
+                        }}
+                      >
+                        Edit
+                      </button>
                     </div>
-                    <div style={{ fontSize: '16px', fontWeight: '600', color: '#4ECDC4' }}>
-                      {index === 0 ? 'First' : index === 1 ? 'Second' : 'Third'} Tone
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(3, 1fr)',
+                      gap: '8px'
+                    }}>
+                      {historyItem.frequencies.map((freq, idx) => (
+                        <div
+                          key={idx}
+                          style={{
+                            padding: '12px',
+                            background: historyItem.selectedIndex === idx
+                              ? 'linear-gradient(135deg, rgba(78, 205, 196, 0.3), rgba(68, 160, 141, 0.3))'
+                              : 'rgba(255, 255, 255, 0.05)',
+                            border: historyItem.selectedIndex === idx
+                              ? '2px solid #4ECDC4'
+                              : '2px solid rgba(255, 255, 255, 0.1)',
+                            borderRadius: '8px',
+                            textAlign: 'center',
+                            color: historyItem.selectedIndex === idx ? '#4ECDC4' : 'rgba(255,255,255,0.5)',
+                            fontSize: '13px',
+                            fontWeight: historyItem.selectedIndex === idx ? '700' : '500'
+                          }}
+                        >
+                          {historyItem.selectedIndex === idx && <div style={{ fontSize: '18px', marginBottom: '4px' }}>✓</div>}
+                          {Math.round(freq)} Hz
+                        </div>
+                      ))}
                     </div>
-                    <div style={{ fontSize: '12px', marginTop: '6px', color: 'rgba(255,255,255,0.7)' }}>
-                      Click to select
-                    </div>
-                  </button>
+                  </div>
                 ))}
+
+                {/* Current Step - Highlighted */}
+                <div style={{
+                  background: 'linear-gradient(135deg, rgba(78, 205, 196, 0.25), rgba(68, 160, 141, 0.2))',
+                  padding: '20px',
+                  borderRadius: '16px',
+                  marginBottom: '12px',
+                  border: '3px solid #4ECDC4',
+                  boxShadow: '0 8px 32px rgba(78, 205, 196, 0.3)'
+                }}>
+                  <div style={{
+                    color: 'white',
+                    fontSize: '18px',
+                    fontWeight: '700',
+                    marginBottom: '8px',
+                    textAlign: 'center'
+                  }}>
+                    🎧 Step {testIteration} - Listen & Select
+                  </div>
+                  <p style={{
+                    color: '#4ECDC4',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    margin: 0,
+                    marginBottom: '16px',
+                    textAlign: 'center'
+                  }}>
+                    Which tone sounded most like your tinnitus?
+                  </p>
+
+                  {/* Current Step Tone Buttons */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: '12px'
+                  }}>
+                    {[0, 1, 2].map(index => (
+                      <button
+                        key={index}
+                        onClick={async () => {
+                          if (!afcTester || !afcTester.isRunning) return;
+
+                          console.log(`User selected tone ${index + 1}`);
+
+                          // Save current step to history
+                          const historyEntry = {
+                            frequencies: currentTestSet.frequencies,
+                            selectedIndex: index,
+                            stepNum: testIteration
+                          };
+                          setTestHistory(prev => [...prev, historyEntry]);
+
+                          // Submit selection
+                          afcTester.submitSelection(index);
+
+                          // If test continues, play next set
+                          if (afcTester.isRunning) {
+                            const nextSet = afcTester.currentSet;
+                            setCurrentTestSet(nextSet);
+                            setTestIteration(prev => prev + 1);
+                            await afcTester.playTestSet();
+                          }
+                        }}
+                        style={{
+                          padding: '20px 12px',
+                          background: 'linear-gradient(135deg, rgba(78, 205, 196, 0.3), rgba(68, 160, 141, 0.3))',
+                          color: 'white',
+                          border: '3px solid rgba(78, 205, 196, 0.6)',
+                          borderRadius: '12px',
+                          cursor: 'pointer',
+                          fontSize: '16px',
+                          fontWeight: '700',
+                          transition: 'all 0.2s',
+                          boxShadow: '0 4px 16px rgba(0,0,0,0.2)'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.transform = 'translateY(-4px) scale(1.05)';
+                          e.target.style.boxShadow = '0 12px 32px rgba(78, 205, 196, 0.5)';
+                          e.target.style.borderColor = '#4ECDC4';
+                          e.target.style.background = 'linear-gradient(135deg, rgba(78, 205, 196, 0.5), rgba(68, 160, 141, 0.5))';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.transform = 'translateY(0) scale(1)';
+                          e.target.style.boxShadow = '0 4px 16px rgba(0,0,0,0.2)';
+                          e.target.style.borderColor = 'rgba(78, 205, 196, 0.6)';
+                          e.target.style.background = 'linear-gradient(135deg, rgba(78, 205, 196, 0.3), rgba(68, 160, 141, 0.3))';
+                        }}
+                      >
+                        <div style={{ fontSize: '32px', marginBottom: '6px' }}>
+                          {index === 0 ? '1️⃣' : index === 1 ? '2️⃣' : '3️⃣'}
+                        </div>
+                        <div style={{ fontSize: '13px', color: '#4ECDC4', fontWeight: '600' }}>
+                          {Math.round(currentTestSet.frequencies[index])} Hz
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
 
-              {/* Action Buttons Row */}
+              {/* Action Buttons */}
               <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
-                {/* Replay Button - More Prominent */}
                 <button
                   onClick={async () => {
                     if (afcTester) {
@@ -1559,69 +1656,51 @@ if (step === 'setup') {
                   }}
                   style={{
                     flex: 1,
-                    padding: '16px',
+                    padding: '14px',
                     background: 'linear-gradient(135deg, rgba(252, 227, 138, 0.2), rgba(243, 129, 129, 0.2))',
                     color: '#FCE38A',
                     border: '2px solid rgba(252, 227, 138, 0.4)',
-                    borderRadius: '12px',
+                    borderRadius: '10px',
                     cursor: 'pointer',
-                    fontSize: '15px',
-                    fontWeight: '600',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.background = 'linear-gradient(135deg, rgba(252, 227, 138, 0.3), rgba(243, 129, 129, 0.3))';
-                    e.target.style.transform = 'scale(1.02)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.background = 'linear-gradient(135deg, rgba(252, 227, 138, 0.2), rgba(243, 129, 129, 0.2))';
-                    e.target.style.transform = 'scale(1)';
+                    fontSize: '14px',
+                    fontWeight: '600'
                   }}
                 >
-                  🔄 Replay All 3 Tones
+                  🔄 Replay Tones
                 </button>
 
-                {/* Restart Test Button */}
                 <button
                   onClick={() => {
-                    if (window.confirm('Restart the test from the beginning?')) {
+                    if (window.confirm('Restart from the beginning?')) {
                       setIsTestingFrequency(false);
                       setCurrentTestSet(null);
                       setTestIteration(0);
                       setTestReady(false);
+                      setTestHistory([]);
                       if (afcTester) {
                         afcTester.isRunning = false;
                       }
                     }
                   }}
                   style={{
-                    padding: '16px 20px',
+                    padding: '14px 18px',
                     background: 'rgba(255, 255, 255, 0.1)',
                     color: 'rgba(255, 255, 255, 0.7)',
                     border: '2px solid rgba(255, 255, 255, 0.2)',
-                    borderRadius: '12px',
+                    borderRadius: '10px',
                     cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.background = 'rgba(255, 255, 255, 0.15)';
-                    e.target.style.color = 'white';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.background = 'rgba(255, 255, 255, 0.1)';
-                    e.target.style.color = 'rgba(255, 255, 255, 0.7)';
+                    fontSize: '13px',
+                    fontWeight: '500'
                   }}
                 >
                   ↺ Restart
                 </button>
               </div>
 
-              {/* Skip to Manual Entry */}
+              {/* Skip Option */}
               <button
                 onClick={() => {
-                  const manualFreq = prompt('Enter your tinnitus frequency manually (250-16000 Hz):', '4000');
+                  const manualFreq = prompt('Enter your tinnitus frequency (250-16000 Hz):', '4000');
                   if (manualFreq) {
                     const freq = parseInt(manualFreq);
                     if (freq >= 250 && freq <= 16000) {
@@ -1629,6 +1708,7 @@ if (step === 'setup') {
                       setIsTestingFrequency(false);
                       setCurrentTestSet(null);
                       setTestReady(false);
+                      setTestHistory([]);
                       setStep('therapy');
                       setCalibrationStage('complete');
                       if (afcTester) {
@@ -1641,26 +1721,17 @@ if (step === 'setup') {
                 }}
                 style={{
                   width: '100%',
-                  padding: '14px',
+                  padding: '12px',
                   background: 'rgba(255, 165, 0, 0.15)',
                   color: 'rgba(255, 165, 0, 0.9)',
                   border: '1px solid rgba(255, 165, 0, 0.3)',
-                  borderRadius: '10px',
+                  borderRadius: '8px',
                   cursor: 'pointer',
-                  fontSize: '13px',
-                  fontWeight: '500',
-                  transition: 'all 0.2s'
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.background = 'rgba(255, 165, 0, 0.2)';
-                  e.target.style.color = 'orange';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.background = 'rgba(255, 165, 0, 0.15)';
-                  e.target.style.color = 'rgba(255, 165, 0, 0.9)';
+                  fontSize: '12px',
+                  fontWeight: '500'
                 }}
               >
-                ⚡ Skip Test - Enter Frequency Manually
+                ⚡ Skip - Enter Frequency Manually
               </button>
             </div>
           )}
