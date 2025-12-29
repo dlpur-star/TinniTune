@@ -54,6 +54,7 @@ const [currentTestSet, setCurrentTestSet] = useState(null);
 const [testIteration, setTestIteration] = useState(0);
 const [testReady, setTestReady] = useState(false); // New: track if test is initialized and ready
 const [testHistory, setTestHistory] = useState([]); // Track all completed steps for progressive UI
+const [isPlayingTones, setIsPlayingTones] = useState(false); // Visual feedback for tone playback
 
 // Calm Mode states
 const [isCalmMode, setIsCalmMode] = useState(false);
@@ -1386,30 +1387,46 @@ if (step === 'setup') {
                   if (!afcTester) return;
                   console.log('▶️ Playing first test set...');
 
-                  // Show selection buttons and initialize
-                  setCurrentTestSet(afcTester.currentSet || afcTester.generateTestSet());
-                  setTestReady(false);
-                  setTestIteration(1);
-                  setTestHistory([]);
+                  try {
+                    // Show selection buttons and initialize
+                    setCurrentTestSet(afcTester.currentSet || afcTester.generateTestSet());
+                    setTestReady(false);
+                    setTestIteration(1);
+                    setTestHistory([]);
 
-                  // Play tones AFTER buttons are visible
-                  await afcTester.playTestSet();
+                    // Visual feedback: tones are playing
+                    setIsPlayingTones(true);
+
+                    // Play tones AFTER buttons are visible
+                    await afcTester.playTestSet();
+
+                    console.log('✓ All tones played successfully');
+                  } catch (error) {
+                    console.error('Error playing tones:', error);
+                    alert('⚠️ Audio playback failed!\n\nCheck your device volume and try again.\n\nError: ' + error.message);
+                  } finally {
+                    setIsPlayingTones(false);
+                  }
                 }}
+                disabled={isPlayingTones}
                 style={{
                   width: '100%',
                   padding: '20px',
-                  background: 'linear-gradient(135deg, #4ECDC4, #44A08D)',
+                  background: isPlayingTones
+                    ? 'linear-gradient(135deg, #FCE38A, #F38181)'
+                    : 'linear-gradient(135deg, #4ECDC4, #44A08D)',
                   color: 'white',
                   border: 'none',
                   borderRadius: '14px',
-                  cursor: 'pointer',
+                  cursor: isPlayingTones ? 'not-allowed' : 'pointer',
                   fontSize: '18px',
                   fontWeight: '700',
                   boxShadow: '0 6px 24px rgba(78, 205, 196, 0.4)',
-                  marginBottom: '20px'
+                  marginBottom: '20px',
+                  opacity: isPlayingTones ? 0.8 : 1
                 }}
               >
-                ▶️ Play 3 Tones
+                {isPlayingTones ? '🔊 Playing Tones...' : '▶️ Play 3 Tones'}
               </button>
 
               {/* Selection Buttons - Visible from start */}
@@ -1633,26 +1650,41 @@ if (step === 'setup') {
                   {/* Play Tones Button - Always visible */}
                   <button
                     onClick={async () => {
-                      if (afcTester) {
+                      if (!afcTester) return;
+
+                      try {
                         console.log('▶️ Playing tones...');
+                        setIsPlayingTones(true);
+
                         await afcTester.playTestSet();
+
+                        console.log('✓ All tones played successfully');
+                      } catch (error) {
+                        console.error('Error playing tones:', error);
+                        alert('⚠️ Audio playback failed!\n\nCheck your device volume and try again.\n\nError: ' + error.message);
+                      } finally {
+                        setIsPlayingTones(false);
                       }
                     }}
+                    disabled={isPlayingTones}
                     style={{
                       width: '100%',
                       padding: '16px',
-                      background: 'linear-gradient(135deg, #4ECDC4, #44A08D)',
+                      background: isPlayingTones
+                        ? 'linear-gradient(135deg, #FCE38A, #F38181)'
+                        : 'linear-gradient(135deg, #4ECDC4, #44A08D)',
                       color: 'white',
                       border: 'none',
                       borderRadius: '12px',
-                      cursor: 'pointer',
+                      cursor: isPlayingTones ? 'not-allowed' : 'pointer',
                       fontSize: '16px',
                       fontWeight: '700',
                       boxShadow: '0 4px 16px rgba(78, 205, 196, 0.4)',
-                      marginBottom: '16px'
+                      marginBottom: '16px',
+                      opacity: isPlayingTones ? 0.8 : 1
                     }}
                   >
-                    ▶️ Play 3 Tones
+                    {isPlayingTones ? '🔊 Playing Tones...' : '▶️ Play 3 Tones'}
                   </button>
 
                   <p style={{
