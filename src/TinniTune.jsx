@@ -1268,12 +1268,12 @@ if (step === 'setup') {
                     // Start the test
                     const testPromise = tester.startTest(ear);
 
-                    // Get and play first test set
-                    const firstSet = tester.currentSet;
-                    setCurrentTestSet(firstSet);
+                    // Play first test set (this generates currentSet automatically)
                     setTestIteration(1);
-
                     await tester.playTestSet();
+
+                    // Now get the test set that was just generated
+                    setCurrentTestSet(tester.currentSet);
 
                     // Wait for test completion
                     const result = await testPromise;
