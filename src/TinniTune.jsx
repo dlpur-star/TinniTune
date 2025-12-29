@@ -52,6 +52,7 @@ const [afcTester, setAfcTester] = useState(null);
 const [isTestingFrequency, setIsTestingFrequency] = useState(false);
 const [currentTestSet, setCurrentTestSet] = useState(null);
 const [testIteration, setTestIteration] = useState(0);
+const [testReady, setTestReady] = useState(false); // New: track if test is initialized and ready
 
 // Calm Mode states
 const [isCalmMode, setIsCalmMode] = useState(false);
@@ -1242,8 +1243,7 @@ if (step === 'setup') {
               <button
                 onClick={async () => {
                   try {
-                    setIsTestingFrequency(true);
-                    console.log('🎯 Starting 3AFC frequency test...');
+                    console.log('🎯 Initializing 3AFC frequency test...');
 
                     // Initialize engine if not already
                     let activeEngine = engineInstance;
@@ -1266,39 +1266,48 @@ if (step === 'setup') {
 
                     setAfcTester(tester);
 
-                    // Start the test
+                    // Start the test (but don't play tones yet!)
                     const testPromise = tester.startTest(ear);
 
-                    // Play first test set (this generates currentSet automatically)
+                    // Store the promise for later
+                    tester._testPromise = testPromise;
+
+                    // Set ready state - this shows the "Play First Set" button
+                    setTestReady(true);
+                    setIsTestingFrequency(true);
                     setTestIteration(1);
-                    await tester.playTestSet();
 
-                    // Now get the test set that was just generated
-                    setCurrentTestSet(tester.currentSet);
+                    // Wait for test completion in background
+                    testPromise.then(result => {
+                      // Test complete!
+                      console.log('✅ 3AFC test complete:', result);
+                      setFrequency(Math.round(result.frequency));
+                      setIsTestingFrequency(false);
+                      setCurrentTestSet(null);
+                      setTestReady(false);
 
-                    // Wait for test completion
-                    const result = await testPromise;
+                      alert(`✅ Frequency matched!\n\n` +
+                            `Frequency: ${Math.round(result.frequency)} Hz\n` +
+                            `Confidence: ${result.confidence}%\n` +
+                            `Iterations: ${result.iterations}\n\n` +
+                            `This is ${result.confidence >= 85 ? 'highly accurate' : 'accurate'} frequency matching!`);
 
-                    // Test complete!
-                    console.log('✅ 3AFC test complete:', result);
-                    setFrequency(Math.round(result.frequency));
-                    setIsTestingFrequency(false);
-                    setCurrentTestSet(null);
+                      // Move to therapy
+                      setStep('therapy');
+                      setCalibrationStage('complete');
+                    }).catch(error => {
+                      console.error('3AFC test error:', error);
+                      alert('Error during test: ' + error.message);
+                      setIsTestingFrequency(false);
+                      setCurrentTestSet(null);
+                      setTestReady(false);
+                    });
 
-                    alert(`✅ Frequency matched!\n\n` +
-                          `Frequency: ${Math.round(result.frequency)} Hz\n` +
-                          `Confidence: ${result.confidence}%\n` +
-                          `Iterations: ${result.iterations}\n\n` +
-                          `This is ${result.confidence >= 85 ? 'highly accurate' : 'accurate'} frequency matching!`);
-
-                    // Move to therapy
-                    setStep('therapy');
-                    setCalibrationStage('complete');
                   } catch (error) {
-                    console.error('3AFC test error:', error);
-                    alert('Error during test: ' + error.message);
+                    console.error('3AFC test setup error:', error);
+                    alert('Error setting up test: ' + error.message);
                     setIsTestingFrequency(false);
-                    setCurrentTestSet(null);
+                    setTestReady(false);
                   }
                 }}
                 disabled={!ear}
@@ -1324,8 +1333,103 @@ if (step === 'setup') {
             </div>
           )}
 
+          {/* Ready to Start - Show instructions before first tones play */}
+          {isTestingFrequency && testReady && !currentTestSet && (
+            <div>
+              {/* Get Ready Screen */}
+              <div style={{
+                background: 'linear-gradient(135deg, rgba(78, 205, 196, 0.25), rgba(68, 160, 141, 0.2))',
+                padding: '40px',
+                borderRadius: '20px',
+                marginBottom: '24px',
+                border: '3px solid rgba(78, 205, 196, 0.5)',
+                textAlign: 'center'
+              }}>
+                <div style={{ fontSize: '64px', marginBottom: '20px' }}>🎧</div>
+                <h2 style={{ color: 'white', fontSize: '28px', fontWeight: '700', margin: 0, marginBottom: '16px' }}>
+                  Ready to Begin!
+                </h2>
+                <p style={{ color: '#4ECDC4', fontSize: '18px', fontWeight: '600', margin: 0, marginBottom: '12px', lineHeight: '1.6' }}>
+                  When you click "Play First Set" below:
+                </p>
+                <ol style={{ color: 'rgba(255,255,255,0.9)', fontSize: '16px', textAlign: 'left', maxWidth: '400px', margin: '0 auto', lineHeight: '1.8', paddingLeft: '20px' }}>
+                  <li>You'll hear <strong>3 tones</strong> played one after another</li>
+                  <li>Listen carefully to all 3</li>
+                  <li>Then click which one sounded most like your tinnitus</li>
+                  <li>Repeat for ~8-15 rounds until we find your exact frequency</li>
+                </ol>
+                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', marginTop: '20px', marginBottom: 0 }}>
+                  💡 Tip: Make sure your volume is comfortable and you're in a quiet place
+                </p>
+              </div>
+
+              {/* Play First Set Button */}
+              <button
+                onClick={async () => {
+                  if (!afcTester) return;
+                  console.log('▶️ Playing first test set...');
+
+                  // Play first test set
+                  await afcTester.playTestSet();
+
+                  // Update UI to show selection buttons
+                  setCurrentTestSet(afcTester.currentSet);
+                  setTestReady(false);
+                }}
+                style={{
+                  width: '100%',
+                  padding: '24px',
+                  background: 'linear-gradient(135deg, #4ECDC4, #44A08D)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '16px',
+                  cursor: 'pointer',
+                  fontSize: '20px',
+                  fontWeight: '700',
+                  boxShadow: '0 8px 32px rgba(78, 205, 196, 0.4)',
+                  transition: 'all 0.3s',
+                  marginBottom: '12px'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.transform = 'translateY(-2px)';
+                  e.target.style.boxShadow = '0 12px 40px rgba(78, 205, 196, 0.5)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.transform = 'translateY(0)';
+                  e.target.style.boxShadow = '0 8px 32px rgba(78, 205, 196, 0.4)';
+                }}
+              >
+                ▶️ Play First Set of 3 Tones
+              </button>
+
+              {/* Cancel/Back Button */}
+              <button
+                onClick={() => {
+                  setIsTestingFrequency(false);
+                  setTestReady(false);
+                  if (afcTester) {
+                    afcTester.isRunning = false;
+                  }
+                }}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                ← Cancel and Go Back
+              </button>
+            </div>
+          )}
+
           {/* Test In Progress */}
-          {isTestingFrequency && currentTestSet && (
+          {isTestingFrequency && !testReady && currentTestSet && (
             <div>
               {/* Progress */}
               <div style={{ marginBottom: '30px' }}>
@@ -1336,7 +1440,7 @@ if (step === 'setup') {
                   marginBottom: '10px'
                 }}>
                   <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px' }}>
-                    Test Round {testIteration} / ~12
+                    Round {testIteration} of ~12
                   </span>
                   <span style={{ color: '#4ECDC4', fontSize: '14px', fontWeight: '600' }}>
                     {Math.round((testIteration / 12) * 100)}% Complete
@@ -1358,24 +1462,28 @@ if (step === 'setup') {
                 </div>
               </div>
 
-              {/* Instructions */}
+              {/* Clearer Instructions */}
               <div style={{
-                background: 'rgba(78, 205, 196, 0.15)',
-                padding: '20px',
-                borderRadius: '12px',
-                marginBottom: '30px',
-                border: '1px solid rgba(78, 205, 196, 0.3)',
+                background: 'linear-gradient(135deg, rgba(78, 205, 196, 0.2), rgba(68, 160, 141, 0.15))',
+                padding: '24px',
+                borderRadius: '16px',
+                marginBottom: '24px',
+                border: '2px solid rgba(78, 205, 196, 0.4)',
                 textAlign: 'center'
               }}>
-                <p style={{ color: 'white', fontSize: '18px', fontWeight: '600', margin: 0, marginBottom: '8px' }}>
-                  🎧 Listen carefully to all 3 tones
+                <div style={{ fontSize: '32px', marginBottom: '12px' }}>🎧</div>
+                <p style={{ color: 'white', fontSize: '20px', fontWeight: '700', margin: 0, marginBottom: '12px' }}>
+                  3 tones just played in sequence
                 </p>
-                <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '14px', margin: 0 }}>
-                  Which tone sounds most similar to your tinnitus?
+                <p style={{ color: '#4ECDC4', fontSize: '16px', fontWeight: '600', margin: 0, marginBottom: '8px' }}>
+                  Which ONE sounded most like your tinnitus?
+                </p>
+                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', margin: 0 }}>
+                  Click the button for the tone that matched best
                 </p>
               </div>
 
-              {/* Tone Selection Buttons */}
+              {/* Tone Selection Buttons - MUCH CLEARER */}
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(3, 1fr)',
@@ -1400,55 +1508,158 @@ if (step === 'setup') {
                       }
                     }}
                     style={{
-                      padding: '32px 20px',
-                      background: 'linear-gradient(135deg, rgba(78, 205, 196, 0.2), rgba(68, 160, 141, 0.2))',
+                      padding: '28px 20px',
+                      background: 'linear-gradient(135deg, rgba(78, 205, 196, 0.25), rgba(68, 160, 141, 0.25))',
                       color: 'white',
-                      border: '2px solid rgba(78, 205, 196, 0.4)',
+                      border: '3px solid rgba(78, 205, 196, 0.5)',
                       borderRadius: '16px',
                       cursor: 'pointer',
-                      fontSize: '24px',
+                      fontSize: '18px',
                       fontWeight: '700',
                       transition: 'all 0.2s',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+                      boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
+                      position: 'relative'
                     }}
                     onMouseEnter={(e) => {
-                      e.target.style.transform = 'translateY(-4px)';
-                      e.target.style.boxShadow = '0 8px 24px rgba(78, 205, 196, 0.3)';
+                      e.target.style.transform = 'translateY(-6px) scale(1.02)';
+                      e.target.style.boxShadow = '0 12px 32px rgba(78, 205, 196, 0.4)';
                       e.target.style.borderColor = '#4ECDC4';
+                      e.target.style.background = 'linear-gradient(135deg, rgba(78, 205, 196, 0.4), rgba(68, 160, 141, 0.4))';
                     }}
                     onMouseLeave={(e) => {
-                      e.target.style.transform = 'translateY(0)';
-                      e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
-                      e.target.style.borderColor = 'rgba(78, 205, 196, 0.4)';
+                      e.target.style.transform = 'translateY(0) scale(1)';
+                      e.target.style.boxShadow = '0 4px 16px rgba(0,0,0,0.3)';
+                      e.target.style.borderColor = 'rgba(78, 205, 196, 0.5)';
+                      e.target.style.background = 'linear-gradient(135deg, rgba(78, 205, 196, 0.25), rgba(68, 160, 141, 0.25))';
                     }}
                   >
-                    <div style={{ marginBottom: '8px' }}>🎵</div>
-                    <div style={{ fontSize: '16px', fontWeight: '600' }}>Tone {index + 1}</div>
+                    <div style={{ fontSize: '48px', marginBottom: '8px' }}>
+                      {index === 0 ? '1️⃣' : index === 1 ? '2️⃣' : '3️⃣'}
+                    </div>
+                    <div style={{ fontSize: '16px', fontWeight: '600', color: '#4ECDC4' }}>
+                      {index === 0 ? 'First' : index === 1 ? 'Second' : 'Third'} Tone
+                    </div>
+                    <div style={{ fontSize: '12px', marginTop: '6px', color: 'rgba(255,255,255,0.7)' }}>
+                      Click to select
+                    </div>
                   </button>
                 ))}
               </div>
 
-              {/* Replay Button */}
+              {/* Action Buttons Row */}
+              <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
+                {/* Replay Button - More Prominent */}
+                <button
+                  onClick={async () => {
+                    if (afcTester) {
+                      console.log('🔄 Replaying tones...');
+                      await afcTester.playTestSet();
+                    }
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '16px',
+                    background: 'linear-gradient(135deg, rgba(252, 227, 138, 0.2), rgba(243, 129, 129, 0.2))',
+                    color: '#FCE38A',
+                    border: '2px solid rgba(252, 227, 138, 0.4)',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = 'linear-gradient(135deg, rgba(252, 227, 138, 0.3), rgba(243, 129, 129, 0.3))';
+                    e.target.style.transform = 'scale(1.02)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = 'linear-gradient(135deg, rgba(252, 227, 138, 0.2), rgba(243, 129, 129, 0.2))';
+                    e.target.style.transform = 'scale(1)';
+                  }}
+                >
+                  🔄 Replay All 3 Tones
+                </button>
+
+                {/* Restart Test Button */}
+                <button
+                  onClick={() => {
+                    if (window.confirm('Restart the test from the beginning?')) {
+                      setIsTestingFrequency(false);
+                      setCurrentTestSet(null);
+                      setTestIteration(0);
+                      setTestReady(false);
+                      if (afcTester) {
+                        afcTester.isRunning = false;
+                      }
+                    }
+                  }}
+                  style={{
+                    padding: '16px 20px',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    border: '2px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: '12px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+                    e.target.style.color = 'white';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = 'rgba(255, 255, 255, 0.1)';
+                    e.target.style.color = 'rgba(255, 255, 255, 0.7)';
+                  }}
+                >
+                  ↺ Restart
+                </button>
+              </div>
+
+              {/* Skip to Manual Entry */}
               <button
-                onClick={async () => {
-                  if (afcTester) {
-                    console.log('🔄 Replaying tones...');
-                    await afcTester.playTestSet();
+                onClick={() => {
+                  const manualFreq = prompt('Enter your tinnitus frequency manually (250-16000 Hz):', '4000');
+                  if (manualFreq) {
+                    const freq = parseInt(manualFreq);
+                    if (freq >= 250 && freq <= 16000) {
+                      setFrequency(freq);
+                      setIsTestingFrequency(false);
+                      setCurrentTestSet(null);
+                      setTestReady(false);
+                      setStep('therapy');
+                      setCalibrationStage('complete');
+                      if (afcTester) {
+                        afcTester.isRunning = false;
+                      }
+                    } else {
+                      alert('Please enter a frequency between 250 and 16000 Hz');
+                    }
                   }
                 }}
                 style={{
                   width: '100%',
-                  padding: '12px',
-                  background: 'rgba(255,255,255,0.1)',
-                  color: 'rgba(255,255,255,0.7)',
-                  border: '1px solid rgba(255,255,255,0.2)',
+                  padding: '14px',
+                  background: 'rgba(255, 165, 0, 0.15)',
+                  color: 'rgba(255, 165, 0, 0.9)',
+                  border: '1px solid rgba(255, 165, 0, 0.3)',
                   borderRadius: '10px',
                   cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500'
+                  fontSize: '13px',
+                  fontWeight: '500',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = 'rgba(255, 165, 0, 0.2)';
+                  e.target.style.color = 'orange';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = 'rgba(255, 165, 0, 0.15)';
+                  e.target.style.color = 'rgba(255, 165, 0, 0.9)';
                 }}
               >
-                🔄 Replay Tones
+                ⚡ Skip Test - Enter Frequency Manually
               </button>
             </div>
           )}
