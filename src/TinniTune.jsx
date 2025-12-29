@@ -1261,6 +1261,7 @@ if (step === 'setup') {
                       startFrequency: 4000,
                       minFrequency: 250,
                       maxFrequency: 16000,
+                      initialStepSize: 1,      // 1 octave instead of 2 - keeps tones in audible range
                       targetPrecision: 0.1
                     });
 
