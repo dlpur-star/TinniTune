@@ -1314,13 +1314,16 @@ if (step === 'setup') {
 
                     if (error.message.includes('Audio initialization failed')) {
                       errorMsg += 'Could not start audio playback.\n\n';
-                      errorMsg += 'Try these solutions:\n';
-                      errorMsg += '• Reload the page and try again\n';
-                      errorMsg += '• Check your device volume is not muted\n';
-                      errorMsg += '• If on iOS, remove from Low Power Mode\n';
-                      errorMsg += '• Try using headphones\n';
-                      errorMsg += '• Grant audio permissions if prompted\n\n';
-                      errorMsg += 'Technical details: ' + error.message;
+                      errorMsg += '🔄 FIRST TRY THIS:\n';
+                      errorMsg += '1. Hard reload to clear cache:\n';
+                      errorMsg += '   iOS Safari: Hold ⟳ → "Reload Without Content Blockers"\n';
+                      errorMsg += '   Or close tab completely and reopen\n\n';
+                      errorMsg += '📱 IF STILL FAILING:\n';
+                      errorMsg += '• Check device volume (not muted)\n';
+                      errorMsg += '• Turn off Low Power Mode\n';
+                      errorMsg += '• Try with headphones\n';
+                      errorMsg += '• Update Safari/iOS if available\n\n';
+                      errorMsg += 'Tech details: ' + error.message;
                     } else {
                       errorMsg += error.message;
                     }
