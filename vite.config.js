@@ -4,6 +4,6 @@ import react from '@vitejs/plugin-react'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/', // Changed from '/TinniTune/' for Netlify deployment
+  base: '/TinniTune/', // GitHub Pages requires repo name as base path
   assetsInclude: ['**/*.PNG'], // Support uppercase .PNG file extensions
 })
