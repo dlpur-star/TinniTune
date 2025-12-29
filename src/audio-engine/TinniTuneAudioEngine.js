@@ -61,57 +61,28 @@ export class TinniTuneAudioEngine {
    * Must be called in response to user interaction
    */
   async initialize() {
-    this._log('Initialize called. Current state:', {
-      isInitialized: this.isInitialized,
-      contextState: Tone.context?.state
-    });
+    if (this.isInitialized) {
+      this._log('Engine already initialized');
+      return true;
+    }
 
     try {
-      // Always try to start/resume, regardless of initialization status
-      // This handles cases where context gets suspended
-      this._log('Attempting to start audio context...');
+      this._log('Starting audio context...');
+      await Tone.start();
 
-      // Try starting - this is safe to call multiple times on iOS
-      try {
-        await Tone.start();
-        this._log('Tone.start() succeeded');
-      } catch (startError) {
-        this._log('Tone.start() failed (may be already running):', startError.message);
-
-        // Try resume instead
-        try {
-          await Tone.context.resume();
-          this._log('context.resume() succeeded');
-        } catch (resumeError) {
-          this._log('context.resume() also failed:', resumeError.message);
-        }
-      }
-
-      // Verify we're actually running
-      if (Tone.context.state !== 'running') {
-        throw new Error(`Audio context stuck in ${Tone.context.state} state. Try reloading the page.`);
-      }
-
-      this._log('✓ Audio context is running', {
+      this._log('Audio context started', {
         sampleRate: Tone.context.sampleRate,
         latency: Tone.context.baseLatency,
         state: Tone.context.state
       });
 
-      // Create master chain only on first init
-      if (!this.isInitialized) {
-        this._createMasterChain();
-        this.isInitialized = true;
-        this._log('✓ Engine fully initialized');
-      } else {
-        this._log('✓ Engine re-initialized (context resumed)');
-      }
+      // Create master signal chain
+      this._createMasterChain();
 
+      this.isInitialized = true;
       return true;
     } catch (error) {
-      console.error('❌ Failed to initialize audio engine:', error);
-      console.error('Audio context state:', Tone.context?.state);
-      console.error('User agent:', navigator.userAgent);
+      console.error('Failed to initialize audio engine:', error);
       throw new Error(`Audio initialization failed: ${error.message}`);
     }
   }

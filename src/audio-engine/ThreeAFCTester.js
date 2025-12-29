@@ -291,20 +291,6 @@ export class ThreeAFCTester {
    * Play a single test tone
    */
   async _playTone(frequency, index) {
-    this.engine._log(`Playing tone ${index + 1}: ${frequency} Hz`);
-
-    // CRITICAL: Ensure audio context is running (iOS Safari requirement)
-    if (Tone.context.state !== 'running') {
-      this.engine._log('⚠️ Audio context not running, attempting to resume...');
-      try {
-        await Tone.context.resume();
-        this.engine._log('✓ Audio context resumed');
-      } catch (error) {
-        console.error('Failed to resume audio context:', error);
-        throw new Error('Audio playback failed: context suspended');
-      }
-    }
-
     // Create oscillator
     const destination = this.engine.getChannelDestination(this.testEar);
 
@@ -319,7 +305,6 @@ export class ThreeAFCTester {
     this.gain.gain.rampTo(Tone.dbToGain(this.config.volumeDb), 0.05);
 
     this.oscillator.start();
-    this.engine._log(`✓ Oscillator started for ${frequency} Hz`);
 
     // Play for duration
     await this._wait(this.config.toneDuration);
@@ -332,8 +317,6 @@ export class ThreeAFCTester {
     this.oscillator.stop();
     this.oscillator.dispose();
     this.gain.dispose();
-
-    this.engine._log(`✓ Tone ${index + 1} completed`);
   }
 
   /**
