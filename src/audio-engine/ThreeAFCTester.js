@@ -27,7 +27,7 @@ const DEFAULT_3AFC_CONFIG = {
   minStepSize: 0.05,        // octaves - ~3.5% frequency change
   targetPrecision: 0.1,     // octaves - converge within ~7%
   maxIterations: 15,        // maximum test rounds
-  volumeDb: -20,            // test tone volume
+  volumeDb: -10,            // test tone volume (increased for mobile devices)
   octaveConfusionPrevention: true
 };
 
@@ -291,32 +291,49 @@ export class ThreeAFCTester {
    * Play a single test tone
    */
   async _playTone(frequency, index) {
+    this.engine._log(`Playing tone ${index + 1}: ${frequency} Hz`);
+
+    // CRITICAL: Ensure audio context is running (iOS Safari requirement)
+    if (Tone.context.state !== 'running') {
+      this.engine._log('⚠️ Audio context not running, attempting to resume...');
+      try {
+        await Tone.context.resume();
+        this.engine._log('✓ Audio context resumed');
+      } catch (error) {
+        console.error('Failed to resume audio context:', error);
+        throw new Error('Audio playback failed: context suspended');
+      }
+    }
+
     // Create oscillator
     const destination = this.engine.getChannelDestination(this.testEar);
-    
+
     this.gain = new Tone.Gain(Tone.dbToGain(this.config.volumeDb));
     this.gain.connect(destination);
-    
+
     this.oscillator = new Tone.Oscillator(frequency, 'sine');
     this.oscillator.connect(this.gain);
-    
+
     // Fade in
     this.gain.gain.setValueAtTime(0, Tone.now());
     this.gain.gain.rampTo(Tone.dbToGain(this.config.volumeDb), 0.05);
-    
+
     this.oscillator.start();
-    
+    this.engine._log(`✓ Oscillator started for ${frequency} Hz`);
+
     // Play for duration
     await this._wait(this.config.toneDuration);
-    
+
     // Fade out
     this.gain.gain.rampTo(0, 0.05);
     await this._wait(0.05);
-    
+
     // Clean up
     this.oscillator.stop();
     this.oscillator.dispose();
     this.gain.dispose();
+
+    this.engine._log(`✓ Tone ${index + 1} completed`);
   }
 
   /**
