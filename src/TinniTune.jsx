@@ -1534,7 +1534,17 @@ if (step === 'setup') {
                       <button
                         onClick={async () => {
                           // Go back to this step
-                          alert('Go back feature coming soon!');
+                          if (window.confirm(`Go back to Step ${stepNum + 1}? This will reset all steps after this one.`)) {
+                            // Truncate history to everything BEFORE this step
+                            setTestHistory(prev => prev.slice(0, stepNum));
+
+                            // Reset to this step
+                            setTestIteration(stepNum + 1);
+                            setCurrentTestSet(historyItem);
+
+                            // User can now replay and make different selection
+                            console.log(`Reverted to Step ${stepNum + 1}`);
+                          }
                         }}
                         style={{
                           padding: '4px 12px',
@@ -1649,9 +1659,9 @@ if (step === 'setup') {
 
                           console.log(`User selected tone ${index + 1}`);
 
-                          // Save current step to history
+                          // Save current step to history (full test set + selection)
                           const historyEntry = {
-                            frequencies: currentTestSet.frequencies,
+                            ...currentTestSet,
                             selectedIndex: index,
                             stepNum: testIteration
                           };
@@ -1660,12 +1670,12 @@ if (step === 'setup') {
                           // Submit selection
                           afcTester.submitSelection(index);
 
-                          // If test continues, play next set
+                          // If test continues, advance to next step (but DON'T auto-play)
                           if (afcTester.isRunning) {
                             const nextSet = afcTester.currentSet;
                             setCurrentTestSet(nextSet);
                             setTestIteration(prev => prev + 1);
-                            await afcTester.playTestSet();
+                            // Removed auto-play - user must click "Play 3 Tones" button
                           }
                         }}
                         style={{
