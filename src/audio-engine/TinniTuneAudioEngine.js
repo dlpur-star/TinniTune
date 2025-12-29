@@ -61,55 +61,57 @@ export class TinniTuneAudioEngine {
    * Must be called in response to user interaction
    */
   async initialize() {
-    if (this.isInitialized) {
-      this._log('Engine already initialized, checking audio context state...');
+    this._log('Initialize called. Current state:', {
+      isInitialized: this.isInitialized,
+      contextState: Tone.context?.state
+    });
 
-      // Even if initialized, ensure context is running
-      if (Tone.context.state !== 'running') {
-        this._log('Resuming suspended audio context...');
+    try {
+      // Always try to start/resume, regardless of initialization status
+      // This handles cases where context gets suspended
+      this._log('Attempting to start audio context...');
+
+      // Try starting - this is safe to call multiple times on iOS
+      try {
+        await Tone.start();
+        this._log('Tone.start() succeeded');
+      } catch (startError) {
+        this._log('Tone.start() failed (may be already running):', startError.message);
+
+        // Try resume instead
         try {
           await Tone.context.resume();
-        } catch (error) {
-          this._log('Warning: Could not resume context:', error.message);
+          this._log('context.resume() succeeded');
+        } catch (resumeError) {
+          this._log('context.resume() also failed:', resumeError.message);
         }
       }
 
-      return true;
-    }
-
-    try {
-      this._log('Starting audio context...');
-
-      // Check if context is already started
-      if (Tone.context.state === 'suspended') {
-        await Tone.context.resume();
-      } else if (Tone.context.state === 'closed') {
-        // Context is closed, need to start fresh
-        await Tone.start();
-      } else if (Tone.context.state !== 'running') {
-        // Not running, start it
-        await Tone.start();
-      }
-
-      // Ensure it's running
+      // Verify we're actually running
       if (Tone.context.state !== 'running') {
-        await Tone.context.resume();
+        throw new Error(`Audio context stuck in ${Tone.context.state} state. Try reloading the page.`);
       }
 
-      this._log('Audio context started', {
+      this._log('✓ Audio context is running', {
         sampleRate: Tone.context.sampleRate,
         latency: Tone.context.baseLatency,
         state: Tone.context.state
       });
 
-      // Create master signal chain
-      this._createMasterChain();
+      // Create master chain only on first init
+      if (!this.isInitialized) {
+        this._createMasterChain();
+        this.isInitialized = true;
+        this._log('✓ Engine fully initialized');
+      } else {
+        this._log('✓ Engine re-initialized (context resumed)');
+      }
 
-      this.isInitialized = true;
       return true;
     } catch (error) {
-      console.error('Failed to initialize audio engine:', error);
-      console.error('Audio context state:', Tone.context.state);
+      console.error('❌ Failed to initialize audio engine:', error);
+      console.error('Audio context state:', Tone.context?.state);
+      console.error('User agent:', navigator.userAgent);
       throw new Error(`Audio initialization failed: ${error.message}`);
     }
   }
