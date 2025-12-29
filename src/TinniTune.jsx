@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import * as Tone from 'tone';
 import logo from './assets/logo.PNG';
 import TherapySetupWizard from './components/therapy/TherapySetupWizard';
+import FeedbackModal from './components/FeedbackModal';
 
 export default function TinniTune() {
 const [step, setStep] = useState('welcome'); // 'welcome', 'setup', 'therapy', 'history'
@@ -29,6 +30,9 @@ notes: ''
 const [showInstallPrompt, setShowInstallPrompt] = useState(false);
 const [isIOS, setIsIOS] = useState(false);
 const [isStandalone, setIsStandalone] = useState(false);
+
+// Feedback form state
+const [showFeedback, setShowFeedback] = useState(false);
 
 // Calm Mode states
 const [isCalmMode, setIsCalmMode] = useState(false);
@@ -3766,14 +3770,29 @@ Great session! Help us track your progress by rating your tinnitus.
       fontWeight: '500',
       letterSpacing: '0.3px'
     }}>
-      {isPlaying 
-        ? notchEnabled 
-          ? `🎧 Therapy active with notch filtering • ${notchIntensity} intensity` 
+      {isPlaying
+        ? notchEnabled
+          ? `🎧 Therapy active with notch filtering • ${notchIntensity} intensity`
           : '🎧 Therapy active • Best with headphones'
         : notchEnabled
           ? '💡 Notch therapy uses clinically-proven sound filtering'
           : '💡 Start with 10-15 min sessions, 2-3x daily'}
     </div>
+
+    {/* Feedback Button */}
+    <button
+      onClick={() => setShowFeedback(true)}
+      className="feedback-button"
+      aria-label="Give Feedback"
+    >
+      💬 Feedback
+    </button>
+
+    {/* Feedback Modal */}
+    <FeedbackModal
+      isOpen={showFeedback}
+      onClose={() => setShowFeedback(false)}
+    />
   </div>
 </div>
 
