@@ -1335,78 +1335,112 @@ if (step === 'setup') {
             </div>
           )}
 
-          {/* Ready to Start - Show instructions before first tones play */}
+          {/* Ready to Start - Show buttons immediately with play button */}
           {isTestingFrequency && testReady && !currentTestSet && (
             <div>
-              {/* Get Ready Screen */}
+              {/* Brief Instructions */}
               <div style={{
-                background: 'linear-gradient(135deg, rgba(78, 205, 196, 0.25), rgba(68, 160, 141, 0.2))',
-                padding: '40px',
-                borderRadius: '20px',
-                marginBottom: '24px',
-                border: '3px solid rgba(78, 205, 196, 0.5)',
+                background: 'linear-gradient(135deg, rgba(78, 205, 196, 0.2), rgba(68, 160, 141, 0.15))',
+                padding: '24px',
+                borderRadius: '16px',
+                marginBottom: '20px',
+                border: '2px solid rgba(78, 205, 196, 0.4)',
                 textAlign: 'center'
               }}>
-                <div style={{ fontSize: '64px', marginBottom: '20px' }}>🎧</div>
-                <h2 style={{ color: 'white', fontSize: '28px', fontWeight: '700', margin: 0, marginBottom: '16px' }}>
-                  Ready to Begin!
+                <div style={{ fontSize: '32px', marginBottom: '12px' }}>🎧</div>
+                <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '700', margin: 0, marginBottom: '12px' }}>
+                  Step 1 of ~12
                 </h2>
-                <p style={{ color: '#4ECDC4', fontSize: '18px', fontWeight: '600', margin: 0, marginBottom: '12px', lineHeight: '1.6' }}>
-                  When you click "Play First Set" below:
+                <p style={{ color: '#4ECDC4', fontSize: '16px', fontWeight: '600', margin: 0, marginBottom: '8px' }}>
+                  Click "Play Tones" → Listen → Select which matched your tinnitus
                 </p>
-                <ol style={{ color: 'rgba(255,255,255,0.9)', fontSize: '16px', textAlign: 'left', maxWidth: '400px', margin: '0 auto', lineHeight: '1.8', paddingLeft: '20px' }}>
-                  <li>You'll hear <strong>3 tones</strong> played one after another</li>
-                  <li>Listen carefully to all 3</li>
-                  <li>Then click which one sounded most like your tinnitus</li>
-                  <li>Repeat for ~8-15 rounds until we find your exact frequency</li>
-                </ol>
-                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', marginTop: '20px', marginBottom: 0 }}>
-                  💡 Tip: Make sure your volume is comfortable and you're in a quiet place
+                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '13px', margin: 0 }}>
+                  💡 The buttons below will stay visible while tones play
                 </p>
               </div>
 
-              {/* Play First Set Button */}
+              {/* Play Tones Button */}
               <button
                 onClick={async () => {
                   if (!afcTester) return;
                   console.log('▶️ Playing first test set...');
 
-                  // Play first test set
-                  await afcTester.playTestSet();
-
-                  // Update UI to show selection buttons
-                  setCurrentTestSet(afcTester.currentSet);
+                  // Show selection buttons and initialize
+                  setCurrentTestSet(afcTester.currentSet || afcTester.generateTestSet());
                   setTestReady(false);
                   setTestIteration(1);
-                  setTestHistory([]); // Reset history
+                  setTestHistory([]);
+
+                  // Play tones AFTER buttons are visible
+                  await afcTester.playTestSet();
                 }}
                 style={{
                   width: '100%',
-                  padding: '24px',
+                  padding: '20px',
                   background: 'linear-gradient(135deg, #4ECDC4, #44A08D)',
                   color: 'white',
                   border: 'none',
-                  borderRadius: '16px',
+                  borderRadius: '14px',
                   cursor: 'pointer',
-                  fontSize: '20px',
+                  fontSize: '18px',
                   fontWeight: '700',
-                  boxShadow: '0 8px 32px rgba(78, 205, 196, 0.4)',
-                  transition: 'all 0.3s',
-                  marginBottom: '12px'
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 12px 40px rgba(78, 205, 196, 0.5)';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.transform = 'translateY(0)';
-                  e.target.style.boxShadow = '0 8px 32px rgba(78, 205, 196, 0.4)';
+                  boxShadow: '0 6px 24px rgba(78, 205, 196, 0.4)',
+                  marginBottom: '20px'
                 }}
               >
-                ▶️ Play First Set of 3 Tones
+                ▶️ Play 3 Tones
               </button>
 
-              {/* Cancel/Back Button */}
+              {/* Selection Buttons - Visible from start */}
+              <div style={{
+                background: 'linear-gradient(135deg, rgba(78, 205, 196, 0.15), rgba(68, 160, 141, 0.1))',
+                padding: '20px',
+                borderRadius: '14px',
+                marginBottom: '16px',
+                border: '2px solid rgba(78, 205, 196, 0.3)'
+              }}>
+                <p style={{
+                  color: 'rgba(255,255,255,0.8)',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  margin: 0,
+                  marginBottom: '16px',
+                  textAlign: 'center'
+                }}>
+                  After playing, select which tone matched best:
+                </p>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '12px',
+                  opacity: 0.6
+                }}>
+                  {[0, 1, 2].map(index => (
+                    <div
+                      key={index}
+                      style={{
+                        padding: '24px 16px',
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        color: 'rgba(255,255,255,0.6)',
+                        border: '2px solid rgba(255, 255, 255, 0.2)',
+                        borderRadius: '12px',
+                        fontSize: '16px',
+                        fontWeight: '600',
+                        textAlign: 'center'
+                      }}
+                    >
+                      <div style={{ fontSize: '36px', marginBottom: '8px' }}>
+                        {index === 0 ? '1️⃣' : index === 1 ? '2️⃣' : '3️⃣'}
+                      </div>
+                      <div style={{ fontSize: '13px' }}>
+                        {index === 0 ? 'First' : index === 1 ? 'Second' : 'Third'} Tone
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Cancel Button */}
               <button
                 onClick={() => {
                   setIsTestingFrequency(false);
@@ -1423,7 +1457,7 @@ if (step === 'setup') {
                   border: '1px solid rgba(255, 255, 255, 0.2)',
                   borderRadius: '10px',
                   cursor: 'pointer',
-                  fontSize: '14px',
+                  fontSize: '13px',
                   fontWeight: '500'
                 }}
               >
@@ -1564,6 +1598,32 @@ if (step === 'setup') {
                   }}>
                     🎧 Step {testIteration} - Listen & Select
                   </div>
+
+                  {/* Play Tones Button - Always visible */}
+                  <button
+                    onClick={async () => {
+                      if (afcTester) {
+                        console.log('▶️ Playing tones...');
+                        await afcTester.playTestSet();
+                      }
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '16px',
+                      background: 'linear-gradient(135deg, #4ECDC4, #44A08D)',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '12px',
+                      cursor: 'pointer',
+                      fontSize: '16px',
+                      fontWeight: '700',
+                      boxShadow: '0 4px 16px rgba(78, 205, 196, 0.4)',
+                      marginBottom: '16px'
+                    }}
+                  >
+                    ▶️ Play 3 Tones
+                  </button>
+
                   <p style={{
                     color: '#4ECDC4',
                     fontSize: '14px',
@@ -1572,7 +1632,7 @@ if (step === 'setup') {
                     marginBottom: '16px',
                     textAlign: 'center'
                   }}>
-                    Which tone sounded most like your tinnitus?
+                    After listening, select which tone matched best:
                   </p>
 
                   {/* Current Step Tone Buttons */}
@@ -1648,28 +1708,6 @@ if (step === 'setup') {
               {/* Action Buttons */}
               <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
                 <button
-                  onClick={async () => {
-                    if (afcTester) {
-                      console.log('🔄 Replaying tones...');
-                      await afcTester.playTestSet();
-                    }
-                  }}
-                  style={{
-                    flex: 1,
-                    padding: '14px',
-                    background: 'linear-gradient(135deg, rgba(252, 227, 138, 0.2), rgba(243, 129, 129, 0.2))',
-                    color: '#FCE38A',
-                    border: '2px solid rgba(252, 227, 138, 0.4)',
-                    borderRadius: '10px',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '600'
-                  }}
-                >
-                  🔄 Replay Tones
-                </button>
-
-                <button
                   onClick={() => {
                     if (window.confirm('Restart from the beginning?')) {
                       setIsTestingFrequency(false);
@@ -1683,7 +1721,8 @@ if (step === 'setup') {
                     }
                   }}
                   style={{
-                    padding: '14px 18px',
+                    flex: 1,
+                    padding: '14px',
                     background: 'rgba(255, 255, 255, 0.1)',
                     color: 'rgba(255, 255, 255, 0.7)',
                     border: '2px solid rgba(255, 255, 255, 0.2)',
@@ -1693,7 +1732,7 @@ if (step === 'setup') {
                     fontWeight: '500'
                   }}
                 >
-                  ↺ Restart
+                  ↺ Restart Test
                 </button>
               </div>
 
