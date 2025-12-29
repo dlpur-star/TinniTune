@@ -180,7 +180,7 @@ export class ThreeAFCTester {
 
     const selectedFreq = this.currentSet.frequencies[selection];
     const wasCorrect = selection === this.currentSet.targetIndex;
-    
+
     this.testHistory.push({
       iteration: this.iteration,
       selectedFrequency: selectedFreq,
@@ -189,7 +189,7 @@ export class ThreeAFCTester {
       stepSize: this.stepSize
     });
 
-    this.engine._log(`Selection ${selection}: ${selectedFreq} Hz`, 
+    this.engine._log(`Selection ${selection}: ${selectedFreq} Hz`,
                      wasCorrect ? '✓ correct' : '✗ needs adjustment');
 
     // Update frequency and step size based on selection
@@ -203,6 +203,12 @@ export class ThreeAFCTester {
 
     // Generate next test set
     this.currentSet = this.generateTestSet();
+
+    // If generateTestSet returned null, test is complete
+    if (!this.currentSet) {
+      this.isRunning = false;
+      this.engine._log('✓ Test complete: Max iterations reached');
+    }
   }
 
   /**
