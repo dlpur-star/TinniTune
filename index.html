@@ -23,5 +23,19 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+
+    <!-- Hidden form for Netlify form detection -->
+    <form name="tinnitune-feedback" netlify netlify-honeypot="bot-field" hidden>
+      <input type="text" name="email" />
+      <select name="reliefRating">
+        <option value="1">1</option>
+        <option value="10">10</option>
+      </select>
+      <select name="featureUsed">
+        <option value="frequency-matching">Frequency Matching</option>
+      </select>
+      <textarea name="feedback"></textarea>
+      <textarea name="improvements"></textarea>
+    </form>
   </body>
 </html>
