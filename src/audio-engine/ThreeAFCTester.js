@@ -291,32 +291,35 @@ export class ThreeAFCTester {
    * Play a single test tone
    */
   async _playTone(frequency, index) {
-    // Create oscillator
+    // Create NEW oscillator and gain for EACH tone (don't reuse class variables)
     const destination = this.engine.getChannelDestination(this.testEar);
 
-    this.gain = new Tone.Gain(Tone.dbToGain(this.config.volumeDb));
-    this.gain.connect(destination);
+    const gain = new Tone.Gain(Tone.dbToGain(this.config.volumeDb));
+    gain.connect(destination);
 
-    this.oscillator = new Tone.Oscillator(frequency, 'sine');
-    this.oscillator.connect(this.gain);
+    const oscillator = new Tone.Oscillator(frequency, 'sine');
+    oscillator.connect(gain);
 
     // Fade in
-    this.gain.gain.setValueAtTime(0, Tone.now());
-    this.gain.gain.rampTo(Tone.dbToGain(this.config.volumeDb), 0.05);
+    gain.gain.setValueAtTime(0, Tone.now());
+    gain.gain.rampTo(Tone.dbToGain(this.config.volumeDb), 0.05);
 
-    this.oscillator.start();
+    oscillator.start();
+    console.log(`▶️ Tone ${index + 1} playing: ${frequency} Hz`);
 
     // Play for duration
     await this._wait(this.config.toneDuration);
 
     // Fade out
-    this.gain.gain.rampTo(0, 0.05);
+    gain.gain.rampTo(0, 0.05);
     await this._wait(0.05);
 
     // Clean up
-    this.oscillator.stop();
-    this.oscillator.dispose();
-    this.gain.dispose();
+    oscillator.stop();
+    oscillator.dispose();
+    gain.dispose();
+
+    console.log(`✓ Tone ${index + 1} completed: ${frequency} Hz`);
   }
 
   /**
