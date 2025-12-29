@@ -1246,17 +1246,18 @@ if (step === 'setup') {
                     console.log('🎯 Starting 3AFC frequency test...');
 
                     // Initialize engine if not already
-                    if (!engineInstance) {
+                    let activeEngine = engineInstance;
+                    if (!activeEngine) {
                       console.log('Initializing audio engine for 3AFC test...');
-                      const engine = getAudioEngine({ enableLogging: true });
-                      setEngineInstance(engine);
-                      await engine.initialize();
+                      activeEngine = getAudioEngine({ enableLogging: true });
+                      setEngineInstance(activeEngine);
+                      await activeEngine.initialize();
                     } else {
-                      await engineInstance.initialize();
+                      await activeEngine.initialize();
                     }
 
-                    // Create 3AFC tester
-                    const tester = new ThreeAFCTester(engineInstance, {
+                    // Create 3AFC tester (use activeEngine, not engineInstance!)
+                    const tester = new ThreeAFCTester(activeEngine, {
                       startFrequency: 4000,
                       minFrequency: 250,
                       maxFrequency: 16000,
