@@ -1384,27 +1384,45 @@ if (step === 'setup') {
               {/* Play Tones Button */}
               <button
                 onClick={async () => {
-                  if (!afcTester) return;
+                  console.log('🔘 Button clicked!');
+                  console.log('afcTester exists?', !!afcTester);
+                  console.log('afcTester:', afcTester);
+
+                  if (!afcTester) {
+                    alert('⚠️ Audio test not initialized!\n\nThe frequency tester failed to start. Please:\n1. Reload the page\n2. Try the test again\n3. Check browser console for errors');
+                    console.error('❌ afcTester is null or undefined');
+                    return;
+                  }
+
+                  console.log('✓ afcTester exists, proceeding...');
                   console.log('▶️ Playing first test set...');
 
                   try {
                     // Show selection buttons and initialize
-                    setCurrentTestSet(afcTester.currentSet || afcTester.generateTestSet());
+                    console.log('Setting up test state...');
+                    const testSet = afcTester.currentSet || afcTester.generateTestSet();
+                    console.log('Test set generated:', testSet);
+
+                    setCurrentTestSet(testSet);
                     setTestReady(false);
                     setTestIteration(1);
                     setTestHistory([]);
 
                     // Visual feedback: tones are playing
+                    console.log('Setting isPlayingTones = true');
                     setIsPlayingTones(true);
 
                     // Play tones AFTER buttons are visible
+                    console.log('Calling afcTester.playTestSet()...');
                     await afcTester.playTestSet();
 
                     console.log('✓ All tones played successfully');
                   } catch (error) {
-                    console.error('Error playing tones:', error);
-                    alert('⚠️ Audio playback failed!\n\nCheck your device volume and try again.\n\nError: ' + error.message);
+                    console.error('❌ Error playing tones:', error);
+                    console.error('Error stack:', error.stack);
+                    alert('⚠️ Audio playback failed!\n\nError: ' + error.message + '\n\nCheck browser console for details.');
                   } finally {
+                    console.log('Setting isPlayingTones = false');
                     setIsPlayingTones(false);
                   }
                 }}
@@ -1650,18 +1668,26 @@ if (step === 'setup') {
                   {/* Play Tones Button - Always visible */}
                   <button
                     onClick={async () => {
-                      if (!afcTester) return;
+                      console.log('🔘 Step button clicked!');
+                      console.log('afcTester exists?', !!afcTester);
+
+                      if (!afcTester) {
+                        alert('⚠️ Audio test not initialized!\n\nPlease reload the page and try again.');
+                        console.error('❌ afcTester is null or undefined');
+                        return;
+                      }
 
                       try {
-                        console.log('▶️ Playing tones...');
+                        console.log('▶️ Playing tones for current step...');
                         setIsPlayingTones(true);
 
                         await afcTester.playTestSet();
 
                         console.log('✓ All tones played successfully');
                       } catch (error) {
-                        console.error('Error playing tones:', error);
-                        alert('⚠️ Audio playback failed!\n\nCheck your device volume and try again.\n\nError: ' + error.message);
+                        console.error('❌ Error playing tones:', error);
+                        console.error('Error stack:', error.stack);
+                        alert('⚠️ Audio playback failed!\n\nError: ' + error.message + '\n\nCheck browser console for details.');
                       } finally {
                         setIsPlayingTones(false);
                       }
