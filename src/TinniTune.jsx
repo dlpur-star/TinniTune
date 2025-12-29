@@ -1249,13 +1249,14 @@ if (step === 'setup') {
                     // Initialize engine if not already
                     let activeEngine = engineInstance;
                     if (!activeEngine) {
-                      console.log('Initializing audio engine for 3AFC test...');
+                      console.log('Creating audio engine for 3AFC test...');
                       activeEngine = getAudioEngine({ enableLogging: true });
                       setEngineInstance(activeEngine);
-                      await activeEngine.initialize();
-                    } else {
-                      await activeEngine.initialize();
                     }
+
+                    // Initialize (or re-initialize if context was suspended)
+                    console.log('Initializing audio engine...');
+                    await activeEngine.initialize();
 
                     // Create 3AFC tester (use activeEngine, not engineInstance!)
                     const tester = new ThreeAFCTester(activeEngine, {
@@ -1307,7 +1308,24 @@ if (step === 'setup') {
 
                   } catch (error) {
                     console.error('3AFC test setup error:', error);
-                    alert('Error setting up test: ' + error.message);
+
+                    // User-friendly error message
+                    let errorMsg = '⚠️ Audio Initialization Error\n\n';
+
+                    if (error.message.includes('Audio initialization failed')) {
+                      errorMsg += 'Could not start audio playback.\n\n';
+                      errorMsg += 'Try these solutions:\n';
+                      errorMsg += '• Reload the page and try again\n';
+                      errorMsg += '• Check your device volume is not muted\n';
+                      errorMsg += '• If on iOS, remove from Low Power Mode\n';
+                      errorMsg += '• Try using headphones\n';
+                      errorMsg += '• Grant audio permissions if prompted\n\n';
+                      errorMsg += 'Technical details: ' + error.message;
+                    } else {
+                      errorMsg += error.message;
+                    }
+
+                    alert(errorMsg);
                     setIsTestingFrequency(false);
                     setTestReady(false);
                   }
