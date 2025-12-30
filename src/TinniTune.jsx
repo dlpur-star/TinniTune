@@ -1354,6 +1354,7 @@ Sound therapy for tinnitus relief
 
 <button
 onClick={() => {
+alert('Button clicked! Profiles: ' + profiles.length + ', Modal: ' + showNewProfileModal);
 console.log('Begin button clicked');
 // If no profiles exist, show the new profile modal first
 if (profiles.length === 0) {
@@ -1371,7 +1372,9 @@ fontSize: '18px',
 borderRadius: '12px',
 cursor: 'pointer',
 fontWeight: 'bold',
-display: hasCalibration() ? 'none' : 'block'
+display: hasCalibration() ? 'none' : 'block',
+touchAction: 'manipulation',
+WebkitTapHighlightColor: 'rgba(0,0,0,0)'
 }}
 >
 {profiles.length === 0 ? 'Create Profile' : 'Begin Setup'}
@@ -5455,6 +5458,7 @@ Great session! Help us track your progress by rating your tinnitus.
             </button>
             <button
               onClick={() => {
+                alert('Create clicked! Name: "' + newProfileName + '", Profiles: ' + profiles.length);
                 console.log('Create button clicked!');
                 console.log('Profile name:', newProfileName);
                 console.log('Current profiles:', profiles);
@@ -5487,7 +5491,9 @@ Great session! Help us track your progress by rating your tinnitus.
                 color: 'white',
                 cursor: newProfileName.trim() ? 'pointer' : 'not-allowed',
                 fontWeight: 'bold',
-                opacity: newProfileName.trim() ? 1 : 0.5
+                opacity: newProfileName.trim() ? 1 : 0.5,
+                touchAction: 'manipulation',
+                WebkitTapHighlightColor: 'rgba(0,0,0,0)'
               }}
             >
               Create
