@@ -50,54 +50,38 @@ self.addEventListener('activate', (event) => {
   return self.clients.claim();
 });
 
-// Fetch event - network-first for HTML/JS, cache-first for assets
+// Fetch event - stale-while-revalidate strategy
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-  const url = new URL(request.url);
 
-  // Network-first strategy for HTML and JS files (always get latest)
-  if (request.destination === 'document' || url.pathname.endsWith('.html') || url.pathname.endsWith('.js')) {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          // Cache the new version
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseToCache);
-          });
-          return response;
-        })
-        .catch(() => {
-          // Fallback to cache if offline
-          return caches.match(request);
-        })
-    );
+  // Skip non-GET requests
+  if (request.method !== 'GET') {
     return;
   }
 
-  // Cache-first for static assets (images, fonts, etc.)
+  // Skip chrome-extension and other non-http(s) requests
+  if (!request.url.startsWith('http')) {
+    return;
+  }
+
   event.respondWith(
-    caches.match(request)
-      .then((response) => {
-        if (response) {
-          return response;
-        }
-
-        return fetch(request).then((response) => {
-          if (!response || response.status !== 200 || response.type !== 'basic') {
-            return response;
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.match(request).then((cachedResponse) => {
+        // Fetch from network
+        const fetchPromise = fetch(request).then((networkResponse) => {
+          // Update cache with new response
+          if (networkResponse && networkResponse.status === 200) {
+            cache.put(request, networkResponse.clone());
           }
-
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseToCache);
-          });
-
-          return response;
-        }).catch((error) => {
-          console.error('Fetch failed:', error);
-          throw error;
+          return networkResponse;
+        }).catch(() => {
+          // Network failed, return cached response if available
+          return cachedResponse;
         });
-      })
+
+        // Return cached response immediately if available, otherwise wait for network
+        return cachedResponse || fetchPromise;
+      });
+    })
   );
 });
