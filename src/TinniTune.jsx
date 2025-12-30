@@ -134,6 +134,7 @@ const calibrationTimeoutRef = useRef(null);
 // Calm Mode refs
 const heartbeatSynthsRef = useRef([]);
 const breathingTimerRef = useRef(null);
+const breathingIntervalsRef = useRef([]);
 
 // Load session history from localStorage on mount
 React.useEffect(() => {
@@ -1024,9 +1025,12 @@ const startBreathingGuide = () => {
       setBreathCount(count);
       if (count === 0) {
         clearInterval(inhaleInterval);
+        // Remove from refs array
+        breathingIntervalsRef.current = breathingIntervalsRef.current.filter(id => id !== inhaleInterval);
+
         setBreathingPhase('hold');
         setBreathCount(2);
-        setTimeout(() => {
+        const holdTimeout = setTimeout(() => {
           setBreathingPhase('out');
           let outCount = 6;
           setBreathCount(6);
@@ -1035,21 +1039,35 @@ const startBreathingGuide = () => {
             setBreathCount(outCount);
             if (outCount === 0) {
               clearInterval(exhaleInterval);
+              // Remove from refs array
+              breathingIntervalsRef.current = breathingIntervalsRef.current.filter(id => id !== exhaleInterval);
+
               breathingTimerRef.current = setTimeout(breathCycle, 500);
             }
           }, 1000);
+          breathingIntervalsRef.current.push(exhaleInterval);
         }, 2000);
+        breathingIntervalsRef.current.push(holdTimeout);
       }
     }, 1000);
+    breathingIntervalsRef.current.push(inhaleInterval);
   };
   breathCycle();
 };
 
 const stopBreathingGuide = () => {
+  // Clear all breathing intervals and timeouts
+  breathingIntervalsRef.current.forEach(id => {
+    clearInterval(id);
+    clearTimeout(id);
+  });
+  breathingIntervalsRef.current = [];
+
   if (breathingTimerRef.current) {
     clearTimeout(breathingTimerRef.current);
     breathingTimerRef.current = null;
   }
+
   setBreathingPhase('in');
   setBreathCount(4);
 };
