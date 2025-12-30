@@ -28,6 +28,26 @@
             y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
         })(window, document, "clarity", "script", "ut56ok4isw");
     </script>
+
+    <!-- EMERGENCY FIX: Unregister service workers IMMEDIATELY -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for (var i = 0; i < registrations.length; i++) {
+            registrations[i].unregister();
+            console.log('Unregistered service worker:', registrations[i].scope);
+          }
+        });
+      }
+      if ('caches' in window) {
+        caches.keys().then(function(names) {
+          for (var i = 0; i < names.length; i++) {
+            caches.delete(names[i]);
+            console.log('Deleted cache:', names[i]);
+          }
+        });
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
