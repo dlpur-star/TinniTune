@@ -5784,12 +5784,17 @@ Great session! Help us track your progress by rating your tinnitus.
 
         <button
           onClick={() => {
-            if (isPlaying) {
+            const newNotchState = !notchEnabled;
+            setNotchEnabled(newNotchState);
+
+            // Update in real-time if using new engine and playing
+            if (isPlaying && therapyEngine === 'engine' && therapyModule) {
+              therapyModule.setNotchEnabled(newNotchState);
+              console.log('🎛️ Notch toggled to:', newNotchState);
+            } else if (isPlaying && therapyEngine === 'legacy') {
+              // Legacy engine requires restart
               stopAudio();
-              setNotchEnabled(!notchEnabled);
               setTimeout(() => startAudio(), 100);
-            } else {
-              setNotchEnabled(!notchEnabled);
             }
           }}
           style={{
@@ -5848,12 +5853,23 @@ Great session! Help us track your progress by rating your tinnitus.
               <button
                 key={intensity}
                 onClick={() => {
-                  if (isPlaying) {
+                  setNotchIntensity(intensity);
+
+                  // Update in real-time if using new engine and playing
+                  if (isPlaying && therapyEngine === 'engine' && therapyModule) {
+                    const intensityMap = {
+                      'gentle': 'gentle',
+                      'standard': 'moderate',
+                      'strong': 'strong',
+                      'precise': 'precise'
+                    };
+                    const engineIntensity = intensityMap[intensity] || 'moderate';
+                    therapyModule.updateNotchIntensity(engineIntensity);
+                    console.log('🎛️ Notch intensity updated to:', engineIntensity);
+                  } else if (isPlaying && therapyEngine === 'legacy') {
+                    // Legacy engine requires restart
                     stopTherapy();
-                    setNotchIntensity(intensity);
                     setTimeout(() => startTherapy(), 100);
-                  } else {
-                    setNotchIntensity(intensity);
                   }
                 }}
                 style={{
@@ -5967,12 +5983,22 @@ Great session! Help us track your progress by rating your tinnitus.
               <button
                 key={modeKey}
                 onClick={() => {
-                  if (isPlaying) {
+                  setMode(modeKey);
+
+                  // Update in real-time if using new engine and playing
+                  if (isPlaying && therapyEngine === 'engine' && therapyModule) {
+                    const binauralMap = {
+                      'daytime': 'focus',
+                      'evening': 'calm',
+                      'sleep': 'sleep'
+                    };
+                    const binauralMode = binauralMap[modeKey] || 'focus';
+                    therapyModule.updateBinauralMode(binauralMode);
+                    console.log('🎛️ Binaural mode updated to:', binauralMode);
+                  } else if (isPlaying && therapyEngine === 'legacy') {
+                    // Legacy engine requires restart
                     stopTherapy();
-                    setMode(modeKey);
                     setTimeout(() => startTherapy(), 100);
-                  } else {
-                    setMode(modeKey);
                   }
                 }}
                 style={{
