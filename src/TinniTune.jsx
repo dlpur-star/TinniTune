@@ -10,7 +10,21 @@ import { ThreeAFCTester } from './audio-engine/ThreeAFCTester';
 import { ClinicalTherapyModule } from './audio-engine/ClinicalTherapyModule';
 import { SafetyMonitor } from './audio-engine/CalibrationSafetyModule';
 
+// User Settings Hook
+import { useUserSettings } from './hooks/useUserSettings';
+
 export default function TinniTune() {
+// Initialize user settings hook
+const {
+  settings: userSettings,
+  isLoaded: settingsLoaded,
+  updateSettings,
+  updateCalmMode,
+  saveCalibration,
+  resetSettings,
+  hasCalibration
+} = useUserSettings();
+
 const [step, setStep] = useState('welcome'); // 'welcome', 'setup', 'therapy', 'history'
 const [showWizard, setShowWizard] = useState(false); // Show therapy setup wizard
 const [frequency, setFrequency] = useState(4000);
@@ -122,6 +136,32 @@ setTestVolume(data.testVolume || -15);
 console.error('Error loading calibration progress:', error);
 }
 }, []);
+
+// Load user settings and apply them to component state
+React.useEffect(() => {
+if (settingsLoaded && userSettings) {
+// Apply saved frequency and ear settings if available
+if (userSettings.frequency) {
+setFrequency(userSettings.frequency);
+setFineFreq(userSettings.frequency);
+}
+if (userSettings.ear) {
+setEar(userSettings.ear);
+}
+// Apply therapy preferences
+setMode(userSettings.mode);
+setNotchEnabled(userSettings.notchEnabled);
+setNotchIntensity(userSettings.notchIntensity);
+setVolumeLeft(userSettings.volumeLeft);
+setVolumeRight(userSettings.volumeRight);
+
+// Apply calm mode preferences
+if (userSettings.calmMode) {
+setHeartbeatBPM(userSettings.calmMode.heartbeatBPM);
+setHeartbeatVolume(userSettings.calmMode.heartbeatVolume);
+}
+}
+}, [settingsLoaded, userSettings]);
 
 // Detect iOS and check if already installed
 React.useEffect(() => {
@@ -863,6 +903,9 @@ const handleCalibrationComplete = () => {
   }
   setFrequency(finalFreq);
 
+  // Save calibration to user settings
+  saveCalibration(finalFreq, ear, confidence);
+
   // Clear calibration progress
   localStorage.removeItem('tinnitune_calibration_progress');
 
@@ -1113,6 +1156,99 @@ Sound therapy for tinnitus relief
   </div>
 )}
 
+{/* Saved Settings Display */}
+{settingsLoaded && hasCalibration() && (
+  <div style={{
+    background: 'rgba(78, 205, 196, 0.15)',
+    border: '2px solid #4ECDC4',
+    borderRadius: '12px',
+    padding: '20px',
+    marginBottom: '20px',
+    textAlign: 'left'
+  }}>
+    <h3 style={{
+      color: '#4ECDC4',
+      margin: '0 0 15px 0',
+      fontSize: '18px',
+      fontWeight: 'bold'
+    }}>
+      Your Saved Settings
+    </h3>
+    <div style={{
+      color: 'rgba(255, 255, 255, 0.9)',
+      fontSize: '14px',
+      lineHeight: '1.8'
+    }}>
+      <p style={{ margin: '5px 0' }}>
+        <strong>Frequency:</strong> {userSettings.frequency} Hz
+      </p>
+      <p style={{ margin: '5px 0' }}>
+        <strong>Ear:</strong> {userSettings.ear === 'both' ? 'Both' : userSettings.ear === 'left' ? 'Left' : 'Right'}
+      </p>
+      {userSettings.confidence && (
+        <p style={{ margin: '5px 0' }}>
+          <strong>Confidence:</strong> {userSettings.confidence}%
+        </p>
+      )}
+      <p style={{ margin: '5px 0' }}>
+        <strong>Therapy Mode:</strong> {userSettings.mode.charAt(0).toUpperCase() + userSettings.mode.slice(1)}
+      </p>
+      <p style={{ margin: '5px 0' }}>
+        <strong>Notch Filter:</strong> {userSettings.notchEnabled ? `Enabled (${userSettings.notchIntensity})` : 'Disabled'}
+      </p>
+    </div>
+    <div style={{
+      display: 'flex',
+      gap: '10px',
+      marginTop: '15px',
+      flexWrap: 'wrap'
+    }}>
+      <button
+        onClick={() => {
+          setShowWizard(true);
+          setStep('therapy');
+        }}
+        style={{
+          background: 'linear-gradient(135deg, #667eea, #764ba2)',
+          color: 'white',
+          border: 'none',
+          padding: '12px 24px',
+          fontSize: '14px',
+          borderRadius: '8px',
+          cursor: 'pointer',
+          fontWeight: 'bold',
+          flex: '1',
+          minWidth: '120px'
+        }}
+      >
+        Continue
+      </button>
+      <button
+        onClick={() => {
+          if (window.confirm('This will clear your saved settings and start fresh. Continue?')) {
+            resetSettings();
+            setStep('setup');
+          }
+        }}
+        style={{
+          background: 'rgba(255, 107, 107, 0.2)',
+          color: '#ff6b6b',
+          border: '2px solid #ff6b6b',
+          padding: '12px 24px',
+          fontSize: '14px',
+          borderRadius: '8px',
+          cursor: 'pointer',
+          fontWeight: 'bold',
+          flex: '1',
+          minWidth: '120px'
+        }}
+      >
+        Reset & Recalibrate
+      </button>
+    </div>
+  </div>
+)}
+
 <button
 onClick={() => {
 console.log('Begin button clicked');
@@ -1126,7 +1262,8 @@ padding: '18px 48px',
 fontSize: '18px',
 borderRadius: '12px',
 cursor: 'pointer',
-fontWeight: 'bold'
+fontWeight: 'bold',
+display: hasCalibration() ? 'none' : 'block'
 }}
 >
 Begin Setup
@@ -1289,6 +1426,9 @@ if (step === 'setup') {
                       setIsTestingFrequency(false);
                       setCurrentTestSet(null);
                       setTestReady(false);
+
+                      // Save calibration to user settings
+                      saveCalibration(Math.round(result.frequency), ear, result.confidence);
 
                       alert(`✅ Frequency matched!\n\n` +
                             `Frequency: ${Math.round(result.frequency)} Hz\n` +
@@ -3508,6 +3648,19 @@ if (showWizard) {
           setIsCalmMode(config.calmMode);
           setHeartbeatBPM(config.heartbeatBPM);
 
+          // Save therapy preferences to user settings
+          updateSettings({
+            mode: config.therapyMode,
+            notchEnabled: config.notchEnabled,
+            notchIntensity: config.notchIntensity
+          });
+
+          // Save calm mode preferences
+          updateCalmMode({
+            enabled: config.calmMode,
+            heartbeatBPM: config.heartbeatBPM
+          });
+
           // Hide wizard and show therapy
           setShowWizard(false);
 
@@ -4757,6 +4910,7 @@ Great session! Help us track your progress by rating your tinnitus.
             onChange={(e) => {
               const newVol = parseInt(e.target.value);
               setVolumeLeft(newVol);
+              updateSettings({ volumeLeft: newVol });
               if (isPlaying) {
                 // Update left channel sounds (indices 0 and 1)
                 if (synthsRef.current[0] && synthsRef.current[0].volume) {
@@ -4826,6 +4980,7 @@ Great session! Help us track your progress by rating your tinnitus.
             onChange={(e) => {
               const newVol = parseInt(e.target.value);
               setVolumeRight(newVol);
+              updateSettings({ volumeRight: newVol });
               if (isPlaying) {
                 // Update right channel sounds (indices 2 and 3)
                 if (synthsRef.current[2] && synthsRef.current[2].volume) {
