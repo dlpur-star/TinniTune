@@ -136,6 +136,9 @@ const heartbeatSynthsRef = useRef([]);
 const breathingTimerRef = useRef(null);
 const breathingIntervalsRef = useRef([]);
 
+// Wake Lock ref to prevent phone sleep during therapy
+const wakeLockRef = useRef(null);
+
 // Load session history from localStorage on mount
 React.useEffect(() => {
 try {
@@ -274,6 +277,60 @@ React.useEffect(() => {
   window.addEventListener('tinnitune-safety-warning', handleSafetyWarning);
   return () => window.removeEventListener('tinnitune-safety-warning', handleSafetyWarning);
 }, []);
+
+// Handle visibility change to resume audio context and wake lock
+React.useEffect(() => {
+  const handleVisibilityChange = async () => {
+    if (document.visibilityState === 'visible' && isPlaying) {
+      console.log('📱 App visible - resuming audio context');
+
+      // Resume Tone.js audio context if suspended
+      if (Tone.context.state === 'suspended') {
+        await Tone.context.resume();
+        console.log('✅ Audio context resumed');
+      }
+
+      // Re-acquire wake lock if it was released
+      if (!wakeLockRef.current && isPlaying) {
+        await requestWakeLock();
+      }
+    }
+  };
+
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+}, [isPlaying]);
+
+// Request wake lock to prevent phone sleep during therapy
+const requestWakeLock = async () => {
+  try {
+    if ('wakeLock' in navigator) {
+      wakeLockRef.current = await navigator.wakeLock.request('screen');
+      console.log('🔒 Wake lock acquired - screen will stay on');
+
+      wakeLockRef.current.addEventListener('release', () => {
+        console.log('🔓 Wake lock released');
+      });
+    } else {
+      console.log('⚠️ Wake Lock API not supported on this device');
+    }
+  } catch (err) {
+    console.error('Failed to acquire wake lock:', err);
+  }
+};
+
+// Release wake lock when therapy stops
+const releaseWakeLock = async () => {
+  if (wakeLockRef.current) {
+    try {
+      await wakeLockRef.current.release();
+      wakeLockRef.current = null;
+      console.log('🔓 Wake lock released');
+    } catch (err) {
+      console.error('Failed to release wake lock:', err);
+    }
+  }
+};
 
 // Save calibration progress to localStorage
 const saveCalibrationProgress = () => {
@@ -601,10 +658,14 @@ console.log('Audio context started');
 
   synthsRef.current.push(oscLeft, oscRight);
   console.log('Binaural beats added');
-  
+
   setIsPlaying(true);
   setSessionTime(0);
   setSessionStartTime(Date.now()); // Record when session started
+
+  // Request wake lock to prevent phone sleep
+  await requestWakeLock();
+
   const notchStatus = notchEnabled ? `with ${notchIntensity} notch therapy` : 'without notch therapy';
   console.log(`Therapy started ${notchStatus} at ${frequency}Hz`);
 } catch (error) {
@@ -639,6 +700,9 @@ if (pannerRightRef.current) {
   try { pannerRightRef.current.dispose(); } catch (e) {}
   pannerRightRef.current = null;
 }
+
+// Release wake lock when therapy stops
+releaseWakeLock();
 
 // Only handle session ending if this is a real stop, not cleanup
 if (!silentCleanup) {
@@ -744,6 +808,9 @@ const startAudioEngine = async () => {
 
     setIsPlaying(true);
 
+    // Request wake lock to prevent phone sleep
+    await requestWakeLock();
+
     // Start safety monitoring
     if (safetyMonitor) {
       const maxVolume = Math.max(volumeLeft, volumeRight);
@@ -802,6 +869,9 @@ const stopAudioEngine = async (silentCleanup = false) => {
 
     // Always clean up state
     setTherapyModule(null);
+
+    // Release wake lock when therapy stops
+    releaseWakeLock();
 
     // Only handle session ending if this is a real stop, not cleanup
     if (!silentCleanup) {
