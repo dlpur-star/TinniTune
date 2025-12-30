@@ -4964,68 +4964,6 @@ Great session! Help us track your progress by rating your tinnitus.
           </div>
         </div>
       )}
-      <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
-        <button
-          onClick={() => {
-            if (isPlaying) stopAudio();
-            setStep('history');
-          }}
-          style={{
-            padding: '8px 16px',
-            background: 'rgba(255,255,255,0.1)',
-            color: 'rgba(255,255,255,0.9)',
-            border: '1px solid rgba(255,255,255,0.15)',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            fontSize: '13px',
-            fontWeight: '600',
-            backdropFilter: 'blur(10px)',
-            transition: 'all 0.2s',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-            whiteSpace: 'nowrap'
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.background = 'rgba(255,255,255,0.15)';
-            e.target.style.transform = 'translateY(-1px)';
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.background = 'rgba(255,255,255,0.1)';
-            e.target.style.transform = 'translateY(0)';
-          }}
-        >
-          📊 History
-        </button>
-        <button
-          onClick={() => {
-            if (isPlaying) stopAudio();
-            setStep('setup');
-          }}
-          style={{
-            padding: '8px 16px',
-            background: 'rgba(255,255,255,0.1)',
-            color: 'rgba(255,255,255,0.9)',
-            border: '1px solid rgba(255,255,255,0.15)',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            fontSize: '13px',
-            fontWeight: '600',
-            backdropFilter: 'blur(10px)',
-            transition: 'all 0.2s',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-            whiteSpace: 'nowrap'
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.background = 'rgba(255,255,255,0.15)';
-            e.target.style.transform = 'translateY(-1px)';
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.background = 'rgba(255,255,255,0.1)';
-            e.target.style.transform = 'translateY(0)';
-          }}
-        >
-          ⚙️ Settings
-        </button>
-      </div>
     </div>
 
     {/* Volume Control - Independent Left/Right */}
@@ -5864,6 +5802,107 @@ Great session! Help us track your progress by rating your tinnitus.
       )}
     </div>
 
+
+    {/* History Overview */}
+    {sessions.length > 0 && (
+      <div style={{
+        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%)',
+        padding: '28px 24px',
+        borderRadius: '20px',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
+        marginBottom: '24px'
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '20px'
+        }}>
+          <h2 style={{
+            color: '#4ECDC4',
+            margin: 0,
+            fontSize: '20px',
+            fontWeight: '700'
+          }}>
+            📊 Your Progress
+          </h2>
+          <button
+            onClick={() => setStep('history')}
+            style={{
+              padding: '8px 16px',
+              background: 'rgba(78, 205, 196, 0.15)',
+              color: '#4ECDC4',
+              border: '1px solid rgba(78, 205, 196, 0.3)',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              fontSize: '13px',
+              fontWeight: '600',
+              transition: 'all 0.2s'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = 'rgba(78, 205, 196, 0.25)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = 'rgba(78, 205, 196, 0.15)';
+            }}
+          >
+            View Details →
+          </button>
+        </div>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+          gap: '16px'
+        }}>
+          <div style={{
+            background: 'rgba(102, 126, 234, 0.15)',
+            padding: '16px',
+            borderRadius: '12px',
+            border: '1px solid rgba(102, 126, 234, 0.2)',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: '#667eea', marginBottom: '4px' }}>
+              {getStats().totalSessions}
+            </div>
+            <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', fontWeight: '600' }}>
+              Sessions
+            </div>
+          </div>
+
+          <div style={{
+            background: 'rgba(78, 205, 196, 0.15)',
+            padding: '16px',
+            borderRadius: '12px',
+            border: '1px solid rgba(78, 205, 196, 0.2)',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: '#4ECDC4', marginBottom: '4px' }}>
+              {Math.floor(getStats().totalTime / 3600)}h {Math.floor((getStats().totalTime % 3600) / 60)}m
+            </div>
+            <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', fontWeight: '600' }}>
+              Total Time
+            </div>
+          </div>
+
+          <div style={{
+            background: 'rgba(255, 183, 77, 0.15)',
+            padding: '16px',
+            borderRadius: '12px',
+            border: '1px solid rgba(255, 183, 77, 0.2)',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: '24px', fontWeight: '700', color: '#FFB74D', marginBottom: '4px' }}>
+              {getStats().streak} 🔥
+            </div>
+            <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', fontWeight: '600' }}>
+              Day Streak
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
 
     {/* Footer - More subtle */}
     <div style={{
