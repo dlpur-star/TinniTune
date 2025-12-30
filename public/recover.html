@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>TinniTune - Recovering...</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container {
+      max-width: 600px;
+      background: rgba(255,255,255,0.1);
+      padding: 40px;
+      border-radius: 20px;
+      text-align: center;
+    }
+    h1 { color: #4ECDC4; margin: 0 0 20px 0; }
+    .status { margin: 20px 0; font-size: 18px; }
+    .spinner {
+      border: 4px solid rgba(255,255,255,0.3);
+      border-top: 4px solid #4ECDC4;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+      margin: 30px auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .success { color: #4ECDC4; }
+    .info { font-size: 14px; opacity: 0.8; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔧 Recovering TinniTune</h1>
+    <div class="status" id="status">Clearing service workers and caches...</div>
+    <div class="spinner" id="spinner"></div>
+    <div id="details" class="info"></div>
+  </div>
+
+  <script>
+    const status = document.getElementById('status');
+    const spinner = document.getElementById('spinner');
+    const details = document.getElementById('details');
+
+    async function recover() {
+      try {
+        let steps = [];
+
+        // Step 1: Unregister ALL service workers
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          for (const reg of registrations) {
+            await reg.unregister();
+            steps.push('✓ Unregistered: ' + reg.scope);
+          }
+          if (registrations.length === 0) {
+            steps.push('✓ No service workers found');
+          }
+        }
+
+        // Step 2: Clear ALL caches
+        if ('caches' in window) {
+          const names = await caches.keys();
+          for (const name of names) {
+            await caches.delete(name);
+            steps.push('✓ Cleared cache: ' + name);
+          }
+          if (names.length === 0) {
+            steps.push('✓ No caches found');
+          }
+        }
+
+        // Step 3: Show success
+        spinner.style.display = 'none';
+        status.innerHTML = '<span class="success">✅ Recovery Complete!</span>';
+        details.innerHTML = steps.join('<br>') + '<br><br><strong>Redirecting to TinniTune...</strong>';
+
+        // Step 4: Redirect to main app with cache-busting
+        setTimeout(() => {
+          window.location.href = '/?t=' + Date.now();
+        }, 2000);
+
+      } catch (error) {
+        spinner.style.display = 'none';
+        status.innerHTML = '❌ Error: ' + error.message;
+        details.innerHTML = 'Please try:<br>1. Close ALL browser tabs/windows<br>2. Clear browser data manually<br>3. Restart your device<br>4. Visit TinniTune again';
+      }
+    }
+
+    // Run immediately
+    recover();
+  </script>
+</body>
+</html>
