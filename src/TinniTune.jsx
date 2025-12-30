@@ -1302,50 +1302,90 @@ Sound therapy for tinnitus relief
       gap: '10px'
     }}>
       {userSettings.favorites.map(fav => (
-        <button
-          key={fav.id}
-          onClick={() => {
-            loadFavorite(fav.id);
-            setStep('therapy');
-          }}
-          style={{
-            background: 'linear-gradient(135deg, rgba(252, 227, 138, 0.25), rgba(252, 227, 138, 0.15))',
-            border: '2px solid rgba(252, 227, 138, 0.5)',
-            borderRadius: '12px',
-            padding: '16px 12px',
-            color: 'white',
-            fontSize: '14px',
-            fontWeight: '700',
-            cursor: 'pointer',
-            touchAction: 'manipulation',
-            textAlign: 'center',
-            transition: 'all 0.2s',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '6px',
-            alignItems: 'center'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'linear-gradient(135deg, rgba(252, 227, 138, 0.35), rgba(252, 227, 138, 0.25))';
-            e.currentTarget.style.transform = 'translateY(-2px)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'linear-gradient(135deg, rgba(252, 227, 138, 0.25), rgba(252, 227, 138, 0.15))';
-            e.currentTarget.style.transform = 'translateY(0)';
-          }}
-        >
-          <div style={{ fontSize: '24px' }}>
-            {fav.mode === 'daytime' ? '☀️' : fav.mode === 'evening' ? '🌆' : '🌙'}
-          </div>
-          <div>{fav.name}</div>
-          <div style={{
-            fontSize: '11px',
-            opacity: 0.7,
-            fontWeight: '500'
-          }}>
-            {fav.mode.charAt(0).toUpperCase() + fav.mode.slice(1)} • {fav.notchEnabled ? 'Notch ON' : 'No Notch'}
-          </div>
-        </button>
+        <div key={fav.id} style={{ position: 'relative' }}>
+          <button
+            onClick={() => {
+              loadFavorite(fav.id);
+              setStep('therapy');
+            }}
+            style={{
+              background: 'linear-gradient(135deg, rgba(252, 227, 138, 0.25), rgba(252, 227, 138, 0.15))',
+              border: '2px solid rgba(252, 227, 138, 0.5)',
+              borderRadius: '12px',
+              padding: '16px 12px',
+              color: 'white',
+              fontSize: '14px',
+              fontWeight: '700',
+              cursor: 'pointer',
+              touchAction: 'manipulation',
+              textAlign: 'center',
+              transition: 'all 0.2s',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '6px',
+              alignItems: 'center',
+              width: '100%'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(252, 227, 138, 0.35), rgba(252, 227, 138, 0.25))';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(252, 227, 138, 0.25), rgba(252, 227, 138, 0.15))';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+          >
+            <div style={{ fontSize: '24px' }}>
+              {fav.mode === 'daytime' ? '☀️' : fav.mode === 'evening' ? '🌆' : '🌙'}
+            </div>
+            <div>{fav.name}</div>
+            <div style={{
+              fontSize: '11px',
+              opacity: 0.7,
+              fontWeight: '500'
+            }}>
+              {fav.mode.charAt(0).toUpperCase() + fav.mode.slice(1)} • {fav.notchEnabled ? 'Notch ON' : 'No Notch'}
+            </div>
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (window.confirm(`Delete "${fav.name}"?`)) {
+                deleteFavorite(fav.id);
+              }
+            }}
+            style={{
+              position: 'absolute',
+              top: '6px',
+              right: '6px',
+              background: 'rgba(255, 107, 107, 0.9)',
+              border: 'none',
+              borderRadius: '50%',
+              width: '24px',
+              height: '24px',
+              color: 'white',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              touchAction: 'manipulation',
+              zIndex: 10,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 107, 107, 1)';
+              e.currentTarget.style.transform = 'scale(1.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 107, 107, 0.9)';
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+          >
+            ×
+          </button>
+        </div>
       ))}
     </div>
   </div>
