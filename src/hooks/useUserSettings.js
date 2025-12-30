@@ -23,6 +23,9 @@ const DEFAULT_SETTINGS = {
     breathingEnabled: true
   },
 
+  // Favorite therapy presets
+  favorites: [],
+
   // Metadata
   lastUpdated: null,
   calibrationCompleted: false
@@ -137,6 +140,76 @@ export const useUserSettings = (profileId = null) => {
     return settings.calibrationCompleted && settings.frequency !== null;
   }, [settings]);
 
+  /**
+   * Save current therapy settings as a favorite preset
+   * @param {string} name - Name for the favorite preset
+   * @returns {Object} The created favorite
+   */
+  const saveFavorite = useCallback((name) => {
+    const newFavorite = {
+      id: `favorite_${Date.now()}`,
+      name: name.trim(),
+      mode: settings.mode,
+      notchEnabled: settings.notchEnabled,
+      notchIntensity: settings.notchIntensity,
+      volumeLeft: settings.volumeLeft,
+      volumeRight: settings.volumeRight,
+      calmMode: { ...settings.calmMode },
+      createdAt: new Date().toISOString()
+    };
+
+    setSettings(prev => ({
+      ...prev,
+      favorites: [...prev.favorites, newFavorite]
+    }));
+
+    return newFavorite;
+  }, [settings]);
+
+  /**
+   * Load a favorite preset into current therapy settings
+   * @param {string} favoriteId - ID of the favorite to load
+   */
+  const loadFavorite = useCallback((favoriteId) => {
+    const favorite = settings.favorites.find(f => f.id === favoriteId);
+    if (favorite) {
+      setSettings(prev => ({
+        ...prev,
+        mode: favorite.mode,
+        notchEnabled: favorite.notchEnabled,
+        notchIntensity: favorite.notchIntensity,
+        volumeLeft: favorite.volumeLeft,
+        volumeRight: favorite.volumeRight,
+        calmMode: { ...favorite.calmMode }
+      }));
+    }
+  }, [settings.favorites]);
+
+  /**
+   * Delete a favorite preset
+   * @param {string} favoriteId - ID of the favorite to delete
+   */
+  const deleteFavorite = useCallback((favoriteId) => {
+    setSettings(prev => ({
+      ...prev,
+      favorites: prev.favorites.filter(f => f.id !== favoriteId)
+    }));
+  }, []);
+
+  /**
+   * Rename a favorite preset
+   * @param {string} favoriteId - ID of the favorite to rename
+   * @param {string} newName - New name for the favorite
+   */
+  const renameFavorite = useCallback((favoriteId, newName) => {
+    setSettings(prev => ({
+      ...prev,
+      favorites: prev.favorites.map(f =>
+        f.id === favoriteId ? { ...f, name: newName.trim() } : f
+      )
+    }));
+  }, []);
+
   return {
     settings,
     isLoaded,
@@ -144,7 +217,11 @@ export const useUserSettings = (profileId = null) => {
     updateCalmMode,
     saveCalibration,
     resetSettings,
-    hasCalibration
+    hasCalibration,
+    saveFavorite,
+    loadFavorite,
+    deleteFavorite,
+    renameFavorite
   };
 };
 
