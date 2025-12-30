@@ -1362,14 +1362,9 @@ Sound therapy for tinnitus relief
 
 <button
 onClick={() => {
-alert('Button clicked! Profiles: ' + profiles.length + ', Modal: ' + showNewProfileModal);
-console.log('Begin button clicked');
 // If no profiles exist, show the new profile modal first
 if (profiles.length === 0) {
   setShowNewProfileModal(true);
-  setTimeout(() => {
-    alert('Modal should be set to true now. If you still dont see a popup with a text input, theres a rendering issue.');
-  }, 100);
 } else {
   setStep('setup');
 }
@@ -5822,21 +5817,12 @@ Great session! Help us track your progress by rating your tinnitus.
             }}
             onKeyPress={(e) => {
               if (e.key === 'Enter' && newProfileName.trim()) {
-                console.log('Enter key pressed in profile input');
-                console.log('Profile name:', newProfileName);
-                console.log('Current profiles:', profiles);
                 const wasFirstProfile = profiles.length === 0;
-                console.log('Was first profile?', wasFirstProfile);
                 const profile = createProfile(newProfileName);
-                console.log('Created profile:', profile);
                 setNewProfileName('');
                 setShowNewProfileModal(false);
-                // If this was the first profile, proceed to setup
                 if (wasFirstProfile) {
-                  console.log('Advancing to setup step');
                   setStep('setup');
-                } else {
-                  console.log('Not first profile, staying on welcome');
                 }
               }
             }}
@@ -5866,23 +5852,13 @@ Great session! Help us track your progress by rating your tinnitus.
             </button>
             <button
               onClick={() => {
-                alert('Create clicked! Name: "' + newProfileName + '", Profiles: ' + profiles.length);
-                console.log('Create button clicked!');
-                console.log('Profile name:', newProfileName);
-                console.log('Current profiles:', profiles);
                 if (newProfileName.trim()) {
                   const wasFirstProfile = profiles.length === 0;
-                  console.log('Was first profile?', wasFirstProfile);
                   const profile = createProfile(newProfileName);
-                  console.log('Created profile:', profile);
                   setNewProfileName('');
                   setShowNewProfileModal(false);
-                  // If this was the first profile, proceed to setup
                   if (wasFirstProfile) {
-                    console.log('Advancing to setup step');
                     setStep('setup');
-                  } else {
-                    console.log('Not first profile, staying on welcome');
                   }
                 }
               }}
