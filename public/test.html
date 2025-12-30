@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Page</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      padding: 40px;
+      background: #1a1a2e;
+      color: white;
+    }
+    .success { color: #4ECDC4; font-size: 24px; margin: 20px 0; }
+    .info { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px; margin: 10px 0; }
+    pre { background: #000; padding: 10px; overflow: auto; }
+  </style>
+</head>
+<body>
+  <h1>🔍 TinniTune Deployment Test</h1>
+  <div class="success">✅ Deployment is working!</div>
+
+  <div class="info">
+    <strong>Next step:</strong> Visit the main app and check the browser console for errors.
+    <br><br>
+    <strong>How to check console:</strong>
+    <ul>
+      <li><strong>Fire Tablet (Silk):</strong> Not easily accessible - use iPhone instead</li>
+      <li><strong>iPhone (Safari):</strong> Settings → Safari → Advanced → Web Inspector (connect to Mac/PC)</li>
+      <li><strong>Desktop Chrome:</strong> Press F12 or Ctrl+Shift+J</li>
+      <li><strong>Desktop Safari:</strong> Develop → Show JavaScript Console</li>
+    </ul>
+  </div>
+
+  <div class="info">
+    <strong>If you see an error in console, it will look like:</strong>
+    <pre>Uncaught TypeError: Cannot read property 'xxx' of undefined
+    at TinniTune.jsx:123</pre>
+  </div>
+
+  <div class="info">
+    <a href="/" style="color: #4ECDC4; font-size: 18px;">→ Return to TinniTune</a>
+  </div>
+
+  <script>
+    console.log('✅ Test page JavaScript is working');
+    console.log('Window location:', window.location.href);
+    console.log('User agent:', navigator.userAgent);
+  </script>
+</body>
+</html>
