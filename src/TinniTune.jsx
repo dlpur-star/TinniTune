@@ -10,11 +10,25 @@ import { ThreeAFCTester } from './audio-engine/ThreeAFCTester';
 import { ClinicalTherapyModule } from './audio-engine/ClinicalTherapyModule';
 import { SafetyMonitor } from './audio-engine/CalibrationSafetyModule';
 
-// User Settings Hook
+// User Settings Hooks
 import { useUserSettings } from './hooks/useUserSettings';
+import { useUserProfiles } from './hooks/useUserProfiles';
 
 export default function TinniTune() {
-// Initialize user settings hook
+// Initialize profile management
+const {
+  profiles,
+  activeProfileId,
+  activeProfile,
+  isLoaded: profilesLoaded,
+  createProfile,
+  switchProfile,
+  deleteProfile,
+  renameProfile,
+  getProfileCount
+} = useUserProfiles();
+
+// Initialize user settings hook (profile-aware)
 const {
   settings: userSettings,
   isLoaded: settingsLoaded,
@@ -23,7 +37,7 @@ const {
   saveCalibration,
   resetSettings,
   hasCalibration
-} = useUserSettings();
+} = useUserSettings(activeProfileId);
 
 const [step, setStep] = useState('welcome'); // 'welcome', 'setup', 'therapy', 'history'
 const [showWizard, setShowWizard] = useState(false); // Show therapy setup wizard
@@ -53,6 +67,12 @@ const [isStandalone, setIsStandalone] = useState(false);
 
 // Feedback form state
 const [showFeedback, setShowFeedback] = useState(false);
+
+// Profile management state
+const [showProfileManager, setShowProfileManager] = useState(false);
+const [showNewProfileModal, setShowNewProfileModal] = useState(false);
+const [newProfileName, setNewProfileName] = useState('');
+const [showSettingsPanel, setShowSettingsPanel] = useState(false);
 
 // Audio Engine Mode Toggle (Development Feature)
 const [therapyEngine, setTherapyEngine] = useState('legacy'); // 'legacy' or 'engine'
@@ -1156,8 +1176,91 @@ Sound therapy for tinnitus relief
   </div>
 )}
 
+{/* Profile Selector */}
+{profilesLoaded && profiles.length > 0 && (
+  <div style={{
+    background: 'rgba(102, 126, 234, 0.15)',
+    border: '2px solid #667eea',
+    borderRadius: '12px',
+    padding: '20px',
+    marginBottom: '20px',
+    textAlign: 'left'
+  }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+      <h3 style={{
+        color: '#667eea',
+        margin: '0',
+        fontSize: '18px',
+        fontWeight: 'bold'
+      }}>
+        User Profile
+      </h3>
+      <button
+        onClick={() => setShowProfileManager(true)}
+        style={{
+          background: 'rgba(102, 126, 234, 0.2)',
+          color: '#667eea',
+          border: '1px solid #667eea',
+          padding: '6px 12px',
+          fontSize: '12px',
+          borderRadius: '6px',
+          cursor: 'pointer',
+          fontWeight: 'bold'
+        }}
+      >
+        Manage Profiles
+      </button>
+    </div>
+    <div style={{
+      display: 'flex',
+      gap: '10px',
+      flexWrap: 'wrap'
+    }}>
+      {profiles.map(profile => (
+        <button
+          key={profile.id}
+          onClick={() => switchProfile(profile.id)}
+          style={{
+            background: profile.id === activeProfileId
+              ? 'linear-gradient(135deg, #667eea, #764ba2)'
+              : 'rgba(255, 255, 255, 0.1)',
+            color: 'white',
+            border: profile.id === activeProfileId ? 'none' : '1px solid rgba(255, 255, 255, 0.2)',
+            padding: '10px 20px',
+            fontSize: '14px',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontWeight: profile.id === activeProfileId ? 'bold' : 'normal',
+            flex: '1',
+            minWidth: '100px'
+          }}
+        >
+          {profile.name}
+        </button>
+      ))}
+    </div>
+    <button
+      onClick={() => setShowNewProfileModal(true)}
+      style={{
+        background: 'transparent',
+        color: '#667eea',
+        border: '2px dashed #667eea',
+        padding: '10px 20px',
+        fontSize: '14px',
+        borderRadius: '8px',
+        cursor: 'pointer',
+        fontWeight: 'bold',
+        width: '100%',
+        marginTop: '10px'
+      }}
+    >
+      + Add New Profile
+    </button>
+  </div>
+)}
+
 {/* Saved Settings Display */}
-{settingsLoaded && hasCalibration() && (
+{settingsLoaded && hasCalibration() && activeProfile && (
   <div style={{
     background: 'rgba(78, 205, 196, 0.15)',
     border: '2px solid #4ECDC4',
@@ -1172,7 +1275,7 @@ Sound therapy for tinnitus relief
       fontSize: '18px',
       fontWeight: 'bold'
     }}>
-      Your Saved Settings
+      {activeProfile?.name}'s Settings
     </h3>
     <div style={{
       color: 'rgba(255, 255, 255, 0.9)',
@@ -1252,7 +1355,12 @@ Sound therapy for tinnitus relief
 <button
 onClick={() => {
 console.log('Begin button clicked');
-setStep('setup');
+// If no profiles exist, show the new profile modal first
+if (profiles.length === 0) {
+  setShowNewProfileModal(true);
+} else {
+  setStep('setup');
+}
 }}
 style={{
 background: 'linear-gradient(135deg, #667eea, #764ba2)',
@@ -1266,7 +1374,7 @@ fontWeight: 'bold',
 display: hasCalibration() ? 'none' : 'block'
 }}
 >
-Begin Setup
+{profiles.length === 0 ? 'Create Profile' : 'Begin Setup'}
 </button>
 </div>
 </div>
@@ -3693,6 +3801,173 @@ position: 'relative',
 overflow: 'hidden'
 }}>
 
+{/* Current Settings Panel */}
+<div style={{
+  position: 'fixed',
+  top: '10px',
+  left: '10px',
+  zIndex: 2000,
+  background: 'rgba(20, 30, 48, 0.95)',
+  backdropFilter: 'blur(10px)',
+  borderRadius: '12px',
+  border: '1px solid rgba(78, 205, 196, 0.3)',
+  overflow: 'hidden',
+  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
+  maxWidth: '350px'
+}}>
+  <button
+    onClick={() => setShowSettingsPanel(!showSettingsPanel)}
+    style={{
+      width: '100%',
+      padding: '10px 16px',
+      background: 'rgba(78, 205, 196, 0.1)',
+      color: '#4ECDC4',
+      border: 'none',
+      cursor: 'pointer',
+      fontSize: '13px',
+      fontWeight: '600',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: '8px'
+    }}
+  >
+    <span>📋 Active Settings</span>
+    <span style={{ fontSize: '10px' }}>{showSettingsPanel ? '▼' : '▶'}</span>
+  </button>
+
+  {showSettingsPanel && (
+    <div style={{
+      padding: '16px',
+      borderTop: '1px solid rgba(78, 205, 196, 0.2)',
+      maxHeight: '60vh',
+      overflowY: 'auto'
+    }}>
+      {/* Profile Info */}
+      {activeProfile && (
+        <div style={{
+          marginBottom: '16px',
+          padding: '12px',
+          background: 'rgba(102, 126, 234, 0.1)',
+          borderRadius: '8px',
+          border: '1px solid rgba(102, 126, 234, 0.3)'
+        }}>
+          <div style={{
+            color: '#667eea',
+            fontSize: '11px',
+            fontWeight: '600',
+            textTransform: 'uppercase',
+            marginBottom: '4px',
+            letterSpacing: '0.5px'
+          }}>
+            User Profile
+          </div>
+          <div style={{
+            color: 'white',
+            fontSize: '16px',
+            fontWeight: 'bold'
+          }}>
+            {activeProfile.name}
+          </div>
+        </div>
+      )}
+
+      {/* Frequency Settings */}
+      <div style={{
+        marginBottom: '16px',
+        padding: '12px',
+        background: 'rgba(78, 205, 196, 0.1)',
+        borderRadius: '8px',
+        border: '1px solid rgba(78, 205, 196, 0.3)'
+      }}>
+        <div style={{
+          color: '#4ECDC4',
+          fontSize: '11px',
+          fontWeight: '600',
+          textTransform: 'uppercase',
+          marginBottom: '8px',
+          letterSpacing: '0.5px'
+        }}>
+          Calibration
+        </div>
+        <div style={{ color: 'rgba(255, 255, 255, 0.9)', fontSize: '13px', lineHeight: '1.6' }}>
+          <div style={{ marginBottom: '6px' }}>
+            <strong>Frequency:</strong> {frequency} Hz
+          </div>
+          <div style={{ marginBottom: '6px' }}>
+            <strong>Ear:</strong> {ear === 'both' ? 'Both Ears' : ear === 'left' ? 'Left Ear' : 'Right Ear'}
+          </div>
+          {userSettings.confidence && (
+            <div>
+              <strong>Confidence:</strong> {userSettings.confidence}%
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Therapy Settings */}
+      <div style={{
+        marginBottom: '16px',
+        padding: '12px',
+        background: 'rgba(102, 126, 234, 0.1)',
+        borderRadius: '8px',
+        border: '1px solid rgba(102, 126, 234, 0.3)'
+      }}>
+        <div style={{
+          color: '#667eea',
+          fontSize: '11px',
+          fontWeight: '600',
+          textTransform: 'uppercase',
+          marginBottom: '8px',
+          letterSpacing: '0.5px'
+        }}>
+          Therapy Mode
+        </div>
+        <div style={{ color: 'rgba(255, 255, 255, 0.9)', fontSize: '13px', lineHeight: '1.6' }}>
+          <div style={{ marginBottom: '6px' }}>
+            <strong>Mode:</strong> {mode.charAt(0).toUpperCase() + mode.slice(1)}
+          </div>
+          <div style={{ marginBottom: '6px' }}>
+            <strong>Notch Filter:</strong> {notchEnabled ? `ON (${notchIntensity})` : 'OFF'}
+          </div>
+          <div style={{ marginBottom: '6px' }}>
+            <strong>Left Volume:</strong> {Math.round((volumeLeft + 40) / 30 * 100)}%
+          </div>
+          <div>
+            <strong>Right Volume:</strong> {Math.round((volumeRight + 40) / 30 * 100)}%
+          </div>
+        </div>
+      </div>
+
+      {/* Calm Mode Info */}
+      {isCalmMode && (
+        <div style={{
+          padding: '12px',
+          background: 'rgba(252, 227, 138, 0.1)',
+          borderRadius: '8px',
+          border: '1px solid rgba(252, 227, 138, 0.3)'
+        }}>
+          <div style={{
+            color: '#FCE38A',
+            fontSize: '11px',
+            fontWeight: '600',
+            textTransform: 'uppercase',
+            marginBottom: '8px',
+            letterSpacing: '0.5px'
+          }}>
+            Calm Mode
+          </div>
+          <div style={{ color: 'rgba(255, 255, 255, 0.9)', fontSize: '13px', lineHeight: '1.6' }}>
+            <div>
+              <strong>Heartbeat:</strong> {heartbeatBPM} BPM
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )}
+</div>
+
 {/* Developer Settings Panel (Development Only) */}
 <div style={{
   position: 'fixed',
@@ -5079,6 +5354,296 @@ Great session! Help us track your progress by rating your tinnitus.
       isOpen={showFeedback}
       onClose={() => setShowFeedback(false)}
     />
+
+    {/* New Profile Modal */}
+    {showNewProfileModal && (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0, 0, 0, 0.8)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 10000,
+        padding: '20px'
+      }}>
+        <div style={{
+          background: 'linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%)',
+          padding: '30px',
+          borderRadius: '16px',
+          maxWidth: '400px',
+          width: '100%',
+          border: '2px solid #667eea'
+        }}>
+          <h3 style={{
+            color: 'white',
+            margin: '0 0 20px 0',
+            fontSize: '24px'
+          }}>
+            Create New Profile
+          </h3>
+          <p style={{
+            color: 'rgba(255, 255, 255, 0.7)',
+            fontSize: '14px',
+            marginBottom: '20px'
+          }}>
+            Enter a name for this user profile. Each profile stores its own calibration and preferences.
+          </p>
+          <input
+            type="text"
+            value={newProfileName}
+            onChange={(e) => setNewProfileName(e.target.value)}
+            placeholder="e.g., John, Mom, Dad"
+            maxLength={20}
+            style={{
+              width: '100%',
+              padding: '12px',
+              fontSize: '16px',
+              borderRadius: '8px',
+              border: '2px solid rgba(255, 255, 255, 0.2)',
+              background: 'rgba(255, 255, 255, 0.1)',
+              color: 'white',
+              marginBottom: '20px',
+              boxSizing: 'border-box'
+            }}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' && newProfileName.trim()) {
+                const profile = createProfile(newProfileName);
+                setNewProfileName('');
+                setShowNewProfileModal(false);
+                // If this is the first profile, proceed to setup
+                if (profiles.length === 0) {
+                  setStep('setup');
+                }
+              }
+            }}
+          />
+          <div style={{
+            display: 'flex',
+            gap: '10px'
+          }}>
+            <button
+              onClick={() => {
+                setShowNewProfileModal(false);
+                setNewProfileName('');
+              }}
+              style={{
+                flex: 1,
+                padding: '12px',
+                fontSize: '16px',
+                borderRadius: '8px',
+                border: '2px solid rgba(255, 255, 255, 0.2)',
+                background: 'transparent',
+                color: 'white',
+                cursor: 'pointer',
+                fontWeight: 'bold'
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                if (newProfileName.trim()) {
+                  const profile = createProfile(newProfileName);
+                  setNewProfileName('');
+                  setShowNewProfileModal(false);
+                  // If this is the first profile, proceed to setup
+                  if (profiles.length === 0) {
+                    setStep('setup');
+                  }
+                }
+              }}
+              disabled={!newProfileName.trim()}
+              style={{
+                flex: 1,
+                padding: '12px',
+                fontSize: '16px',
+                borderRadius: '8px',
+                border: 'none',
+                background: newProfileName.trim()
+                  ? 'linear-gradient(135deg, #667eea, #764ba2)'
+                  : 'rgba(255, 255, 255, 0.1)',
+                color: 'white',
+                cursor: newProfileName.trim() ? 'pointer' : 'not-allowed',
+                fontWeight: 'bold',
+                opacity: newProfileName.trim() ? 1 : 0.5
+              }}
+            >
+              Create
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Profile Manager Modal */}
+    {showProfileManager && (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0, 0, 0, 0.8)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 10000,
+        padding: '20px'
+      }}>
+        <div style={{
+          background: 'linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%)',
+          padding: '30px',
+          borderRadius: '16px',
+          maxWidth: '500px',
+          width: '100%',
+          border: '2px solid #667eea',
+          maxHeight: '80vh',
+          overflowY: 'auto'
+        }}>
+          <h3 style={{
+            color: 'white',
+            margin: '0 0 20px 0',
+            fontSize: '24px'
+          }}>
+            Manage Profiles
+          </h3>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px',
+            marginBottom: '20px'
+          }}>
+            {profiles.map(profile => (
+              <div
+                key={profile.id}
+                style={{
+                  background: profile.id === activeProfileId
+                    ? 'rgba(102, 126, 234, 0.2)'
+                    : 'rgba(255, 255, 255, 0.05)',
+                  padding: '15px',
+                  borderRadius: '12px',
+                  border: profile.id === activeProfileId
+                    ? '2px solid #667eea'
+                    : '1px solid rgba(255, 255, 255, 0.1)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}
+              >
+                <div>
+                  <div style={{
+                    color: 'white',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    marginBottom: '5px'
+                  }}>
+                    {profile.name}
+                    {profile.id === activeProfileId && (
+                      <span style={{
+                        marginLeft: '10px',
+                        fontSize: '12px',
+                        color: '#4ECDC4',
+                        fontWeight: 'normal'
+                      }}>
+                        (Active)
+                      </span>
+                    )}
+                  </div>
+                  <div style={{
+                    color: 'rgba(255, 255, 255, 0.5)',
+                    fontSize: '12px'
+                  }}>
+                    Created: {new Date(profile.createdAt).toLocaleDateString()}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '5px' }}>
+                  {profile.id !== activeProfileId && (
+                    <button
+                      onClick={() => {
+                        switchProfile(profile.id);
+                      }}
+                      style={{
+                        padding: '6px 12px',
+                        fontSize: '12px',
+                        borderRadius: '6px',
+                        border: '1px solid #4ECDC4',
+                        background: 'rgba(78, 205, 196, 0.2)',
+                        color: '#4ECDC4',
+                        cursor: 'pointer',
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      Switch
+                    </button>
+                  )}
+                  {profiles.length > 1 && (
+                    <button
+                      onClick={() => {
+                        if (window.confirm(`Delete profile "${profile.name}"? This will permanently remove all their calibration data.`)) {
+                          deleteProfile(profile.id);
+                        }
+                      }}
+                      style={{
+                        padding: '6px 12px',
+                        fontSize: '12px',
+                        borderRadius: '6px',
+                        border: '1px solid #ff6b6b',
+                        background: 'rgba(255, 107, 107, 0.2)',
+                        color: '#ff6b6b',
+                        cursor: 'pointer',
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          <button
+            onClick={() => {
+              setShowProfileManager(false);
+              setShowNewProfileModal(true);
+            }}
+            style={{
+              width: '100%',
+              padding: '12px',
+              fontSize: '16px',
+              borderRadius: '8px',
+              border: '2px dashed #667eea',
+              background: 'transparent',
+              color: '#667eea',
+              cursor: 'pointer',
+              fontWeight: 'bold',
+              marginBottom: '10px'
+            }}
+          >
+            + Add New Profile
+          </button>
+          <button
+            onClick={() => setShowProfileManager(false)}
+            style={{
+              width: '100%',
+              padding: '12px',
+              fontSize: '16px',
+              borderRadius: '8px',
+              border: '2px solid rgba(255, 255, 255, 0.2)',
+              background: 'transparent',
+              color: 'white',
+              cursor: 'pointer',
+              fontWeight: 'bold'
+            }}
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    )}
   </div>
 </div>
 
