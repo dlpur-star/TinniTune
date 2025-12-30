@@ -5008,13 +5008,12 @@ Great session! Help us track your progress by rating your tinnitus.
 
     {/* Volume Control - Independent Left/Right */}
     <div style={{
-      maxWidth: '500px',
-      margin: '0 auto 24px auto',
       background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03))',
       padding: '28px 24px',
       borderRadius: '20px',
       border: '1px solid rgba(255, 255, 255, 0.1)',
-      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)'
+      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)',
+      marginBottom: '24px'
     }}>
       <div style={{
         marginBottom: '24px',
@@ -5038,14 +5037,19 @@ Great session! Help us track your progress by rating your tinnitus.
         </div>
       </div>
 
-      {/* Left Ear Volume */}
       <div style={{
-        marginBottom: '24px',
-        padding: '20px',
-        background: 'rgba(78, 205, 196, 0.08)',
-        borderRadius: '16px',
-        border: '1px solid rgba(78, 205, 196, 0.15)'
+        display: 'flex',
+        gap: '20px',
+        alignItems: 'stretch'
       }}>
+        {/* Left Ear Volume */}
+        <div style={{
+          flex: 1,
+          padding: '20px',
+          background: 'rgba(78, 205, 196, 0.08)',
+          borderRadius: '16px',
+          border: '1px solid rgba(78, 205, 196, 0.15)'
+        }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
           <span style={{
             fontSize: '24px',
@@ -5112,13 +5116,14 @@ Great session! Help us track your progress by rating your tinnitus.
         </div>
       </div>
 
-      {/* Right Ear Volume */}
-      <div style={{
-        padding: '20px',
-        background: 'rgba(102, 126, 234, 0.08)',
-        borderRadius: '16px',
-        border: '1px solid rgba(102, 126, 234, 0.15)'
-      }}>
+        {/* Right Ear Volume */}
+        <div style={{
+          flex: 1,
+          padding: '20px',
+          background: 'rgba(102, 126, 234, 0.08)',
+          borderRadius: '16px',
+          border: '1px solid rgba(102, 126, 234, 0.15)'
+        }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
           <span style={{
             fontSize: '24px'
@@ -5179,6 +5184,7 @@ Great session! Help us track your progress by rating your tinnitus.
           fontVariantNumeric: 'tabular-nums'
         }}>
           {Math.round((volumeRight + 40) / 30 * 100)}%
+        </div>
         </div>
       </div>
 
