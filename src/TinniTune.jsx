@@ -5411,11 +5411,12 @@ Great session! Help us track your progress by rating your tinnitus.
             }}
             onKeyPress={(e) => {
               if (e.key === 'Enter' && newProfileName.trim()) {
+                const wasFirstProfile = profiles.length === 0;
                 const profile = createProfile(newProfileName);
                 setNewProfileName('');
                 setShowNewProfileModal(false);
-                // If this is the first profile, proceed to setup
-                if (profiles.length === 0) {
+                // If this was the first profile, proceed to setup
+                if (wasFirstProfile) {
                   setStep('setup');
                 }
               }
@@ -5447,11 +5448,12 @@ Great session! Help us track your progress by rating your tinnitus.
             <button
               onClick={() => {
                 if (newProfileName.trim()) {
+                  const wasFirstProfile = profiles.length === 0;
                   const profile = createProfile(newProfileName);
                   setNewProfileName('');
                   setShowNewProfileModal(false);
-                  // If this is the first profile, proceed to setup
-                  if (profiles.length === 0) {
+                  // If this was the first profile, proceed to setup
+                  if (wasFirstProfile) {
                     setStep('setup');
                   }
                 }
