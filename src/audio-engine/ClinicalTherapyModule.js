@@ -189,16 +189,18 @@ export class ClinicalTherapyModule {
 
     // White noise generator (primary therapeutic sound)
     nodes.white = new Tone.Noise('white').start();
-    nodes.gain = new Tone.Gain(Tone.dbToGain(volumeDb));
+    nodes.white.volume.value = volumeDb;  // Set noise generator's built-in volume
+    nodes.gain = new Tone.Gain();  // Create gain node at default (1.0) for routing
     nodes.white.connect(nodes.gain);
     nodes.gain.connect(destination);
 
     // Pink noise with lowpass (ambient/ASMR layer)
     if (this.config.enableAmbience) {
       nodes.pink = new Tone.Noise('pink').start();
+      nodes.pink.volume.value = volumeDb + 8;  // Set pink noise volume
       nodes.filter = new Tone.Filter(1000, 'lowpass');
-      nodes.pinkGain = new Tone.Gain(Tone.dbToGain(volumeDb + 8));
-      
+      nodes.pinkGain = new Tone.Gain();  // Create gain node at default (1.0)
+
       nodes.pink.connect(nodes.filter);
       nodes.filter.connect(nodes.pinkGain);
       nodes.pinkGain.connect(destination);
@@ -224,13 +226,11 @@ export class ClinicalTherapyModule {
       ? this.notchFilters.left
       : this.engine.getChannelDestination('left');
 
-    this.binauralGenerators.leftGain = new Tone.Gain(
-      Tone.dbToGain(volumeLeft + 12)
-    );
-    this.binauralGenerators.leftGain.connect(leftDest);
-    
     this.binauralGenerators.left = new Tone.Oscillator(baseFreq, 'sine');
+    this.binauralGenerators.left.volume.value = volumeLeft + 12;  // Set oscillator's built-in volume
+    this.binauralGenerators.leftGain = new Tone.Gain();  // Create gain node for routing
     this.binauralGenerators.left.connect(this.binauralGenerators.leftGain);
+    this.binauralGenerators.leftGain.connect(leftDest);
     this.binauralGenerators.left.start();
 
     // Right ear: base frequency + beat frequency
@@ -238,16 +238,14 @@ export class ClinicalTherapyModule {
       ? this.notchFilters.right
       : this.engine.getChannelDestination('right');
 
-    this.binauralGenerators.rightGain = new Tone.Gain(
-      Tone.dbToGain(volumeRight + 12)
-    );
-    this.binauralGenerators.rightGain.connect(rightDest);
-    
     this.binauralGenerators.right = new Tone.Oscillator(
-      baseFreq + beatFreq, 
+      baseFreq + beatFreq,
       'sine'
     );
+    this.binauralGenerators.right.volume.value = volumeRight + 12;  // Set oscillator's built-in volume
+    this.binauralGenerators.rightGain = new Tone.Gain();  // Create gain node for routing
     this.binauralGenerators.right.connect(this.binauralGenerators.rightGain);
+    this.binauralGenerators.rightGain.connect(rightDest);
     this.binauralGenerators.right.start();
 
     this.engine._log(`Binaural: L=${baseFreq}Hz, R=${baseFreq + beatFreq}Hz, Δ=${beatFreq}Hz`);
@@ -262,20 +260,23 @@ export class ClinicalTherapyModule {
     this.volumes[ear] = volumeDb;
     const nodes = this.noiseGenerators[ear];
 
-    if (nodes.gain) {
-      nodes.gain.gain.rampTo(Tone.dbToGain(volumeDb), 0.1);
+    // Update white noise volume using its built-in volume property
+    if (nodes.white) {
+      nodes.white.volume.rampTo(volumeDb, 0.1);
     }
-    if (nodes.pinkGain) {
-      nodes.pinkGain.gain.rampTo(Tone.dbToGain(volumeDb + 8), 0.1);
+
+    // Update pink noise volume using its built-in volume property
+    if (nodes.pink) {
+      nodes.pink.volume.rampTo(volumeDb + 8, 0.1);
     }
 
     // Update binaural beats if present
-    const binauralGain = ear === 'left' 
-      ? this.binauralGenerators.leftGain 
-      : this.binauralGenerators.rightGain;
-    
-    if (binauralGain) {
-      binauralGain.gain.rampTo(Tone.dbToGain(volumeDb + 12), 0.1);
+    const binauralOsc = ear === 'left'
+      ? this.binauralGenerators.left
+      : this.binauralGenerators.right;
+
+    if (binauralOsc) {
+      binauralOsc.volume.rampTo(volumeDb + 12, 0.1);
     }
   }
 
