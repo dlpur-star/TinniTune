@@ -657,6 +657,11 @@ const startAudioEngine = async () => {
     }
 
     console.log('🎵 Starting therapy with NEW Audio Engine');
+    console.log('  Frequency:', frequency, 'Hz');
+    console.log('  Ear:', ear);
+    console.log('  Notch Enabled:', notchEnabled);
+    console.log('  Notch Intensity:', notchIntensity);
+    console.log('  Volume L/R:', volumeLeft, '/', volumeRight, 'dB');
 
     // Initialize audio context
     await engineInstance.initialize();
@@ -4869,6 +4874,17 @@ Great session! Help us track your progress by rating your tinnitus.
             letterSpacing: '0.3px'
           }}>
             {frequency} Hz • {ear === 'left' ? '👂 Left' : ear === 'right' ? 'Right 👂' : '👂 Both'}
+          </p>
+          <p style={{
+            color: therapyEngine === 'engine' ? '#F38181' : '#4ECDC4',
+            margin: '6px 0 0 0',
+            fontSize: '12px',
+            fontWeight: '700',
+            letterSpacing: '0.5px',
+            textTransform: 'uppercase',
+            opacity: 0.9
+          }}>
+            {therapyEngine === 'engine' ? '🚀 New Engine' : '📦 Legacy'} • {notchEnabled ? `Notch ${notchIntensity.toUpperCase()}` : 'Notch OFF'}
           </p>
         </div>
       </div>
