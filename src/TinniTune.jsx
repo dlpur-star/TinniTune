@@ -676,6 +676,17 @@ const startAudioEngine = async () => {
       return;
     }
 
+    // CRITICAL: Clean up any existing therapy module FIRST to prevent multiple instances
+    if (therapyModule) {
+      console.log('⚠️ Disposing existing therapy module before creating new one');
+      try {
+        therapyModule.dispose();
+        engineInstance.unregisterModule('therapy');
+      } catch (e) {
+        console.warn('Error disposing old therapy module:', e);
+      }
+    }
+
     // IMPORTANT: Stop legacy engine if it's running
     stopAudio(true);  // Silent cleanup - don't save session or show modal
 
@@ -713,6 +724,11 @@ const startAudioEngine = async () => {
       binauralMode: binauralMode
     });
 
+    // Set state BEFORE starting to avoid race conditions
+    setTherapyModule(therapy);
+    setSessionTime(0);
+    setSessionStartTime(Date.now());
+
     // Register module
     engineInstance.registerModule('therapy', therapy);
 
@@ -726,10 +742,7 @@ const startAudioEngine = async () => {
       binauralMode: binauralMode
     });
 
-    setTherapyModule(therapy);
     setIsPlaying(true);
-    setSessionTime(0);
-    setSessionStartTime(Date.now());
 
     // Start safety monitoring
     if (safetyMonitor) {
@@ -740,6 +753,8 @@ const startAudioEngine = async () => {
     console.log('✅ New engine therapy started at', frequency, 'Hz with', engineIntensity, 'notch');
   } catch (error) {
     console.error('Error starting new engine therapy:', error);
+    setTherapyModule(null);
+    setIsPlaying(false);
     alert('Error starting therapy: ' + error.message);
   }
 };
@@ -747,21 +762,45 @@ const startAudioEngine = async () => {
 const stopAudioEngine = async (silentCleanup = false) => {
   try {
     if (!engineInstance || !therapyModule) {
+      // Even if no module, ensure state is clean
+      setTherapyModule(null);
+      if (!silentCleanup) {
+        setIsPlaying(false);
+      }
       return;
     }
 
     console.log('🛑 Stopping new engine therapy');
 
-    // Stop therapy
-    await engineInstance.stop();
-    therapyModule.dispose();
-    engineInstance.unregisterModule('therapy');
-
-    // Stop safety monitoring
+    // Stop safety monitoring first
     if (safetyMonitor) {
-      safetyMonitor.stopMonitoring();
+      try {
+        safetyMonitor.stopMonitoring();
+      } catch (e) {
+        console.warn('Error stopping safety monitor:', e);
+      }
     }
 
+    // Stop and dispose therapy module with error handling
+    try {
+      await engineInstance.stop();
+    } catch (e) {
+      console.warn('Error stopping engine instance:', e);
+    }
+
+    try {
+      therapyModule.dispose();
+    } catch (e) {
+      console.warn('Error disposing therapy module:', e);
+    }
+
+    try {
+      engineInstance.unregisterModule('therapy');
+    } catch (e) {
+      console.warn('Error unregistering module:', e);
+    }
+
+    // Always clean up state
     setTherapyModule(null);
 
     // Only handle session ending if this is a real stop, not cleanup
@@ -782,6 +821,11 @@ const stopAudioEngine = async (silentCleanup = false) => {
     }
   } catch (error) {
     console.error('Error stopping new engine therapy:', error);
+    // Ensure state is clean even on error
+    setTherapyModule(null);
+    if (!silentCleanup) {
+      setIsPlaying(false);
+    }
   }
 };
 
