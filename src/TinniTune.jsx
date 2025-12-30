@@ -83,7 +83,7 @@ const [showSaveFavoriteModal, setShowSaveFavoriteModal] = useState(false);
 const [newFavoriteName, setNewFavoriteName] = useState('');
 
 // Audio Engine Mode Toggle (Development Feature)
-const [therapyEngine, setTherapyEngine] = useState('legacy'); // 'legacy' or 'engine'
+const [therapyEngine, setTherapyEngine] = useState('engine'); // 'legacy' or 'engine' - NEW ENGINE IS DEFAULT
 const [showDevSettings, setShowDevSettings] = useState(false); // Developer settings panel
 
 // New Audio Engine States
@@ -777,7 +777,7 @@ const startAudioEngine = async () => {
     const binauralMap = {
       'daytime': 'focus',
       'evening': 'calm',
-      'bedtime': 'sleep'
+      'sleep': 'sleep'  // Fixed: was 'bedtime', should be 'sleep'
     };
     const binauralMode = binauralMap[mode] || 'focus';
 
