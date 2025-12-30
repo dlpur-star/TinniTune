@@ -143,18 +143,22 @@ export const useUserSettings = (profileId = null) => {
   /**
    * Save current therapy settings as a favorite preset
    * @param {string} name - Name for the favorite preset
+   * @param {Object} currentSettings - Current therapy settings to save
    * @returns {Object} The created favorite
    */
-  const saveFavorite = useCallback((name) => {
+  const saveFavorite = useCallback((name, currentSettings = null) => {
+    // Use provided settings or fall back to saved settings
+    const settingsToSave = currentSettings || settings;
+
     const newFavorite = {
       id: `favorite_${Date.now()}`,
       name: name.trim(),
-      mode: settings.mode,
-      notchEnabled: settings.notchEnabled,
-      notchIntensity: settings.notchIntensity,
-      volumeLeft: settings.volumeLeft,
-      volumeRight: settings.volumeRight,
-      calmMode: { ...settings.calmMode },
+      mode: settingsToSave.mode,
+      notchEnabled: settingsToSave.notchEnabled,
+      notchIntensity: settingsToSave.notchIntensity,
+      volumeLeft: settingsToSave.volumeLeft,
+      volumeRight: settingsToSave.volumeRight,
+      calmMode: settingsToSave.calmMode ? { ...settingsToSave.calmMode } : { enabled: false, heartbeatBPM: 60, heartbeatVolume: 0.3, breathingEnabled: true },
       createdAt: new Date().toISOString()
     };
 

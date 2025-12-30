@@ -6211,7 +6211,19 @@ Great session! Help us track your progress by rating your tinnitus.
             }}
             onKeyPress={(e) => {
               if (e.key === 'Enter' && newFavoriteName.trim()) {
-                saveFavorite(newFavoriteName);
+                saveFavorite(newFavoriteName, {
+                  mode,
+                  notchEnabled,
+                  notchIntensity,
+                  volumeLeft,
+                  volumeRight,
+                  calmMode: {
+                    enabled: isCalmMode,
+                    heartbeatBPM,
+                    heartbeatVolume,
+                    breathingEnabled: true
+                  }
+                });
                 setNewFavoriteName('');
                 setShowSaveFavoriteModal(false);
               }
@@ -6244,7 +6256,19 @@ Great session! Help us track your progress by rating your tinnitus.
             <button
               onClick={() => {
                 if (newFavoriteName.trim()) {
-                  saveFavorite(newFavoriteName);
+                  saveFavorite(newFavoriteName, {
+                    mode,
+                    notchEnabled,
+                    notchIntensity,
+                    volumeLeft,
+                    volumeRight,
+                    calmMode: {
+                      enabled: isCalmMode,
+                      heartbeatBPM,
+                      heartbeatVolume,
+                      breathingEnabled: true
+                    }
+                  });
                   setNewFavoriteName('');
                   setShowSaveFavoriteModal(false);
                 }
