@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Clearing Cache...</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+      color: white;
+    }
+    .container {
+      text-align: center;
+      padding: 40px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 20px;
+      max-width: 500px;
+    }
+    h1 { margin: 0 0 20px 0; color: #4ECDC4; }
+    .spinner {
+      border: 4px solid rgba(255,255,255,0.3);
+      border-top: 4px solid #4ECDC4;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    button {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    #status { margin-top: 20px; font-size: 14px; }
+    .success { color: #4ECDC4; }
+    .error { color: #ff6b6b; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔧 Fixing TinniTune</h1>
+    <p>Clearing cached service workers...</p>
+    <div class="spinner"></div>
+    <div id="status"></div>
+    <button id="continueBtn" style="display:none;" onclick="window.location.href='/'">Continue to TinniTune</button>
+  </div>
+
+  <script>
+    const status = document.getElementById('status');
+    const continueBtn = document.getElementById('continueBtn');
+
+    async function clearEverything() {
+      let log = [];
+
+      try {
+        // Unregister all service workers
+        if ('serviceWorker' in navigator) {
+          const registrations = await navigator.serviceWorker.getRegistrations();
+          for (const registration of registrations) {
+            await registration.unregister();
+            log.push('✓ Unregistered service worker: ' + registration.scope);
+          }
+          if (registrations.length === 0) {
+            log.push('✓ No service workers found');
+          }
+        }
+
+        // Clear all caches
+        if ('caches' in window) {
+          const cacheNames = await caches.keys();
+          for (const cacheName of cacheNames) {
+            await caches.delete(cacheName);
+            log.push('✓ Deleted cache: ' + cacheName);
+          }
+          if (cacheNames.length === 0) {
+            log.push('✓ No caches found');
+          }
+        }
+
+        // Clear localStorage (except this page's marker)
+        const keys = Object.keys(localStorage);
+        keys.forEach(key => {
+          if (!key.startsWith('reset_page_')) {
+            localStorage.removeItem(key);
+            log.push('✓ Cleared: ' + key);
+          }
+        });
+
+        status.innerHTML = '<div class="success">' + log.join('<br>') + '<br><br><strong>✅ All clear! You can now use TinniTune.</strong></div>';
+        continueBtn.style.display = 'block';
+
+        // Auto-redirect after 3 seconds
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 3000);
+
+      } catch (error) {
+        status.innerHTML = '<div class="error">Error: ' + error.message + '<br><br>Please try clearing your browser data manually.</div>';
+        continueBtn.style.display = 'block';
+      }
+    }
+
+    // Run immediately
+    clearEverything();
+  </script>
+</body>
+</html>
