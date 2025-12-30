@@ -65,15 +65,23 @@ export const useUserProfiles = () => {
    * @returns {Object} The created profile
    */
   const createProfile = useCallback((name) => {
+    console.log('[useUserProfiles] createProfile called with name:', name);
     const newProfile = {
       id: `profile_${Date.now()}`,
       name: name.trim(),
       createdAt: new Date().toISOString(),
       lastUsed: new Date().toISOString()
     };
+    console.log('[useUserProfiles] Created profile object:', newProfile);
 
-    setProfiles(prev => [...prev, newProfile]);
+    setProfiles(prev => {
+      console.log('[useUserProfiles] Previous profiles:', prev);
+      const updated = [...prev, newProfile];
+      console.log('[useUserProfiles] Updated profiles:', updated);
+      return updated;
+    });
     setActiveProfileId(newProfile.id);
+    console.log('[useUserProfiles] Set active profile ID:', newProfile.id);
 
     return newProfile;
   }, []);

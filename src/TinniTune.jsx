@@ -5411,13 +5411,21 @@ Great session! Help us track your progress by rating your tinnitus.
             }}
             onKeyPress={(e) => {
               if (e.key === 'Enter' && newProfileName.trim()) {
+                console.log('Enter key pressed in profile input');
+                console.log('Profile name:', newProfileName);
+                console.log('Current profiles:', profiles);
                 const wasFirstProfile = profiles.length === 0;
+                console.log('Was first profile?', wasFirstProfile);
                 const profile = createProfile(newProfileName);
+                console.log('Created profile:', profile);
                 setNewProfileName('');
                 setShowNewProfileModal(false);
                 // If this was the first profile, proceed to setup
                 if (wasFirstProfile) {
+                  console.log('Advancing to setup step');
                   setStep('setup');
+                } else {
+                  console.log('Not first profile, staying on welcome');
                 }
               }
             }}
@@ -5447,14 +5455,22 @@ Great session! Help us track your progress by rating your tinnitus.
             </button>
             <button
               onClick={() => {
+                console.log('Create button clicked!');
+                console.log('Profile name:', newProfileName);
+                console.log('Current profiles:', profiles);
                 if (newProfileName.trim()) {
                   const wasFirstProfile = profiles.length === 0;
+                  console.log('Was first profile?', wasFirstProfile);
                   const profile = createProfile(newProfileName);
+                  console.log('Created profile:', profile);
                   setNewProfileName('');
                   setShowNewProfileModal(false);
                   // If this was the first profile, proceed to setup
                   if (wasFirstProfile) {
+                    console.log('Advancing to setup step');
                     setStep('setup');
+                  } else {
+                    console.log('Not first profile, staying on welcome');
                   }
                 }
               }}
