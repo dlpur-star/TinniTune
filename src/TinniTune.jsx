@@ -1267,6 +1267,90 @@ Sound therapy for tinnitus relief
   </div>
 )}
 
+{/* Quick Access Favorites - Show if user has calibration and favorites */}
+{settingsLoaded && hasCalibration() && activeProfile && userSettings.favorites && userSettings.favorites.length > 0 && (
+  <div style={{
+    background: 'linear-gradient(135deg, rgba(252, 227, 138, 0.15), rgba(252, 227, 138, 0.08))',
+    padding: '20px',
+    borderRadius: '12px',
+    marginBottom: '20px',
+    border: '2px solid rgba(252, 227, 138, 0.4)',
+    textAlign: 'left'
+  }}>
+    <h3 style={{
+      color: '#FCE38A',
+      margin: '0 0 15px 0',
+      fontSize: '18px',
+      fontWeight: 'bold',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px'
+    }}>
+      <span>⭐</span>
+      <span>Quick Start</span>
+    </h3>
+    <p style={{
+      color: 'rgba(255, 255, 255, 0.7)',
+      fontSize: '13px',
+      marginBottom: '15px'
+    }}>
+      Jump straight into therapy with your saved presets:
+    </p>
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+      gap: '10px'
+    }}>
+      {userSettings.favorites.map(fav => (
+        <button
+          key={fav.id}
+          onClick={() => {
+            loadFavorite(fav.id);
+            setStep('therapy');
+          }}
+          style={{
+            background: 'linear-gradient(135deg, rgba(252, 227, 138, 0.25), rgba(252, 227, 138, 0.15))',
+            border: '2px solid rgba(252, 227, 138, 0.5)',
+            borderRadius: '12px',
+            padding: '16px 12px',
+            color: 'white',
+            fontSize: '14px',
+            fontWeight: '700',
+            cursor: 'pointer',
+            touchAction: 'manipulation',
+            textAlign: 'center',
+            transition: 'all 0.2s',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '6px',
+            alignItems: 'center'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'linear-gradient(135deg, rgba(252, 227, 138, 0.35), rgba(252, 227, 138, 0.25))';
+            e.currentTarget.style.transform = 'translateY(-2px)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'linear-gradient(135deg, rgba(252, 227, 138, 0.25), rgba(252, 227, 138, 0.15))';
+            e.currentTarget.style.transform = 'translateY(0)';
+          }}
+        >
+          <div style={{ fontSize: '24px' }}>
+            {fav.mode === 'daytime' ? '☀️' : fav.mode === 'evening' ? '🌆' : '🌙'}
+          </div>
+          <div>{fav.name}</div>
+          <div style={{
+            fontSize: '11px',
+            opacity: 0.7,
+            fontWeight: '500'
+          }}>
+            {fav.mode.charAt(0).toUpperCase() + fav.mode.slice(1)} • {fav.notchEnabled ? 'Notch ON' : 'No Notch'}
+          </div>
+        </button>
+      ))}
+    </div>
+  </div>
+)}
+
 {/* Saved Settings Display */}
 {settingsLoaded && hasCalibration() && activeProfile && (
   <div style={{
