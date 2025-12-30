@@ -5006,6 +5006,209 @@ Great session! Help us track your progress by rating your tinnitus.
       </div>
     </div>
 
+    {/* Volume Control - Independent Left/Right */}
+    <div style={{
+      maxWidth: '500px',
+      margin: '0 auto 24px auto',
+      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03))',
+      padding: '28px 24px',
+      borderRadius: '20px',
+      border: '1px solid rgba(255, 255, 255, 0.1)',
+      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)'
+    }}>
+      <div style={{
+        marginBottom: '24px',
+        textAlign: 'center'
+      }}>
+        <div style={{
+          color: 'white',
+          fontSize: '16px',
+          fontWeight: '700',
+          letterSpacing: '0.5px',
+          marginBottom: '4px'
+        }}>
+          Volume Control
+        </div>
+        <div style={{
+          color: 'rgba(255,255,255,0.5)',
+          fontSize: '12px',
+          fontWeight: '500'
+        }}>
+          💡 Adjust each ear independently for optimal balance
+        </div>
+      </div>
+
+      {/* Left Ear Volume */}
+      <div style={{
+        marginBottom: '24px',
+        padding: '20px',
+        background: 'rgba(78, 205, 196, 0.08)',
+        borderRadius: '16px',
+        border: '1px solid rgba(78, 205, 196, 0.15)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
+          <span style={{
+            fontSize: '24px',
+            display: 'inline-block',
+            transform: 'scaleX(-1)',
+            filter: 'grayscale(0)'
+          }}>
+            👂
+          </span>
+          <span style={{
+            color: 'white',
+            fontSize: '15px',
+            fontWeight: '600'
+          }}>
+            Left Ear
+          </span>
+        </div>
+        <input
+          type="range"
+          min="-40"
+          max="-10"
+          step="1"
+          value={volumeLeft}
+          onChange={(e) => {
+            const newVol = parseInt(e.target.value);
+            setVolumeLeft(newVol);
+            updateSettings({ volumeLeft: newVol });
+            if (isPlaying) {
+              // Update left channel sounds (indices 0 and 1)
+              if (synthsRef.current[0] && synthsRef.current[0].volume) {
+                synthsRef.current[0].volume.value = newVol; // left noise
+              }
+              if (synthsRef.current[1] && synthsRef.current[1].volume) {
+                synthsRef.current[1].volume.value = newVol + 8; // left ambience
+              }
+              // Update left binaural if exists (index 4)
+              if (synthsRef.current[4] && synthsRef.current[4].volume) {
+                synthsRef.current[4].volume.value = newVol + 12;
+              }
+            }
+          }}
+          style={{
+            width: '100%',
+            height: '8px',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            appearance: 'none',
+            background: `linear-gradient(to right,
+              #4ECDC4 0%,
+              #4ECDC4 ${((volumeLeft + 40) / 30) * 100}%,
+              rgba(255, 255, 255, 0.15) ${((volumeLeft + 40) / 30) * 100}%,
+              rgba(255, 255, 255, 0.15) 100%)`
+          }}
+        />
+        <div style={{
+          textAlign: 'center',
+          marginTop: '12px',
+          color: '#4ECDC4',
+          fontSize: '18px',
+          fontWeight: '700',
+          fontVariantNumeric: 'tabular-nums'
+        }}>
+          {Math.round((volumeLeft + 40) / 30 * 100)}%
+        </div>
+      </div>
+
+      {/* Right Ear Volume */}
+      <div style={{
+        padding: '20px',
+        background: 'rgba(102, 126, 234, 0.08)',
+        borderRadius: '16px',
+        border: '1px solid rgba(102, 126, 234, 0.15)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
+          <span style={{
+            fontSize: '24px'
+          }}>
+            👂
+          </span>
+          <span style={{
+            color: 'white',
+            fontSize: '15px',
+            fontWeight: '600'
+          }}>
+            Right Ear
+          </span>
+        </div>
+        <input
+          type="range"
+          min="-40"
+          max="-10"
+          step="1"
+          value={volumeRight}
+          onChange={(e) => {
+            const newVol = parseInt(e.target.value);
+            setVolumeRight(newVol);
+            updateSettings({ volumeRight: newVol });
+            if (isPlaying) {
+              // Update right channel sounds (indices 2 and 3)
+              if (synthsRef.current[2] && synthsRef.current[2].volume) {
+                synthsRef.current[2].volume.value = newVol; // right noise
+              }
+              if (synthsRef.current[3] && synthsRef.current[3].volume) {
+                synthsRef.current[3].volume.value = newVol + 8; // right ambience
+              }
+              // Update right binaural if exists (index 5)
+              if (synthsRef.current[5] && synthsRef.current[5].volume) {
+                synthsRef.current[5].volume.value = newVol + 12;
+              }
+            }
+          }}
+          style={{
+            width: '100%',
+            height: '8px',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            appearance: 'none',
+            background: `linear-gradient(to right,
+              #667eea 0%,
+              #667eea ${((volumeRight + 40) / 30) * 100}%,
+              rgba(255, 255, 255, 0.15) ${((volumeRight + 40) / 30) * 100}%,
+              rgba(255, 255, 255, 0.15) 100%)`
+          }}
+        />
+        <div style={{
+          textAlign: 'center',
+          marginTop: '12px',
+          color: '#667eea',
+          fontSize: '18px',
+          fontWeight: '700',
+          fontVariantNumeric: 'tabular-nums'
+        }}>
+          {Math.round((volumeRight + 40) / 30 * 100)}%
+        </div>
+      </div>
+
+      <style>{`
+        input[type="range"]::-webkit-slider-thumb {
+          appearance: none;
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #4ECDC4, #667eea);
+          cursor: pointer;
+          box-shadow: 0 2px 8px rgba(78, 205, 196, 0.4), 0 0 0 4px rgba(78, 205, 196, 0.15);
+          transition: all 0.2s;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+          transform: scale(1.15);
+          box-shadow: 0 4px 12px rgba(78, 205, 196, 0.5), 0 0 0 6px rgba(78, 205, 196, 0.2);
+        }
+        input[type="range"]::-moz-range-thumb {
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #4ECDC4, #667eea);
+          cursor: pointer;
+          box-shadow: 0 2px 8px rgba(78, 205, 196, 0.4);
+          border: none;
+        }
+      `}</style>
+    </div>
+
     {/* Calm Mode Button - Prominent placement */}
     <div style={{
       background: isCalmMode
@@ -5633,327 +5836,6 @@ Great session! Help us track your progress by rating your tinnitus.
       )}
     </div>
 
-    {/* Main Control - More refined and elegant */}
-    <div style={{
-      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%)',
-      padding: '48px 40px',
-      borderRadius: '24px',
-      textAlign: 'center',
-      backdropFilter: 'blur(20px) saturate(180%)',
-      marginBottom: '20px',
-      border: '1px solid rgba(255, 255, 255, 0.1)',
-      boxShadow: '0 16px 48px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-      position: 'relative'
-    }}>
-      {/* Icon with better animation */}
-      <div style={{
-        fontSize: '72px',
-        marginBottom: '32px',
-        filter: 'drop-shadow(0 8px 24px rgba(78, 205, 196, 0.3))',
-        animation: isPlaying ? 'gentlePulse 3s ease-in-out infinite' : 'none'
-      }}>
-        {isPlaying ? '🎵' : '🎧'}
-      </div>
-
-      <button
-        onClick={() => {
-          console.log('Play/Stop clicked, isPlaying:', isPlaying);
-          if (isPlaying) {
-            stopTherapy();
-          } else {
-            startTherapy();
-          }
-        }}
-        style={{
-          padding: '18px 56px',
-          background: isPlaying 
-            ? 'linear-gradient(135deg, #E27D60 0%, #E8A87C 100%)'
-            : `linear-gradient(135deg, ${getModeConfig(mode).color}dd 0%, ${getModeConfig(mode).color} 100%)`,
-          color: 'white',
-          border: 'none',
-          borderRadius: '16px',
-          cursor: 'pointer',
-          fontSize: '18px',
-          fontWeight: '700',
-          boxShadow: isPlaying
-            ? '0 12px 32px rgba(226, 125, 96, 0.35), 0 4px 8px rgba(0, 0, 0, 0.2)'
-            : `0 12px 32px ${getModeConfig(mode).color}35, 0 4px 8px rgba(0, 0, 0, 0.2)`,
-          marginBottom: '32px',
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          letterSpacing: '0.5px',
-          position: 'relative',
-          overflow: 'hidden'
-        }}
-        onMouseEnter={(e) => {
-          e.target.style.transform = 'translateY(-2px)';
-          e.target.style.boxShadow = isPlaying
-            ? '0 16px 40px rgba(226, 125, 96, 0.4), 0 6px 12px rgba(0, 0, 0, 0.25)'
-            : `0 16px 40px ${getModeConfig(mode).color}40, 0 6px 12px rgba(0, 0, 0, 0.25)`;
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.transform = 'translateY(0)';
-          e.target.style.boxShadow = isPlaying
-            ? '0 12px 32px rgba(226, 125, 96, 0.35), 0 4px 8px rgba(0, 0, 0, 0.2)'
-            : `0 12px 32px ${getModeConfig(mode).color}35, 0 4px 8px rgba(0, 0, 0, 0.2)`;
-        }}
-      >
-        {isPlaying ? '⏸ Stop Therapy' : '▶ Start Therapy'}
-      </button>
-
-      {/* Session Timer and Progress */}
-      {isPlaying && (
-        <div style={{
-          marginBottom: '32px',
-          maxWidth: '400px',
-          margin: '0 auto 32px auto'
-        }}>
-          <div style={{
-            fontSize: '32px',
-            fontWeight: '700',
-            color: '#4ECDC4',
-            textShadow: '0 0 20px rgba(78, 205, 196, 0.4)',
-            fontVariantNumeric: 'tabular-nums',
-            letterSpacing: '1px',
-            marginBottom: '12px'
-          }}>
-            {formatTime(sessionTime)}
-          </div>
-
-          {/* Progress bar */}
-          <div style={{
-            width: '100%',
-            height: '8px',
-            background: 'rgba(255, 255, 255, 0.1)',
-            borderRadius: '4px',
-            overflow: 'hidden',
-            position: 'relative'
-          }}>
-            <div style={{
-              height: '100%',
-              background: 'linear-gradient(90deg, #4ECDC4, #44B3AA)',
-              borderRadius: '4px',
-              width: `${Math.min((sessionTime / 900) * 100, 100)}%`,
-              transition: 'width 1s linear',
-              boxShadow: '0 0 10px rgba(78, 205, 196, 0.5)'
-            }}/>
-          </div>
-
-          <div style={{
-            color: 'rgba(255,255,255,0.5)',
-            fontSize: '12px',
-            marginTop: '8px',
-            fontWeight: '500'
-          }}>
-            {sessionTime < 900
-              ? `${Math.floor((900 - sessionTime) / 60)} min remaining in recommended session`
-              : '✓ Recommended session length completed!'}
-          </div>
-        </div>
-      )}
-
-      {/* Volume Control - Independent Left/Right */}
-      <div style={{
-        maxWidth: '500px',
-        margin: '0 auto',
-        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03))',
-        padding: '28px 24px',
-        borderRadius: '20px',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.2)'
-      }}>
-        <div style={{
-          marginBottom: '24px',
-          textAlign: 'center'
-        }}>
-          <div style={{
-            color: 'white',
-            fontSize: '16px',
-            fontWeight: '700',
-            letterSpacing: '0.5px',
-            marginBottom: '4px'
-          }}>
-            Volume Control
-          </div>
-          <div style={{
-            color: 'rgba(255,255,255,0.5)',
-            fontSize: '12px',
-            fontWeight: '500'
-          }}>
-            💡 Adjust each ear independently for optimal balance
-          </div>
-        </div>
-
-        {/* Left Ear Volume */}
-        <div style={{
-          marginBottom: '24px',
-          padding: '20px',
-          background: 'rgba(78, 205, 196, 0.08)',
-          borderRadius: '16px',
-          border: '1px solid rgba(78, 205, 196, 0.15)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-            <span style={{
-              fontSize: '24px',
-              display: 'inline-block',
-              transform: 'scaleX(-1)',
-              filter: 'grayscale(0)'
-            }}>
-              👂
-            </span>
-            <span style={{
-              color: 'white',
-              fontSize: '15px',
-              fontWeight: '600'
-            }}>
-              Left Ear
-            </span>
-          </div>
-          <input
-            type="range"
-            min="-40"
-            max="-10"
-            step="1"
-            value={volumeLeft}
-            onChange={(e) => {
-              const newVol = parseInt(e.target.value);
-              setVolumeLeft(newVol);
-              updateSettings({ volumeLeft: newVol });
-              if (isPlaying) {
-                // Update left channel sounds (indices 0 and 1)
-                if (synthsRef.current[0] && synthsRef.current[0].volume) {
-                  synthsRef.current[0].volume.value = newVol; // left noise
-                }
-                if (synthsRef.current[1] && synthsRef.current[1].volume) {
-                  synthsRef.current[1].volume.value = newVol + 8; // left ambience
-                }
-                // Update left binaural if exists (index 4)
-                if (synthsRef.current[4] && synthsRef.current[4].volume) {
-                  synthsRef.current[4].volume.value = newVol + 12;
-                }
-              }
-            }}
-            style={{
-              width: '100%',
-              height: '8px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              appearance: 'none',
-              background: `linear-gradient(to right,
-                #4ECDC4 0%,
-                #4ECDC4 ${((volumeLeft + 40) / 30) * 100}%,
-                rgba(255, 255, 255, 0.15) ${((volumeLeft + 40) / 30) * 100}%,
-                rgba(255, 255, 255, 0.15) 100%)`
-            }}
-          />
-          <div style={{
-            textAlign: 'center',
-            marginTop: '12px',
-            color: '#4ECDC4',
-            fontSize: '18px',
-            fontWeight: '700',
-            fontVariantNumeric: 'tabular-nums'
-          }}>
-            {Math.round((volumeLeft + 40) / 30 * 100)}%
-          </div>
-        </div>
-
-        {/* Right Ear Volume */}
-        <div style={{
-          padding: '20px',
-          background: 'rgba(102, 126, 234, 0.08)',
-          borderRadius: '16px',
-          border: '1px solid rgba(102, 126, 234, 0.15)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-            <span style={{
-              fontSize: '24px'
-            }}>
-              👂
-            </span>
-            <span style={{
-              color: 'white',
-              fontSize: '15px',
-              fontWeight: '600'
-            }}>
-              Right Ear
-            </span>
-          </div>
-          <input
-            type="range"
-            min="-40"
-            max="-10"
-            step="1"
-            value={volumeRight}
-            onChange={(e) => {
-              const newVol = parseInt(e.target.value);
-              setVolumeRight(newVol);
-              updateSettings({ volumeRight: newVol });
-              if (isPlaying) {
-                // Update right channel sounds (indices 2 and 3)
-                if (synthsRef.current[2] && synthsRef.current[2].volume) {
-                  synthsRef.current[2].volume.value = newVol; // right noise
-                }
-                if (synthsRef.current[3] && synthsRef.current[3].volume) {
-                  synthsRef.current[3].volume.value = newVol + 8; // right ambience
-                }
-                // Update right binaural if exists (index 5)
-                if (synthsRef.current[5] && synthsRef.current[5].volume) {
-                  synthsRef.current[5].volume.value = newVol + 12;
-                }
-              }
-            }}
-            style={{
-              width: '100%',
-              height: '8px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              appearance: 'none',
-              background: `linear-gradient(to right,
-                #667eea 0%,
-                #667eea ${((volumeRight + 40) / 30) * 100}%,
-                rgba(255, 255, 255, 0.15) ${((volumeRight + 40) / 30) * 100}%,
-                rgba(255, 255, 255, 0.15) 100%)`
-            }}
-          />
-          <div style={{
-            textAlign: 'center',
-            marginTop: '12px',
-            color: '#667eea',
-            fontSize: '18px',
-            fontWeight: '700',
-            fontVariantNumeric: 'tabular-nums'
-          }}>
-            {Math.round((volumeRight + 40) / 30 * 100)}%
-          </div>
-        </div>
-
-        <style>{`
-          input[type="range"]::-webkit-slider-thumb {
-            appearance: none;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #4ECDC4, #667eea);
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(78, 205, 196, 0.4), 0 0 0 4px rgba(78, 205, 196, 0.15);
-            transition: all 0.2s;
-          }
-          input[type="range"]::-webkit-slider-thumb:hover {
-            transform: scale(1.15);
-            box-shadow: 0 4px 12px rgba(78, 205, 196, 0.5), 0 0 0 6px rgba(78, 205, 196, 0.2);
-          }
-          input[type="range"]::-moz-range-thumb {
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #4ECDC4, #667eea);
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(78, 205, 196, 0.4);
-            border: none;
-          }
-        `}</style>
-      </div>
-    </div>
 
     {/* Footer - More subtle */}
     <div style={{
