@@ -4803,98 +4803,102 @@ Great session! Help us track your progress by rating your tinnitus.
 
   <div style={{ maxWidth: '900px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
     
-    {/* Header - More compact and refined */}
+    {/* Header - Central and Bold */}
     <div style={{
       background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%)',
-      padding: '16px 24px',
+      padding: '32px 24px',
       borderRadius: '20px',
       marginBottom: '24px',
       backdropFilter: 'blur(20px) saturate(180%)',
       border: '1px solid rgba(255, 255, 255, 0.1)',
-      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
+      textAlign: 'center'
     }}>
+      {/* Logo and Title - Centered */}
       <div style={{
         display: 'flex',
-        justifyContent: 'space-between',
+        flexDirection: 'column',
         alignItems: 'center',
-        marginBottom: '20px'
+        gap: '16px',
+        marginBottom: '24px'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <img
-            src={logo}
-            alt="TinniTune Logo"
-            style={{
-              width: '48px',
-              height: '48px',
-              borderRadius: '12px'
-            }}
-          />
-          <div>
-            <h1 style={{
-              color: '#4ECDC4',
-              margin: 0,
-              fontSize: '22px',
-              fontWeight: '600',
-              letterSpacing: '-0.5px'
-            }}>
-              TinniTune™
-            </h1>
-            <p style={{
-              color: 'rgba(255,255,255,0.5)',
-              margin: '2px 0 0 0',
-              fontSize: '12px',
-              fontWeight: '500',
-              letterSpacing: '0.3px'
-            }}>
-              {frequency} Hz • {ear === 'left' ? '👂 Left' : ear === 'right' ? 'Right 👂' : '👂 Both'}
-            </p>
-          </div>
-        </div>
-
-        {/* Start/Stop Therapy Button - Prominent placement */}
-        <button
-          onClick={() => {
-            console.log('Play/Stop clicked, isPlaying:', isPlaying);
-            if (isPlaying) {
-              stopTherapy();
-            } else {
-              startTherapy();
-            }
-          }}
+        <img
+          src={logo}
+          alt="TinniTune Logo"
           style={{
-            padding: '16px 40px',
-            background: isPlaying
-              ? 'linear-gradient(135deg, #E27D60 0%, #E8A87C 100%)'
-              : `linear-gradient(135deg, ${getModeConfig(mode).color}dd 0%, ${getModeConfig(mode).color} 100%)`,
-            color: 'white',
-            border: 'none',
-            borderRadius: '16px',
-            cursor: 'pointer',
-            fontSize: '16px',
+            width: '80px',
+            height: '80px',
+            borderRadius: '20px',
+            boxShadow: '0 8px 24px rgba(78, 205, 196, 0.3)'
+          }}
+        />
+        <div>
+          <h1 style={{
+            color: '#4ECDC4',
+            margin: 0,
+            fontSize: '32px',
             fontWeight: '700',
-            boxShadow: isPlaying
-              ? '0 12px 32px rgba(226, 125, 96, 0.35), 0 4px 8px rgba(0, 0, 0, 0.2)'
-              : `0 12px 32px ${getModeConfig(mode).color}35, 0 4px 8px rgba(0, 0, 0, 0.2)`,
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            letterSpacing: '0.5px',
-            touchAction: 'manipulation'
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.transform = 'translateY(-2px)';
-            e.target.style.boxShadow = isPlaying
-              ? '0 16px 40px rgba(226, 125, 96, 0.4), 0 6px 12px rgba(0, 0, 0, 0.25)'
-              : `0 16px 40px ${getModeConfig(mode).color}40, 0 6px 12px rgba(0, 0, 0, 0.25)`;
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.transform = 'translateY(0)';
-            e.target.style.boxShadow = isPlaying
-              ? '0 12px 32px rgba(226, 125, 96, 0.35), 0 4px 8px rgba(0, 0, 0, 0.2)'
-              : `0 12px 32px ${getModeConfig(mode).color}35, 0 4px 8px rgba(0, 0, 0, 0.2)`;
-          }}
-        >
-          {isPlaying ? '⏸ Stop' : '▶ Start'}
-        </button>
+            letterSpacing: '-0.5px',
+            textShadow: '0 2px 8px rgba(78, 205, 196, 0.3)'
+          }}>
+            TinniTune™
+          </h1>
+          <p style={{
+            color: 'rgba(255,255,255,0.7)',
+            margin: '8px 0 0 0',
+            fontSize: '14px',
+            fontWeight: '600',
+            letterSpacing: '0.3px'
+          }}>
+            {frequency} Hz • {ear === 'left' ? '👂 Left' : ear === 'right' ? 'Right 👂' : '👂 Both'}
+          </p>
+        </div>
       </div>
+
+      {/* Start/Stop Therapy Button - Large and Central */}
+      <button
+        onClick={() => {
+          console.log('Play/Stop clicked, isPlaying:', isPlaying);
+          if (isPlaying) {
+            stopTherapy();
+          } else {
+            startTherapy();
+          }
+        }}
+        style={{
+          padding: '20px 60px',
+          background: isPlaying
+            ? 'linear-gradient(135deg, #E27D60 0%, #E8A87C 100%)'
+            : `linear-gradient(135deg, ${getModeConfig(mode).color}dd 0%, ${getModeConfig(mode).color} 100%)`,
+          color: 'white',
+          border: 'none',
+          borderRadius: '20px',
+          cursor: 'pointer',
+          fontSize: '20px',
+          fontWeight: '700',
+          boxShadow: isPlaying
+            ? '0 12px 32px rgba(226, 125, 96, 0.4), 0 4px 8px rgba(0, 0, 0, 0.2)'
+            : `0 12px 32px ${getModeConfig(mode).color}40, 0 4px 8px rgba(0, 0, 0, 0.2)`,
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          letterSpacing: '0.5px',
+          touchAction: 'manipulation',
+          marginBottom: '20px'
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.transform = 'translateY(-3px) scale(1.02)';
+          e.target.style.boxShadow = isPlaying
+            ? '0 16px 40px rgba(226, 125, 96, 0.5), 0 6px 12px rgba(0, 0, 0, 0.25)'
+            : `0 16px 40px ${getModeConfig(mode).color}50, 0 6px 12px rgba(0, 0, 0, 0.25)`;
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.transform = 'translateY(0) scale(1)';
+          e.target.style.boxShadow = isPlaying
+            ? '0 12px 32px rgba(226, 125, 96, 0.4), 0 4px 8px rgba(0, 0, 0, 0.2)'
+            : `0 12px 32px ${getModeConfig(mode).color}40, 0 4px 8px rgba(0, 0, 0, 0.2)`;
+        }}
+      >
+        {isPlaying ? '⏸ Stop Therapy' : '▶ Start Therapy'}
+      </button>
 
       {/* Session Timer and Progress */}
       {isPlaying && (
@@ -4942,7 +4946,7 @@ Great session! Help us track your progress by rating your tinnitus.
           </div>
         </div>
       )}
-      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-start', paddingLeft: '8px' }}>
+      <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
         <button
           onClick={() => {
             if (isPlaying) stopAudio();
