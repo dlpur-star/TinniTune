@@ -1359,6 +1359,9 @@ console.log('Begin button clicked');
 // If no profiles exist, show the new profile modal first
 if (profiles.length === 0) {
   setShowNewProfileModal(true);
+  setTimeout(() => {
+    alert('Modal should be set to true now. If you still dont see a popup with a text input, theres a rendering issue.');
+  }, 100);
 } else {
   setStep('setup');
 }
@@ -1379,6 +1382,135 @@ WebkitTapHighlightColor: 'rgba(0,0,0,0)'
 >
 {profiles.length === 0 ? 'Create Profile' : 'Begin Setup'}
 </button>
+
+    {/* New Profile Modal */}
+    {showNewProfileModal && (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0, 0, 0, 0.8)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 10000,
+        padding: '20px'
+      }}>
+        <div style={{
+          background: 'linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%)',
+          padding: '30px',
+          borderRadius: '16px',
+          maxWidth: '400px',
+          width: '100%',
+          border: '2px solid #667eea'
+        }}>
+          <h3 style={{
+            color: 'white',
+            margin: '0 0 20px 0',
+            fontSize: '24px'
+          }}>
+            Create New Profile
+          </h3>
+          <p style={{
+            color: 'rgba(255, 255, 255, 0.7)',
+            fontSize: '14px',
+            marginBottom: '20px'
+          }}>
+            Enter a name for this user profile. Each profile stores its own calibration and preferences.
+          </p>
+          <input
+            type="text"
+            value={newProfileName}
+            onChange={(e) => setNewProfileName(e.target.value)}
+            placeholder="e.g., John, Mom, Dad"
+            maxLength={20}
+            autoFocus
+            style={{
+              width: '100%',
+              padding: '12px',
+              fontSize: '16px',
+              borderRadius: '8px',
+              border: '2px solid rgba(255, 255, 255, 0.2)',
+              background: 'rgba(255, 255, 255, 0.1)',
+              color: 'white',
+              marginBottom: '20px',
+              boxSizing: 'border-box'
+            }}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' && newProfileName.trim()) {
+                const wasFirstProfile = profiles.length === 0;
+                const profile = createProfile(newProfileName);
+                setNewProfileName('');
+                setShowNewProfileModal(false);
+                if (wasFirstProfile) {
+                  setStep('setup');
+                }
+              }
+            }}
+          />
+          <div style={{
+            display: 'flex',
+            gap: '10px'
+          }}>
+            <button
+              onClick={() => {
+                setShowNewProfileModal(false);
+                setNewProfileName('');
+              }}
+              style={{
+                flex: 1,
+                padding: '12px',
+                fontSize: '16px',
+                borderRadius: '8px',
+                border: '2px solid rgba(255, 255, 255, 0.2)',
+                background: 'transparent',
+                color: 'white',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                touchAction: 'manipulation'
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => {
+                if (newProfileName.trim()) {
+                  const wasFirstProfile = profiles.length === 0;
+                  const profile = createProfile(newProfileName);
+                  setNewProfileName('');
+                  setShowNewProfileModal(false);
+                  if (wasFirstProfile) {
+                    setStep('setup');
+                  }
+                }
+              }}
+              disabled={!newProfileName.trim()}
+              style={{
+                flex: 1,
+                padding: '12px',
+                fontSize: '16px',
+                borderRadius: '8px',
+                border: 'none',
+                background: newProfileName.trim()
+                  ? 'linear-gradient(135deg, #667eea, #764ba2)'
+                  : 'rgba(255, 255, 255, 0.1)',
+                color: 'white',
+                cursor: newProfileName.trim() ? 'pointer' : 'not-allowed',
+                fontWeight: 'bold',
+                opacity: newProfileName.trim() ? 1 : 0.5,
+                touchAction: 'manipulation',
+                WebkitTapHighlightColor: 'rgba(0,0,0,0)'
+              }}
+            >
+              Create
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
 </div>
 </div>
 );
