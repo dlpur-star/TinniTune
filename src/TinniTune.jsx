@@ -5770,36 +5770,50 @@ Great session! Help us track your progress by rating your tinnitus.
       {/* Intensity Control - Only show when notch is enabled */}
       {notchEnabled && (
         <div style={{ marginTop: '16px' }}>
-          <div style={{ 
-            color: 'rgba(255,255,255,0.7)', 
+          <div style={{
+            color: 'rgba(255,255,255,0.7)',
             fontSize: '12px',
             marginBottom: '8px',
             fontWeight: '600'
           }}>
             Therapy Intensity:
+            {therapyEngine === 'engine' && <span style={{
+              color: '#F38181',
+              fontSize: '10px',
+              marginLeft: '8px',
+              fontWeight: '700'
+            }}>
+              🚀 ENHANCED
+            </span>}
           </div>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            {['gentle', 'standard', 'strong'].map(intensity => (
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {(therapyEngine === 'engine'
+              ? ['gentle', 'standard', 'strong', 'precise']
+              : ['gentle', 'standard', 'strong']
+            ).map(intensity => (
               <button
                 key={intensity}
                 onClick={() => {
                   if (isPlaying) {
-                    stopAudio();
+                    stopTherapy();
                     setNotchIntensity(intensity);
-                    setTimeout(() => startAudio(), 100);
+                    setTimeout(() => startTherapy(), 100);
                   } else {
                     setNotchIntensity(intensity);
                   }
                 }}
                 style={{
-                  flex: 1,
+                  flex: therapyEngine === 'engine' ? '1 1 calc(50% - 4px)' : '1',
+                  minWidth: therapyEngine === 'engine' ? '120px' : 'auto',
                   padding: '10px 12px',
-                  background: notchIntensity === intensity 
-                    ? 'rgba(78, 205, 196, 0.3)' 
+                  background: notchIntensity === intensity
+                    ? (therapyEngine === 'engine' ? 'rgba(243, 129, 129, 0.3)' : 'rgba(78, 205, 196, 0.3)')
                     : 'rgba(255,255,255,0.05)',
-                  color: notchIntensity === intensity ? '#4ECDC4' : 'rgba(255,255,255,0.6)',
-                  border: notchIntensity === intensity 
-                    ? '1.5px solid rgba(78, 205, 196, 0.5)' 
+                  color: notchIntensity === intensity
+                    ? (therapyEngine === 'engine' ? '#F38181' : '#4ECDC4')
+                    : 'rgba(255,255,255,0.6)',
+                  border: notchIntensity === intensity
+                    ? (therapyEngine === 'engine' ? '1.5px solid rgba(243, 129, 129, 0.5)' : '1.5px solid rgba(78, 205, 196, 0.5)')
                     : '1px solid rgba(255,255,255,0.1)',
                   borderRadius: '8px',
                   cursor: 'pointer',
@@ -5823,19 +5837,129 @@ Great session! Help us track your progress by rating your tinnitus.
               </button>
             ))}
           </div>
-          <div style={{ 
-            color: 'rgba(255,255,255,0.5)', 
+          <div style={{
+            color: 'rgba(255,255,255,0.5)',
             fontSize: '11px',
             marginTop: '8px',
             textAlign: 'center'
           }}>
-            {notchIntensity === 'gentle' && '💫 Wider, softer relief'}
-            {notchIntensity === 'standard' && '✨ Clinically proven (recommended)'}
-            {notchIntensity === 'strong' && '🎯 Targeted, focused relief'}
+            {therapyEngine === 'engine' ? (
+              <>
+                {notchIntensity === 'gentle' && '💫 1 octave bandwidth - Wide, gentle filtering'}
+                {notchIntensity === 'standard' && '✨ 0.5 octave - Clinical standard (Q=2.5)'}
+                {notchIntensity === 'strong' && '🎯 0.25 octave - Focused, narrow (Q=5.0)'}
+                {notchIntensity === 'precise' && '⚡ 0.125 octave - Maximum precision (Q=10.0)'}
+              </>
+            ) : (
+              <>
+                {notchIntensity === 'gentle' && '💫 Wider, softer relief'}
+                {notchIntensity === 'standard' && '✨ Clinically proven (recommended)'}
+                {notchIntensity === 'strong' && '🎯 Targeted, focused relief'}
+              </>
+            )}
           </div>
         </div>
       )}
     </div>
+
+    {/* NEW ENGINE ONLY: Binaural Beat Mode Selector */}
+    {therapyEngine === 'engine' && (
+      <div style={{
+        background: 'linear-gradient(135deg, rgba(243, 129, 129, 0.15), rgba(252, 227, 138, 0.15))',
+        padding: '20px',
+        borderRadius: '16px',
+        marginBottom: '24px',
+        border: '2px solid rgba(243, 129, 129, 0.3)',
+        backdropFilter: 'blur(10px)',
+        boxShadow: '0 8px 24px rgba(243, 129, 129, 0.2)'
+      }}>
+        <div style={{ marginBottom: '16px' }}>
+          <div style={{
+            color: 'white',
+            fontSize: '18px',
+            fontWeight: '700',
+            marginBottom: '8px'
+          }}>
+            🧠 Brainwave Entrainment
+            <span style={{
+              color: '#F38181',
+              fontSize: '11px',
+              marginLeft: '8px',
+              padding: '2px 8px',
+              background: 'rgba(243, 129, 129, 0.2)',
+              borderRadius: '4px',
+              fontWeight: '700'
+            }}>
+              NEW ENGINE
+            </span>
+          </div>
+          <div style={{
+            color: 'rgba(255,255,255,0.7)',
+            fontSize: '13px',
+            lineHeight: '1.5'
+          }}>
+            Binaural beats synchronized to your therapy mode for enhanced effectiveness
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {[
+            { mode: 'daytime', label: 'Focus', icon: '☀️', wave: 'Alpha', hz: '10 Hz' },
+            { mode: 'evening', label: 'Calm', icon: '🌅', wave: 'Theta', hz: '6 Hz' },
+            { mode: 'sleep', label: 'Sleep', icon: '🌙', wave: 'Delta', hz: '3 Hz' }
+          ].map(({ mode: modeKey, label, icon, wave, hz }) => {
+            const isActive = mode === modeKey;
+            return (
+              <button
+                key={modeKey}
+                onClick={() => {
+                  if (isPlaying) {
+                    stopTherapy();
+                    setMode(modeKey);
+                    setTimeout(() => startTherapy(), 100);
+                  } else {
+                    setMode(modeKey);
+                  }
+                }}
+                style={{
+                  flex: 1,
+                  padding: '12px 8px',
+                  background: isActive
+                    ? 'rgba(243, 129, 129, 0.3)'
+                    : 'rgba(255,255,255,0.05)',
+                  color: isActive ? '#F38181' : 'rgba(255,255,255,0.6)',
+                  border: isActive
+                    ? '1.5px solid rgba(243, 129, 129, 0.5)'
+                    : '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: isActive ? '700' : '500',
+                  transition: 'all 0.2s',
+                  textAlign: 'center'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.target.style.background = 'rgba(255,255,255,0.1)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    e.target.style.background = 'rgba(255,255,255,0.05)';
+                  }
+                }}
+              >
+                <div style={{ fontSize: '20px', marginBottom: '4px' }}>{icon}</div>
+                <div style={{ fontSize: '13px', fontWeight: '700' }}>{label}</div>
+                <div style={{ fontSize: '10px', opacity: 0.7, marginTop: '2px' }}>
+                  {wave} • {hz}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    )}
 
 
     {/* History Overview */}
