@@ -483,6 +483,11 @@ try {
 await Tone.start();
 console.log('Audio context started');
 
+  // IMPORTANT: Stop new engine if it's running
+  if (therapyModule) {
+    await stopAudioEngine(true);  // Silent cleanup - don't save session or show modal
+  }
+
   // Stop any existing sounds
   synthsRef.current.forEach(synth => {
     try {
@@ -599,7 +604,7 @@ console.log('Audio context started');
 
 };
 
-const stopAudio = () => {
+const stopAudio = (silentCleanup = false) => {
 synthsRef.current.forEach(synth => {
 try {
 synth.stop();
@@ -625,23 +630,28 @@ if (pannerRightRef.current) {
   pannerRightRef.current = null;
 }
 
-const finalDuration = sessionTime;
-setIsPlaying(false);
+// Only handle session ending if this is a real stop, not cleanup
+if (!silentCleanup) {
+  const finalDuration = sessionTime;
+  setIsPlaying(false);
 
-// Show rating modal for sessions over 60 seconds
-if (finalDuration >= 60) {
-  setShowRatingModal(true);
+  // Show rating modal for sessions over 60 seconds
+  if (finalDuration >= 60) {
+    setShowRatingModal(true);
+  } else {
+    // Save without ratings for short sessions
+    saveSession(finalDuration);
+  }
+
+  // Also stop calm mode if active
+  if (isCalmMode) {
+    stopCalmMode();
+  }
+
+  console.log('Audio stopped - Session length:', formatTime(sessionTime));
 } else {
-  // Save without ratings for short sessions
-  saveSession(finalDuration);
+  console.log('Legacy engine stopped (cleanup for engine switch)');
 }
-
-// Also stop calm mode if active
-if (isCalmMode) {
-  stopCalmMode();
-}
-
-console.log('Audio stopped - Session length:', formatTime(sessionTime));
 
 };
 
@@ -655,6 +665,9 @@ const startAudioEngine = async () => {
       console.error('Audio engine not initialized');
       return;
     }
+
+    // IMPORTANT: Stop legacy engine if it's running
+    stopAudio(true);  // Silent cleanup - don't save session or show modal
 
     console.log('🎵 Starting therapy with NEW Audio Engine');
     console.log('  Frequency:', frequency, 'Hz');
@@ -721,7 +734,7 @@ const startAudioEngine = async () => {
   }
 };
 
-const stopAudioEngine = async () => {
+const stopAudioEngine = async (silentCleanup = false) => {
   try {
     if (!engineInstance || !therapyModule) {
       return;
@@ -739,18 +752,24 @@ const stopAudioEngine = async () => {
       safetyMonitor.stopMonitoring();
     }
 
-    const finalDuration = sessionTime;
-    setIsPlaying(false);
     setTherapyModule(null);
 
-    // Show rating modal for sessions over 60 seconds
-    if (finalDuration >= 60) {
-      setShowRatingModal(true);
-    } else {
-      saveSession(finalDuration);
-    }
+    // Only handle session ending if this is a real stop, not cleanup
+    if (!silentCleanup) {
+      const finalDuration = sessionTime;
+      setIsPlaying(false);
 
-    console.log('✅ New engine therapy stopped - Session length:', formatTime(sessionTime));
+      // Show rating modal for sessions over 60 seconds
+      if (finalDuration >= 60) {
+        setShowRatingModal(true);
+      } else {
+        saveSession(finalDuration);
+      }
+
+      console.log('✅ New engine therapy stopped - Session length:', formatTime(sessionTime));
+    } else {
+      console.log('New engine stopped (cleanup for engine switch)');
+    }
   } catch (error) {
     console.error('Error stopping new engine therapy:', error);
   }
