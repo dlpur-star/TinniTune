@@ -4817,29 +4817,131 @@ Great session! Help us track your progress by rating your tinnitus.
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: '12px'
+        marginBottom: '20px'
       }}>
-        <div>
-          <h1 style={{
-            color: '#4ECDC4',
-            margin: 0,
-            fontSize: '22px',
-            fontWeight: '600',
-            letterSpacing: '-0.5px'
-          }}>
-            TinniTune
-          </h1>
-          <p style={{
-            color: 'rgba(255,255,255,0.5)',
-            margin: '2px 0 0 0',
-            fontSize: '12px',
-            fontWeight: '500',
-            letterSpacing: '0.3px'
-          }}>
-            {frequency} Hz • {ear === 'left' ? '👂 Left' : ear === 'right' ? 'Right 👂' : '👂 Both'}
-          </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <img
+            src={logo}
+            alt="TinniTune Logo"
+            style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '12px'
+            }}
+          />
+          <div>
+            <h1 style={{
+              color: '#4ECDC4',
+              margin: 0,
+              fontSize: '22px',
+              fontWeight: '600',
+              letterSpacing: '-0.5px'
+            }}>
+              TinniTune™
+            </h1>
+            <p style={{
+              color: 'rgba(255,255,255,0.5)',
+              margin: '2px 0 0 0',
+              fontSize: '12px',
+              fontWeight: '500',
+              letterSpacing: '0.3px'
+            }}>
+              {frequency} Hz • {ear === 'left' ? '👂 Left' : ear === 'right' ? 'Right 👂' : '👂 Both'}
+            </p>
+          </div>
         </div>
+
+        {/* Start/Stop Therapy Button - Prominent placement */}
+        <button
+          onClick={() => {
+            console.log('Play/Stop clicked, isPlaying:', isPlaying);
+            if (isPlaying) {
+              stopTherapy();
+            } else {
+              startTherapy();
+            }
+          }}
+          style={{
+            padding: '16px 40px',
+            background: isPlaying
+              ? 'linear-gradient(135deg, #E27D60 0%, #E8A87C 100%)'
+              : `linear-gradient(135deg, ${getModeConfig(mode).color}dd 0%, ${getModeConfig(mode).color} 100%)`,
+            color: 'white',
+            border: 'none',
+            borderRadius: '16px',
+            cursor: 'pointer',
+            fontSize: '16px',
+            fontWeight: '700',
+            boxShadow: isPlaying
+              ? '0 12px 32px rgba(226, 125, 96, 0.35), 0 4px 8px rgba(0, 0, 0, 0.2)'
+              : `0 12px 32px ${getModeConfig(mode).color}35, 0 4px 8px rgba(0, 0, 0, 0.2)`,
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            letterSpacing: '0.5px',
+            touchAction: 'manipulation'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.transform = 'translateY(-2px)';
+            e.target.style.boxShadow = isPlaying
+              ? '0 16px 40px rgba(226, 125, 96, 0.4), 0 6px 12px rgba(0, 0, 0, 0.25)'
+              : `0 16px 40px ${getModeConfig(mode).color}40, 0 6px 12px rgba(0, 0, 0, 0.25)`;
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = 'translateY(0)';
+            e.target.style.boxShadow = isPlaying
+              ? '0 12px 32px rgba(226, 125, 96, 0.35), 0 4px 8px rgba(0, 0, 0, 0.2)'
+              : `0 12px 32px ${getModeConfig(mode).color}35, 0 4px 8px rgba(0, 0, 0, 0.2)`;
+          }}
+        >
+          {isPlaying ? '⏸ Stop' : '▶ Start'}
+        </button>
       </div>
+
+      {/* Session Timer and Progress */}
+      {isPlaying && (
+        <div style={{
+          marginBottom: '24px',
+          textAlign: 'center'
+        }}>
+          <div style={{
+            fontSize: '28px',
+            fontWeight: '700',
+            color: '#4ECDC4',
+            textShadow: '0 0 20px rgba(78, 205, 196, 0.4)',
+            fontVariantNumeric: 'tabular-nums',
+            letterSpacing: '1px',
+            marginBottom: '12px'
+          }}>
+            {formatTime(sessionTime)}
+          </div>
+
+          <div style={{
+            maxWidth: '400px',
+            margin: '0 auto',
+            height: '8px',
+            background: 'rgba(255, 255, 255, 0.1)',
+            borderRadius: '4px',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              height: '100%',
+              background: 'linear-gradient(90deg, #4ECDC4, #44A08D)',
+              width: `${Math.min((sessionTime / (15 * 60)) * 100, 100)}%`,
+              transition: 'width 1s linear',
+              borderRadius: '4px',
+              boxShadow: '0 0 10px rgba(78, 205, 196, 0.5)'
+            }} />
+          </div>
+
+          <div style={{
+            fontSize: '11px',
+            color: 'rgba(255, 255, 255, 0.5)',
+            marginTop: '8px',
+            fontWeight: '500'
+          }}>
+            {Math.floor((sessionTime / (15 * 60)) * 100)}% of recommended 15 minutes
+          </div>
+        </div>
+      )}
       <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-start', paddingLeft: '8px' }}>
         <button
           onClick={() => {
