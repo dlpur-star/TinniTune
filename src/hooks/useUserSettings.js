@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 
-const STORAGE_KEY = 'tinnitune_user_settings';
+const STORAGE_KEY_PREFIX = 'tinnitune_user_settings';
 
 const DEFAULT_SETTINGS = {
   // Frequency matching results
@@ -29,42 +29,59 @@ const DEFAULT_SETTINGS = {
 };
 
 /**
- * Custom hook for managing user settings persistence
+ * Custom hook for managing user settings persistence (profile-aware)
+ * @param {string} profileId - The active profile ID to load settings for
  * @returns {Object} Settings object and methods to update/reset settings
  */
-export const useUserSettings = () => {
+export const useUserSettings = (profileId = null) => {
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load settings from localStorage on mount
+  // Generate storage key based on profile ID
+  const getStorageKey = useCallback(() => {
+    return profileId ? `${STORAGE_KEY_PREFIX}_${profileId}` : STORAGE_KEY_PREFIX;
+  }, [profileId]);
+
+  // Load settings from localStorage when profileId changes
   useEffect(() => {
+    if (!profileId) {
+      setIsLoaded(false);
+      return;
+    }
+
     try {
-      const savedSettings = localStorage.getItem(STORAGE_KEY);
+      const storageKey = getStorageKey();
+      const savedSettings = localStorage.getItem(storageKey);
       if (savedSettings) {
         const parsed = JSON.parse(savedSettings);
         setSettings({ ...DEFAULT_SETTINGS, ...parsed });
+      } else {
+        // No saved settings for this profile, use defaults
+        setSettings(DEFAULT_SETTINGS);
       }
       setIsLoaded(true);
     } catch (error) {
       console.error('Error loading user settings:', error);
+      setSettings(DEFAULT_SETTINGS);
       setIsLoaded(true);
     }
-  }, []);
+  }, [profileId, getStorageKey]);
 
   // Save settings to localStorage whenever they change
   useEffect(() => {
-    if (isLoaded) {
+    if (isLoaded && profileId) {
       try {
         const toSave = {
           ...settings,
           lastUpdated: new Date().toISOString()
         };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+        const storageKey = getStorageKey();
+        localStorage.setItem(storageKey, JSON.stringify(toSave));
       } catch (error) {
         console.error('Error saving user settings:', error);
       }
     }
-  }, [settings, isLoaded]);
+  }, [settings, isLoaded, profileId, getStorageKey]);
 
   /**
    * Update specific settings
@@ -106,8 +123,11 @@ export const useUserSettings = () => {
    */
   const resetSettings = useCallback(() => {
     setSettings(DEFAULT_SETTINGS);
-    localStorage.removeItem(STORAGE_KEY);
-  }, []);
+    if (profileId) {
+      const storageKey = getStorageKey();
+      localStorage.removeItem(storageKey);
+    }
+  }, [profileId, getStorageKey]);
 
   /**
    * Check if user has completed calibration
