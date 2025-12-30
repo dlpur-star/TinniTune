@@ -250,6 +250,16 @@ React.useEffect(() => {
   };
 }, [therapyEngine]);
 
+// Validate settings when switching between engines
+React.useEffect(() => {
+  // Legacy engine only supports 3 notch intensities (gentle, standard, strong)
+  // New engine supports 4 (gentle, standard, strong, precise)
+  if (therapyEngine === 'legacy' && notchIntensity === 'precise') {
+    console.log('⚠️ Switching to legacy engine: downgrading "precise" intensity to "strong"');
+    setNotchIntensity('strong');
+  }
+}, [therapyEngine, notchIntensity]);
+
 // Listen for safety warnings from new engine
 React.useEffect(() => {
   const handleSafetyWarning = (event) => {
