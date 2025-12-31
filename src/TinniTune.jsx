@@ -1139,12 +1139,28 @@ const startHeartbeat = async () => {
 
     const interval = 60 / heartbeatBPM;
 
+    // Determine where to connect the heartbeat based on active engine
+    let destination;
+    if (therapyEngine === 'engine' && audioEngineInstanceRef.current) {
+      // New engine: connect to engine's master gain
+      destination = audioEngineInstanceRef.current.getMasterGain();
+      if (!destination) {
+        console.warn('Engine master gain not available, falling back to default destination');
+        destination = Tone.getDestination();
+      } else {
+        console.log('Heartbeat connecting to new engine master gain');
+      }
+    } else {
+      // Legacy engine: use default Tone.js destination
+      destination = Tone.getDestination();
+    }
+
     const lub = new Tone.MembraneSynth({
       pitchDecay: 0.05,
       octaves: 2,
       oscillator: { type: 'sine' },
       envelope: { attack: 0.001, decay: 0.4, sustain: 0.01, release: 0.1 }
-    }).toDestination();
+    }).connect(destination);
     lub.volume.value = heartbeatVolume;
 
     const dub = new Tone.MembraneSynth({
@@ -1152,7 +1168,7 @@ const startHeartbeat = async () => {
       octaves: 1.5,
       oscillator: { type: 'sine' },
       envelope: { attack: 0.001, decay: 0.2, sustain: 0, release: 0.05 }
-    }).toDestination();
+    }).connect(destination);
     dub.volume.value = heartbeatVolume + 3;
 
     heartbeatSynthsRef.current = [lub, dub];
