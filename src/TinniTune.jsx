@@ -935,7 +935,11 @@ const updateEngineVolume = (earSide, newVolume) => {
   if (therapyModule && isPlaying) {
     therapyModule.updateVolume(earSide, newVolume);
     if (safetyMonitor) {
-      safetyMonitor.updateVolume(Math.max(volumeLeft, volumeRight));
+      // Calculate actual new max volume based on which ear was updated
+      const newMaxVolume = earSide === 'left'
+        ? Math.max(newVolume, volumeRight)
+        : Math.max(volumeLeft, newVolume);
+      safetyMonitor.updateVolume(newMaxVolume);
     }
   }
 };
