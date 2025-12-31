@@ -874,19 +874,22 @@ const stopAudioEngine = async (silentCleanup = false) => {
       }
     }
 
-    // Stop and dispose therapy module with error handling
+    // CRITICAL: Stop the therapy module FIRST to ensure audio generators are stopped
+    try {
+      therapyModule.stop();
+      console.log('✅ Therapy module stopped');
+    } catch (e) {
+      console.warn('Error stopping therapy module:', e);
+    }
+
+    // Then stop the engine (graceful fade)
     try {
       await engineInstance.stop();
     } catch (e) {
       console.warn('Error stopping engine instance:', e);
     }
 
-    try {
-      therapyModule.dispose();
-    } catch (e) {
-      console.warn('Error disposing therapy module:', e);
-    }
-
+    // Clean up module from engine registry
     try {
       engineInstance.unregisterModule('therapy');
     } catch (e) {
