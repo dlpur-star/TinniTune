@@ -772,10 +772,15 @@ const startAudioEngine = async () => {
     console.log('  Ear:', ear);
     console.log('  Notch Enabled:', notchEnabled);
     console.log('  Notch Intensity:', notchIntensity);
+    console.log('  Binaural Enabled:', binauralEnabled);
     console.log('  Volume L/R:', volumeLeft, '/', volumeRight, 'dB');
 
-    // Initialize audio context
+    // Initialize audio context (ensures Tone.js is started)
+    await Tone.start();
     await engineInstance.initialize();
+
+    // Verify audio context is running
+    console.log('  Audio Context State:', Tone.context.state);
 
     // Map notch intensity to engine format
     const intensityMap = {
@@ -832,7 +837,13 @@ const startAudioEngine = async () => {
       safetyMonitor.startMonitoring(maxVolume);
     }
 
-    console.log('✅ New engine therapy started at', frequency, 'Hz with', engineIntensity, 'notch');
+    // Verify therapy is active
+    const therapyConfig = therapy.getConfig();
+    console.log('✅ New engine therapy started successfully');
+    console.log('  Therapy Active:', therapyConfig.isActive);
+    console.log('  Frequency:', therapyConfig.frequency, 'Hz');
+    console.log('  Notch:', therapyConfig.notchEnabled ? therapyConfig.notchIntensity : 'OFF');
+    console.log('  Binaural:', therapyConfig.binauralDetails?.description || 'OFF');
   } catch (error) {
     console.error('Error starting new engine therapy:', error);
     setTherapyModule(null);
