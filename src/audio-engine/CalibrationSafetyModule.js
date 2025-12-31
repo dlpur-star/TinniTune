@@ -337,9 +337,14 @@ export class SafetyMonitor {
    * Check volume safety
    */
   _checkVolumeLevel() {
+    // Reset warning flag if volume drops back to safe levels
+    if (this.currentVolumeDb <= SAFE_LISTENING_LIMITS.warningThresholdDb) {
+      this.warningIssued = false;
+    }
+
     if (this.currentVolumeDb > SAFE_LISTENING_LIMITS.warningThresholdDb) {
       if (!this.warningIssued) {
-        this._issueWarning('volume', 
+        this._issueWarning('volume',
           `Volume level is high (${Math.round(this.currentVolumeDb)} dB). ` +
           `Consider reducing to protect your hearing.`
         );
@@ -347,11 +352,13 @@ export class SafetyMonitor {
       }
     }
 
-    if (this.currentVolumeDb > SAFE_LISTENING_LIMITS.maxContinuousDb) {
+    // Only issue critical warning once per session when volume exceeds safe limit
+    if (this.currentVolumeDb > SAFE_LISTENING_LIMITS.maxContinuousDb && !this.warningIssued) {
       this._issueWarning('volume_critical',
         `CAUTION: Volume exceeds safe continuous exposure level. ` +
         `Please reduce volume immediately.`
       );
+      this.warningIssued = true;
     }
   }
 
