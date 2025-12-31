@@ -453,50 +453,100 @@ export class ClinicalTherapyModule {
    * Stop therapy
    */
   stop() {
-    this.engine._log('Stopping therapy module');
+    if (!this.isActive) {
+      this.engine._log('Therapy module already stopped');
+      return;
+    }
+
+    this.engine._log('Stopping therapy module...');
+
+    // Mark as inactive FIRST to prevent any ongoing operations
+    this.isActive = false;
 
     // Stop and dispose noise generators
-    Object.values(this.noiseGenerators).forEach(nodes => {
-      Object.values(nodes).forEach(node => {
-        if (node && typeof node.dispose === 'function') {
-          try {
-            if (node.stop) node.stop();
-            node.dispose();
-          } catch (e) {}
-        }
-      });
+    ['left', 'right'].forEach(ear => {
+      const nodes = this.noiseGenerators[ear];
+
+      // Stop and dispose white noise
+      if (nodes.white) {
+        try {
+          nodes.white.stop();
+          this.engine._log(`Stopped ${ear} white noise`);
+        } catch (e) {}
+        try {
+          nodes.white.dispose();
+        } catch (e) {}
+        nodes.white = null;
+      }
+
+      // Stop and dispose pink noise
+      if (nodes.pink) {
+        try {
+          nodes.pink.stop();
+          this.engine._log(`Stopped ${ear} pink noise`);
+        } catch (e) {}
+        try {
+          nodes.pink.dispose();
+        } catch (e) {}
+        nodes.pink = null;
+      }
+
+      // Dispose filters and gains
+      if (nodes.filter) {
+        try { nodes.filter.dispose(); } catch (e) {}
+        nodes.filter = null;
+      }
+      if (nodes.gain) {
+        try { nodes.gain.dispose(); } catch (e) {}
+        nodes.gain = null;
+      }
+      if (nodes.pinkGain) {
+        try { nodes.pinkGain.dispose(); } catch (e) {}
+        nodes.pinkGain = null;
+      }
     });
 
     // Stop and dispose binaural generators
-    Object.values(this.binauralGenerators).forEach(node => {
-      if (node && typeof node.dispose === 'function') {
-        try {
-          if (node.stop) node.stop();
-          node.dispose();
-        } catch (e) {}
-      }
-    });
+    if (this.binauralGenerators.left) {
+      try {
+        this.binauralGenerators.left.stop();
+        this.engine._log('Stopped left binaural');
+      } catch (e) {}
+      try {
+        this.binauralGenerators.left.dispose();
+      } catch (e) {}
+      this.binauralGenerators.left = null;
+    }
+    if (this.binauralGenerators.right) {
+      try {
+        this.binauralGenerators.right.stop();
+        this.engine._log('Stopped right binaural');
+      } catch (e) {}
+      try {
+        this.binauralGenerators.right.dispose();
+      } catch (e) {}
+      this.binauralGenerators.right = null;
+    }
+    if (this.binauralGenerators.leftGain) {
+      try { this.binauralGenerators.leftGain.dispose(); } catch (e) {}
+      this.binauralGenerators.leftGain = null;
+    }
+    if (this.binauralGenerators.rightGain) {
+      try { this.binauralGenerators.rightGain.dispose(); } catch (e) {}
+      this.binauralGenerators.rightGain = null;
+    }
 
     // Dispose notch filters
-    Object.values(this.notchFilters).forEach(filter => {
-      if (filter) {
-        try {
-          filter.dispose();
-        } catch (e) {}
-      }
-    });
+    if (this.notchFilters.left) {
+      try { this.notchFilters.left.dispose(); } catch (e) {}
+      this.notchFilters.left = null;
+    }
+    if (this.notchFilters.right) {
+      try { this.notchFilters.right.dispose(); } catch (e) {}
+      this.notchFilters.right = null;
+    }
 
-    // Reset state
-    this.noiseGenerators = {
-      left: { white: null, pink: null, filter: null, gain: null },
-      right: { white: null, pink: null, filter: null, gain: null }
-    };
-    this.binauralGenerators = {
-      left: null, right: null, leftGain: null, rightGain: null
-    };
-    this.notchFilters = { left: null, right: null };
-    
-    this.isActive = false;
+    this.engine._log('✅ Therapy module fully stopped and cleaned up');
   }
 
   /**

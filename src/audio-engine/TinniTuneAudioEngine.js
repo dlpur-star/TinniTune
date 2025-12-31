@@ -246,7 +246,7 @@ export class TinniTuneAudioEngine {
   dispose() {
     this._log('Disposing audio engine');
 
-    // Stop everything
+    // Stop everything first
     this.emergencyStop();
 
     // Dispose all modules
@@ -254,16 +254,38 @@ export class TinniTuneAudioEngine {
       this.unregisterModule(id);
     });
 
-    // Dispose master chain
-    if (this.masterLimiter) this.masterLimiter.dispose();
-    if (this.masterGain) this.masterGain.dispose();
-    if (this.leftChannel) this.leftChannel.dispose();
-    if (this.rightChannel) this.rightChannel.dispose();
+    // Clear the modules map
+    this.activeModules.clear();
 
-    // Suspend audio context
-    if (Tone.context.state !== 'suspended') {
-      Tone.context.suspend();
+    // Dispose master chain
+    if (this.masterLimiter) {
+      try {
+        this.masterLimiter.dispose();
+      } catch (e) {}
+      this.masterLimiter = null;
     }
+    if (this.masterGain) {
+      try {
+        this.masterGain.dispose();
+      } catch (e) {}
+      this.masterGain = null;
+    }
+    if (this.leftChannel) {
+      try {
+        this.leftChannel.dispose();
+      } catch (e) {}
+      this.leftChannel = null;
+    }
+    if (this.rightChannel) {
+      try {
+        this.rightChannel.dispose();
+      } catch (e) {}
+      this.rightChannel = null;
+    }
+
+    // DON'T suspend the audio context - let it stay ready for reuse
+    // The context will be resumed when needed
+    this._log('Audio context state after dispose:', Tone.context.state);
 
     this.isInitialized = false;
   }

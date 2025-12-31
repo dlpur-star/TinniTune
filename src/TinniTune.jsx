@@ -896,6 +896,18 @@ const stopAudioEngine = async (silentCleanup = false) => {
       }
     }
 
+    // Extra safety: Cancel any remaining Tone.Transport events
+    // (in case mode switching left orphaned scheduled events)
+    try {
+      if (Tone.Transport.state === 'started') {
+        Tone.Transport.stop();
+      }
+      Tone.Transport.cancel();
+      console.log('🧹 Cleared any orphaned transport events');
+    } catch (e) {
+      console.warn('Error cleaning transport:', e);
+    }
+
     // Then stop the engine (graceful fade)
     try {
       await engineInstance.stop();
