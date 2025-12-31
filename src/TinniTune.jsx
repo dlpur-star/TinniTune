@@ -54,6 +54,7 @@ const [volumeRight, setVolumeRight] = useState(-25);
 const [sessionTime, setSessionTime] = useState(0);
 const [notchEnabled, setNotchEnabled] = useState(true); // Notch therapy ON by default
 const [notchIntensity, setNotchIntensity] = useState('standard'); // 'gentle', 'standard', 'strong'
+const [binauralEnabled, setBinauralEnabled] = useState(true); // Binaural beats ON by default
 const [sessionStartTime, setSessionStartTime] = useState(null); // Track when session started
 const [sessions, setSessions] = useState([]); // Array of past sessions
 const [showRatingModal, setShowRatingModal] = useState(false); // Show post-session rating
@@ -651,21 +652,25 @@ console.log('Audio context started');
   
   console.log('Left channel:', volumeLeft, 'dB | Right channel:', volumeRight, 'dB');
 
-  // Add binaural beats for therapy
-  const modeConfig = getModeConfig(mode);
-  const baseFreq = 200;
-  const binauralDiff = modeConfig.freq;
+  // Add binaural beats for therapy (if enabled)
+  if (binauralEnabled) {
+    const modeConfig = getModeConfig(mode);
+    const baseFreq = 200;
+    const binauralDiff = modeConfig.freq;
 
-  const oscLeft = new Tone.Oscillator(baseFreq, 'sine').start();
-  const oscRight = new Tone.Oscillator(baseFreq + binauralDiff, 'sine').start();
+    const oscLeft = new Tone.Oscillator(baseFreq, 'sine').start();
+    const oscRight = new Tone.Oscillator(baseFreq + binauralDiff, 'sine').start();
 
-  oscLeft.connect(leftDestination);
-  oscRight.connect(rightDestination);
-  oscLeft.volume.value = volumeLeft + 12;
-  oscRight.volume.value = volumeRight + 12;
+    oscLeft.connect(leftDestination);
+    oscRight.connect(rightDestination);
+    oscLeft.volume.value = volumeLeft + 12;
+    oscRight.volume.value = volumeRight + 12;
 
-  synthsRef.current.push(oscLeft, oscRight);
-  console.log('Binaural beats added');
+    synthsRef.current.push(oscLeft, oscRight);
+    console.log('Binaural beats added');
+  } else {
+    console.log('Binaural beats disabled');
+  }
 
   setIsPlaying(true);
   setSessionTime(0);
@@ -793,6 +798,7 @@ const startAudioEngine = async () => {
     const therapy = new ClinicalTherapyModule(engineInstance, {
       notchEnabled: notchEnabled,
       notchIntensity: engineIntensity,
+      binauralEnabled: binauralEnabled,
       binauralMode: binauralMode
     });
 
@@ -811,6 +817,7 @@ const startAudioEngine = async () => {
       volumeRight: volumeRight,
       ear: ear,
       notchIntensity: engineIntensity,
+      binauralEnabled: binauralEnabled,
       binauralMode: binauralMode
     });
 
@@ -6010,8 +6017,86 @@ Great session! Help us track your progress by rating your tinnitus.
       )}
     </div>
 
+    {/* Binaural Beats Toggle */}
+    <div style={{
+      background: binauralEnabled
+        ? 'linear-gradient(135deg, rgba(147, 112, 219, 0.15), rgba(123, 104, 238, 0.15))'
+        : 'rgba(255,255,255,0.05)',
+      padding: '20px',
+      borderRadius: '16px',
+      marginBottom: '24px',
+      border: binauralEnabled ? '2px solid rgba(147, 112, 219, 0.4)' : '1px solid rgba(255,255,255,0.1)',
+      backdropFilter: 'blur(10px)',
+      boxShadow: binauralEnabled
+        ? '0 8px 24px rgba(147, 112, 219, 0.2)'
+        : '0 4px 12px rgba(0,0,0,0.15)'
+    }}>
+      <div style={{ marginBottom: '16px' }}>
+        <div style={{
+          color: 'white',
+          fontSize: '18px',
+          fontWeight: '700',
+          marginBottom: '8px'
+        }}>
+          🎵 Binaural Beats
+        </div>
+        <div style={{
+          color: 'rgba(255,255,255,0.7)',
+          fontSize: '13px',
+          lineHeight: '1.5'
+        }}>
+          {binauralEnabled
+            ? 'Brainwave entrainment active for relaxation'
+            : 'Enable for enhanced mood and focus'
+          }
+        </div>
+      </div>
+
+      <button
+        onClick={() => {
+          const newBinauralState = !binauralEnabled;
+          setBinauralEnabled(newBinauralState);
+
+          // Update in real-time if using new engine and playing
+          if (isPlaying && therapyEngine === 'engine' && therapyModule) {
+            therapyModule.setBinauralEnabled(newBinauralState);
+            console.log('🎛️ Binaural beats toggled to:', newBinauralState);
+          } else if (isPlaying && therapyEngine === 'legacy') {
+            // Legacy engine requires restart
+            stopAudio();
+            setTimeout(() => startAudio(), 100);
+          }
+        }}
+        style={{
+          width: '100%',
+          padding: '14px 32px',
+          background: binauralEnabled
+            ? 'linear-gradient(135deg, #9370DB, #7B68EE)'
+            : 'rgba(255,255,255,0.15)',
+          color: 'white',
+          border: 'none',
+          borderRadius: '12px',
+          cursor: 'pointer',
+          fontSize: '16px',
+          fontWeight: '700',
+          boxShadow: binauralEnabled
+            ? '0 4px 16px rgba(147, 112, 219, 0.3)'
+            : 'none',
+          transition: 'all 0.3s'
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.transform = 'translateY(-2px)';
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.transform = 'translateY(0)';
+        }}
+      >
+        {binauralEnabled ? 'ON ✓' : 'Turn ON'}
+      </button>
+    </div>
+
     {/* NEW ENGINE ONLY: Binaural Beat Mode Selector */}
-    {therapyEngine === 'engine' && (
+    {therapyEngine === 'engine' && binauralEnabled && (
       <div style={{
         background: 'linear-gradient(135deg, rgba(243, 129, 129, 0.15), rgba(252, 227, 138, 0.15))',
         padding: '20px',
