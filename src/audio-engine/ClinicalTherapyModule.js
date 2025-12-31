@@ -451,13 +451,10 @@ export class ClinicalTherapyModule {
 
   /**
    * Stop therapy
+   * Always stops all audio generators, regardless of isActive state
+   * (Same pattern as legacy mode for reliability)
    */
   stop() {
-    if (!this.isActive) {
-      this.engine._log('Therapy module already stopped');
-      return;
-    }
-
     this.engine._log('Stopping therapy module...');
 
     // Mark as inactive FIRST to prevent any ongoing operations
