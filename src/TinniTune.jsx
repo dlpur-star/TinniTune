@@ -854,8 +854,13 @@ const startAudioEngine = async () => {
 
 const stopAudioEngine = async (silentCleanup = false) => {
   try {
+    console.log('🛑 ========== STOP AUDIO ENGINE CALLED ==========');
+    console.log('  engineInstance exists?', !!engineInstance);
+    console.log('  therapyModule state exists?', !!therapyModule);
+    console.log('  silentCleanup?', silentCleanup);
+
     if (!engineInstance) {
-      console.warn('No engine instance to stop');
+      console.warn('❌ No engine instance to stop');
       setTherapyModule(null);
       if (!silentCleanup) {
         setIsPlaying(false);
@@ -877,23 +882,37 @@ const stopAudioEngine = async (silentCleanup = false) => {
     // CRITICAL: Get the therapy module from engine registry (source of truth)
     // This prevents issues with stale state references during rapid mode switches
     const activeTherapyModule = engineInstance.getModule('therapy');
+    console.log('📋 Active therapy module from registry?', !!activeTherapyModule);
+    if (activeTherapyModule) {
+      console.log('📋 Module isActive?', activeTherapyModule.isActive);
+      console.log('📋 Module has generators?', {
+        leftNoise: !!activeTherapyModule.noiseGenerators?.left?.white,
+        rightNoise: !!activeTherapyModule.noiseGenerators?.right?.white,
+        leftBinaural: !!activeTherapyModule.binauralGenerators?.left,
+        rightBinaural: !!activeTherapyModule.binauralGenerators?.right
+      });
+    }
 
     if (activeTherapyModule) {
       // Stop the active therapy module FIRST to ensure audio generators are stopped
       try {
+        console.log('🎯 Calling stop() on active therapy module...');
         activeTherapyModule.stop();
         console.log('✅ Active therapy module stopped');
       } catch (e) {
-        console.warn('Error stopping active therapy module:', e);
+        console.error('❌ Error stopping active therapy module:', e);
       }
     } else if (therapyModule) {
       // Fallback: stop the state reference if engine doesn't have it
+      console.log('⚠️ No module in registry, trying state reference...');
       try {
         therapyModule.stop();
         console.log('✅ Therapy module stopped (from state)');
       } catch (e) {
         console.warn('Error stopping therapy module from state:', e);
       }
+    } else {
+      console.error('❌ No therapy module found anywhere!');
     }
 
     // Extra safety: Cancel any remaining Tone.Transport events
@@ -918,6 +937,7 @@ const stopAudioEngine = async (silentCleanup = false) => {
     // Clean up module from engine registry
     try {
       engineInstance.unregisterModule('therapy');
+      console.log('🗑️  Unregistered therapy module from engine');
     } catch (e) {
       console.warn('Error unregistering module:', e);
     }
@@ -946,11 +966,12 @@ const stopAudioEngine = async (silentCleanup = false) => {
       }
 
       console.log('✅ New engine therapy stopped - Session length:', formatTime(sessionTime));
+      console.log('🛑 ========== STOP COMPLETE ==========');
     } else {
       console.log('New engine stopped (cleanup for engine switch)');
     }
   } catch (error) {
-    console.error('Error stopping new engine therapy:', error);
+    console.error('❌ CRITICAL ERROR stopping new engine therapy:', error);
     // Ensure state is clean even on error
     setTherapyModule(null);
     if (!silentCleanup) {
@@ -6243,6 +6264,7 @@ Great session! Help us track your progress by rating your tinnitus.
               <button
                 key={modeKey}
                 onClick={() => {
+                  console.log('🔄 Mode switch clicked:', mode, '->', modeKey);
                   setMode(modeKey);
 
                   // Update in real-time if using new engine and playing
@@ -6250,6 +6272,7 @@ Great session! Help us track your progress by rating your tinnitus.
                     // CRITICAL: Get module from engine registry (source of truth)
                     // Don't use therapyModule state as it can be stale
                     const activeModule = engineInstance.getModule('therapy');
+                    console.log('  Active module found?', !!activeModule);
 
                     if (activeModule) {
                       const binauralMap = {
@@ -6258,10 +6281,11 @@ Great session! Help us track your progress by rating your tinnitus.
                         'sleep': 'sleep'
                       };
                       const binauralMode = binauralMap[modeKey] || 'focus';
+                      console.log('  Updating binaural mode to:', binauralMode);
                       activeModule.updateBinauralMode(binauralMode);
-                      console.log('🎛️ Binaural mode updated to:', binauralMode);
+                      console.log('  ✅ Binaural mode updated');
                     } else {
-                      console.warn('No active therapy module found in engine registry');
+                      console.error('  ❌ No active therapy module found in engine registry!');
                     }
                   } else if (isPlaying && therapyEngine === 'legacy') {
                     // Legacy engine requires restart
