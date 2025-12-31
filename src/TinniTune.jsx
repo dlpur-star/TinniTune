@@ -5223,16 +5223,22 @@ Great session! Help us track your progress by rating your tinnitus.
             setVolumeLeft(newVol);
             updateSettings({ volumeLeft: newVol });
             if (isPlaying) {
-              // Update left channel sounds (indices 0 and 1)
-              if (synthsRef.current[0] && synthsRef.current[0].volume) {
-                synthsRef.current[0].volume.value = newVol; // left noise
-              }
-              if (synthsRef.current[1] && synthsRef.current[1].volume) {
-                synthsRef.current[1].volume.value = newVol + 8; // left ambience
-              }
-              // Update left binaural if exists (index 4)
-              if (synthsRef.current[4] && synthsRef.current[4].volume) {
-                synthsRef.current[4].volume.value = newVol + 12;
+              if (therapyEngine === 'engine') {
+                // New engine: use updateEngineVolume
+                updateEngineVolume('left', newVol);
+              } else {
+                // Legacy engine: update synth volumes directly
+                // Update left channel sounds (indices 0 and 1)
+                if (synthsRef.current[0] && synthsRef.current[0].volume) {
+                  synthsRef.current[0].volume.value = newVol; // left noise
+                }
+                if (synthsRef.current[1] && synthsRef.current[1].volume) {
+                  synthsRef.current[1].volume.value = newVol + 8; // left ambience
+                }
+                // Update left binaural if exists (index 4)
+                if (synthsRef.current[4] && synthsRef.current[4].volume) {
+                  synthsRef.current[4].volume.value = newVol + 12;
+                }
               }
             }
           }}
@@ -5294,16 +5300,22 @@ Great session! Help us track your progress by rating your tinnitus.
             setVolumeRight(newVol);
             updateSettings({ volumeRight: newVol });
             if (isPlaying) {
-              // Update right channel sounds (indices 2 and 3)
-              if (synthsRef.current[2] && synthsRef.current[2].volume) {
-                synthsRef.current[2].volume.value = newVol; // right noise
-              }
-              if (synthsRef.current[3] && synthsRef.current[3].volume) {
-                synthsRef.current[3].volume.value = newVol + 8; // right ambience
-              }
-              // Update right binaural if exists (index 5)
-              if (synthsRef.current[5] && synthsRef.current[5].volume) {
-                synthsRef.current[5].volume.value = newVol + 12;
+              if (therapyEngine === 'engine') {
+                // New engine: use updateEngineVolume
+                updateEngineVolume('right', newVol);
+              } else {
+                // Legacy engine: update synth volumes directly
+                // Update right channel sounds (indices 2 and 3)
+                if (synthsRef.current[2] && synthsRef.current[2].volume) {
+                  synthsRef.current[2].volume.value = newVol; // right noise
+                }
+                if (synthsRef.current[3] && synthsRef.current[3].volume) {
+                  synthsRef.current[3].volume.value = newVol + 8; // right ambience
+                }
+                // Update right binaural if exists (index 5)
+                if (synthsRef.current[5] && synthsRef.current[5].volume) {
+                  synthsRef.current[5].volume.value = newVol + 12;
+                }
               }
             }
           }}
