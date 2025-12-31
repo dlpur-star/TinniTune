@@ -285,6 +285,15 @@ export class TinniTuneAudioEngine {
   startSession() {
     this.sessionStartTime = Date.now();
     this.isPlaying = true;
+
+    // CRITICAL: Reset master gain to audible level when starting
+    // This fixes the "no sound" bug after stopping therapy
+    if (this.masterGain) {
+      this.masterGain.gain.cancelScheduledValues(Tone.now());
+      this.masterGain.gain.value = 0.8; // Reset to default audible level
+      this._log('Master gain reset to 0.8 for new session');
+    }
+
     this._log('Session started');
   }
 
