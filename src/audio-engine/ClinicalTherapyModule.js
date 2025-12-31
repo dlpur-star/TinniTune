@@ -59,6 +59,7 @@ export class ClinicalTherapyModule {
     this.config = {
       notchEnabled: config.notchEnabled !== false,
       notchIntensity: config.notchIntensity || 'moderate',
+      binauralEnabled: config.binauralEnabled !== false,
       binauralMode: config.binauralMode || 'focus',
       enableAmbience: config.enableAmbience !== false,
       ...config
@@ -133,9 +134,12 @@ export class ClinicalTherapyModule {
       this._createNoiseGenerator('right', volumeRight);
     }
 
-    // Create binaural beats if using both ears
-    if (ear === 'both') {
+    // Create binaural beats for brainwave entrainment (if enabled)
+    if (this.config.binauralEnabled) {
       this._createBinauralBeats(binauralMode, volumeLeft, volumeRight);
+      this.engine._log('Binaural beats enabled');
+    } else {
+      this.engine._log('Binaural beats disabled');
     }
 
     this.isActive = true;
@@ -354,6 +358,56 @@ export class ClinicalTherapyModule {
       // Recreate notch filters
       this._createNotchFilters(this.currentFrequency, this.config.notchIntensity);
       this._reconnectThroughNotch();
+    }
+  }
+
+  /**
+   * Toggle binaural beats on/off
+   * @param {boolean} enabled
+   */
+  setBinauralEnabled(enabled) {
+    this.config.binauralEnabled = enabled;
+
+    if (!enabled && this.isActive) {
+      // Stop and dispose binaural beats
+      this._stopBinauralBeats();
+      this.engine._log('Binaural beats disabled');
+    } else if (enabled && this.isActive) {
+      // Create new binaural beats
+      this._createBinauralBeats(this.config.binauralMode, this.volumes.left, this.volumes.right);
+      this.engine._log('Binaural beats enabled');
+    }
+  }
+
+  /**
+   * Stop and dispose binaural beat generators
+   */
+  _stopBinauralBeats() {
+    if (this.binauralGenerators.left) {
+      try {
+        this.binauralGenerators.left.stop();
+        this.binauralGenerators.left.dispose();
+      } catch (e) {}
+      this.binauralGenerators.left = null;
+    }
+    if (this.binauralGenerators.right) {
+      try {
+        this.binauralGenerators.right.stop();
+        this.binauralGenerators.right.dispose();
+      } catch (e) {}
+      this.binauralGenerators.right = null;
+    }
+    if (this.binauralGenerators.leftGain) {
+      try {
+        this.binauralGenerators.leftGain.dispose();
+      } catch (e) {}
+      this.binauralGenerators.leftGain = null;
+    }
+    if (this.binauralGenerators.rightGain) {
+      try {
+        this.binauralGenerators.rightGain.dispose();
+      } catch (e) {}
+      this.binauralGenerators.rightGain = null;
     }
   }
 
