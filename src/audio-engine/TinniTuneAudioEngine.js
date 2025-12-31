@@ -154,6 +154,15 @@ export class TinniTuneAudioEngine {
   }
 
   /**
+   * Get a registered module by ID
+   * @param {string} moduleId - Module identifier
+   * @returns {Object|null} The module instance or null if not found
+   */
+  getModule(moduleId) {
+    return this.activeModules.get(moduleId) || null;
+  }
+
+  /**
    * Set master volume with safety checks
    * @param {number} db - Volume in decibels (-40 to 0)
    */
