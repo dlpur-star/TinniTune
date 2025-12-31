@@ -854,8 +854,8 @@ const startAudioEngine = async () => {
 
 const stopAudioEngine = async (silentCleanup = false) => {
   try {
-    if (!engineInstance || !therapyModule) {
-      // Even if no module, ensure state is clean
+    if (!engineInstance) {
+      console.warn('No engine instance to stop');
       setTherapyModule(null);
       if (!silentCleanup) {
         setIsPlaying(false);
@@ -874,12 +874,26 @@ const stopAudioEngine = async (silentCleanup = false) => {
       }
     }
 
-    // CRITICAL: Stop the therapy module FIRST to ensure audio generators are stopped
-    try {
-      therapyModule.stop();
-      console.log('✅ Therapy module stopped');
-    } catch (e) {
-      console.warn('Error stopping therapy module:', e);
+    // CRITICAL: Get the therapy module from engine registry (source of truth)
+    // This prevents issues with stale state references during rapid mode switches
+    const activeTherapyModule = engineInstance.getModule('therapy');
+
+    if (activeTherapyModule) {
+      // Stop the active therapy module FIRST to ensure audio generators are stopped
+      try {
+        activeTherapyModule.stop();
+        console.log('✅ Active therapy module stopped');
+      } catch (e) {
+        console.warn('Error stopping active therapy module:', e);
+      }
+    } else if (therapyModule) {
+      // Fallback: stop the state reference if engine doesn't have it
+      try {
+        therapyModule.stop();
+        console.log('✅ Therapy module stopped (from state)');
+      } catch (e) {
+        console.warn('Error stopping therapy module from state:', e);
+      }
     }
 
     // Then stop the engine (graceful fade)
