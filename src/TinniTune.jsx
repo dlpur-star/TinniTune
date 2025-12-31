@@ -870,8 +870,8 @@ const stopAudioEngine = async (silentCleanup = false) => {
       }
     }
 
-    // CRITICAL: Use ref (same pattern as legacy mode with synthsRef)
-    // Refs persist across renders, unlike state which can become stale
+    // CRITICAL: Stop module directly (same pattern as legacy synthsRef.current.forEach)
+    // Don't rely on engine.stop() or unregisterModule() - just brute force stop
     if (therapyModuleRef.current) {
       try {
         therapyModuleRef.current.stop();
@@ -879,20 +879,26 @@ const stopAudioEngine = async (silentCleanup = false) => {
       } catch (e) {
         console.error('Error stopping therapy module:', e);
       }
+
+      // Dispose immediately
+      try {
+        therapyModuleRef.current.dispose();
+      } catch (e) {}
+
+      therapyModuleRef.current = null;
     }
 
-    // Clean up module from engine registry
+    // Emergency stop the engine (mute master gain immediately, no fade)
     if (engineInstance) {
       try {
-        await engineInstance.stop();
+        engineInstance.emergencyStop();
         engineInstance.unregisterModule('therapy');
       } catch (e) {
         console.warn('Error stopping engine:', e);
       }
     }
 
-    // Clear ref and state
-    therapyModuleRef.current = null;
+    // Clear state
     setTherapyModule(null);
 
     // Release wake lock when therapy stops
