@@ -1141,9 +1141,9 @@ const startHeartbeat = async () => {
 
     // Determine where to connect the heartbeat based on active engine
     let destination;
-    if (therapyEngine === 'engine' && audioEngineInstanceRef.current) {
+    if (therapyEngine === 'engine' && engineInstance) {
       // New engine: connect to engine's master gain
-      destination = audioEngineInstanceRef.current.getMasterGain();
+      destination = engineInstance.getMasterGain();
       if (!destination) {
         console.warn('Engine master gain not available, falling back to default destination');
         destination = Tone.getDestination();
