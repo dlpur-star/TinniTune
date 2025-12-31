@@ -133,10 +133,9 @@ export class ClinicalTherapyModule {
       this._createNoiseGenerator('right', volumeRight);
     }
 
-    // Create binaural beats if using both ears
-    if (ear === 'both') {
-      this._createBinauralBeats(binauralMode, volumeLeft, volumeRight);
-    }
+    // ALWAYS create binaural beats for brainwave entrainment
+    // Binaural beats work best with both ears, but we create them always for consistency with legacy
+    this._createBinauralBeats(binauralMode, volumeLeft, volumeRight);
 
     this.isActive = true;
     this.engine.startSession();

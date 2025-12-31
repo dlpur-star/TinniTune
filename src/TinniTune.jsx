@@ -245,12 +245,20 @@ React.useEffect(() => {
     console.log('✅ Audio Engine initialized');
   }
 
-  // Cleanup on unmount
-  return () => {
-    if (engineInstance) {
+  // When switching to legacy mode, clean up engine instance
+  if (therapyEngine === 'legacy' && engineInstance) {
+    console.log('🔧 Switching to legacy - cleaning up new engine');
+    try {
+      if (therapyModule) {
+        therapyModule.dispose();
+      }
       engineInstance.dispose();
+    } catch (e) {
+      console.warn('Error disposing engine:', e);
     }
-  };
+    setEngineInstance(null);
+    setSafetyMonitor(null);
+  }
 }, [therapyEngine]);
 
 // Validate settings when switching between engines
