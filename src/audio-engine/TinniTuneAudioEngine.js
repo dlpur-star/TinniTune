@@ -311,6 +311,19 @@ export class TinniTuneAudioEngine {
   }
 
   /**
+   * Get master gain node for external audio connections
+   * This allows external audio sources (like calm mode heartbeat) to route through the engine
+   * @returns {Tone.Gain} The master gain node, or null if not initialized
+   */
+  getMasterGain() {
+    if (!this.isInitialized || !this.masterGain) {
+      this._log('Warning: getMasterGain called before engine initialization');
+      return null;
+    }
+    return this.masterGain;
+  }
+
+  /**
    * Event listener setup for lifecycle management
    */
   _setupEventListeners() {
