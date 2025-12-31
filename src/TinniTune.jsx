@@ -961,27 +961,35 @@ const stopAudioEngine = async (silentCleanup = false) => {
 
 // Update therapy parameters in real-time (new engine)
 const updateEngineVolume = (earSide, newVolume) => {
-  if (therapyModule && isPlaying) {
-    therapyModule.updateVolume(earSide, newVolume);
-    if (safetyMonitor) {
-      // Calculate actual new max volume based on which ear was updated
-      const newMaxVolume = earSide === 'left'
-        ? Math.max(newVolume, volumeRight)
-        : Math.max(volumeLeft, newVolume);
-      safetyMonitor.updateVolume(newMaxVolume);
+  if (engineInstance && isPlaying) {
+    // Get module from engine registry (source of truth)
+    const activeModule = engineInstance.getModule('therapy');
+    if (activeModule) {
+      activeModule.updateVolume(earSide, newVolume);
+      if (safetyMonitor) {
+        // Calculate actual new max volume based on which ear was updated
+        const newMaxVolume = earSide === 'left'
+          ? Math.max(newVolume, volumeRight)
+          : Math.max(volumeLeft, newVolume);
+        safetyMonitor.updateVolume(newMaxVolume);
+      }
     }
   }
 };
 
 const updateEngineNotchIntensity = (intensity) => {
-  if (therapyModule && isPlaying) {
-    const intensityMap = {
-      'gentle': 'gentle',
-      'standard': 'moderate',
-      'strong': 'strong',
-      'precise': 'precise'
-    };
-    therapyModule.updateNotchIntensity(intensityMap[intensity] || 'moderate');
+  if (engineInstance && isPlaying) {
+    // Get module from engine registry (source of truth)
+    const activeModule = engineInstance.getModule('therapy');
+    if (activeModule) {
+      const intensityMap = {
+        'gentle': 'gentle',
+        'standard': 'moderate',
+        'strong': 'strong',
+        'precise': 'precise'
+      };
+      activeModule.updateNotchIntensity(intensityMap[intensity] || 'moderate');
+    }
   }
 };
 
@@ -5950,9 +5958,13 @@ Great session! Help us track your progress by rating your tinnitus.
             setNotchEnabled(newNotchState);
 
             // Update in real-time if using new engine and playing
-            if (isPlaying && therapyEngine === 'engine' && therapyModule) {
-              therapyModule.setNotchEnabled(newNotchState);
-              console.log('🎛️ Notch toggled to:', newNotchState);
+            if (isPlaying && therapyEngine === 'engine' && engineInstance) {
+              // Get module from engine registry (source of truth)
+              const activeModule = engineInstance.getModule('therapy');
+              if (activeModule) {
+                activeModule.setNotchEnabled(newNotchState);
+                console.log('🎛️ Notch toggled to:', newNotchState);
+              }
             } else if (isPlaying && therapyEngine === 'legacy') {
               // Legacy engine requires restart
               stopAudio();
@@ -6018,16 +6030,20 @@ Great session! Help us track your progress by rating your tinnitus.
                   setNotchIntensity(intensity);
 
                   // Update in real-time if using new engine and playing
-                  if (isPlaying && therapyEngine === 'engine' && therapyModule) {
-                    const intensityMap = {
-                      'gentle': 'gentle',
-                      'standard': 'moderate',
-                      'strong': 'strong',
-                      'precise': 'precise'
-                    };
-                    const engineIntensity = intensityMap[intensity] || 'moderate';
-                    therapyModule.updateNotchIntensity(engineIntensity);
-                    console.log('🎛️ Notch intensity updated to:', engineIntensity);
+                  if (isPlaying && therapyEngine === 'engine' && engineInstance) {
+                    // Get module from engine registry (source of truth)
+                    const activeModule = engineInstance.getModule('therapy');
+                    if (activeModule) {
+                      const intensityMap = {
+                        'gentle': 'gentle',
+                        'standard': 'moderate',
+                        'strong': 'strong',
+                        'precise': 'precise'
+                      };
+                      const engineIntensity = intensityMap[intensity] || 'moderate';
+                      activeModule.updateNotchIntensity(engineIntensity);
+                      console.log('🎛️ Notch intensity updated to:', engineIntensity);
+                    }
                   } else if (isPlaying && therapyEngine === 'legacy') {
                     // Legacy engine requires restart
                     stopTherapy();
@@ -6135,9 +6151,13 @@ Great session! Help us track your progress by rating your tinnitus.
           setBinauralEnabled(newBinauralState);
 
           // Update in real-time if using new engine and playing
-          if (isPlaying && therapyEngine === 'engine' && therapyModule) {
-            therapyModule.setBinauralEnabled(newBinauralState);
-            console.log('🎛️ Binaural beats toggled to:', newBinauralState);
+          if (isPlaying && therapyEngine === 'engine' && engineInstance) {
+            // Get module from engine registry (source of truth)
+            const activeModule = engineInstance.getModule('therapy');
+            if (activeModule) {
+              activeModule.setBinauralEnabled(newBinauralState);
+              console.log('🎛️ Binaural beats toggled to:', newBinauralState);
+            }
           } else if (isPlaying && therapyEngine === 'legacy') {
             // Legacy engine requires restart
             stopAudio();
@@ -6226,15 +6246,23 @@ Great session! Help us track your progress by rating your tinnitus.
                   setMode(modeKey);
 
                   // Update in real-time if using new engine and playing
-                  if (isPlaying && therapyEngine === 'engine' && therapyModule) {
-                    const binauralMap = {
-                      'daytime': 'focus',
-                      'evening': 'calm',
-                      'sleep': 'sleep'
-                    };
-                    const binauralMode = binauralMap[modeKey] || 'focus';
-                    therapyModule.updateBinauralMode(binauralMode);
-                    console.log('🎛️ Binaural mode updated to:', binauralMode);
+                  if (isPlaying && therapyEngine === 'engine' && engineInstance) {
+                    // CRITICAL: Get module from engine registry (source of truth)
+                    // Don't use therapyModule state as it can be stale
+                    const activeModule = engineInstance.getModule('therapy');
+
+                    if (activeModule) {
+                      const binauralMap = {
+                        'daytime': 'focus',
+                        'evening': 'calm',
+                        'sleep': 'sleep'
+                      };
+                      const binauralMode = binauralMap[modeKey] || 'focus';
+                      activeModule.updateBinauralMode(binauralMode);
+                      console.log('🎛️ Binaural mode updated to:', binauralMode);
+                    } else {
+                      console.warn('No active therapy module found in engine registry');
+                    }
                   } else if (isPlaying && therapyEngine === 'legacy') {
                     // Legacy engine requires restart
                     stopTherapy();
