@@ -911,6 +911,11 @@ const stopAudioEngine = async (silentCleanup = false) => {
         saveSession(finalDuration);
       }
 
+      // Also stop calm mode if active
+      if (isCalmMode) {
+        stopCalmMode();
+      }
+
       console.log('✅ New engine therapy stopped - Session length:', formatTime(sessionTime));
     } else {
       console.log('New engine stopped (cleanup for engine switch)');
