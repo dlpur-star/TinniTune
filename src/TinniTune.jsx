@@ -1314,37 +1314,54 @@ padding: '20px',
 fontFamily: 'system-ui, sans-serif'
 }}>
 <div style={{
-maxWidth: '500px',
+width: '100%',
+maxWidth: '1200px',
 background: 'rgba(255, 255, 255, 0.1)',
 padding: '60px 40px',
 borderRadius: '20px',
 textAlign: 'center',
 backdropFilter: 'blur(10px)'
 }}>
-<div style={{ marginBottom: '20px' }}>
+{/* Logo and Title - Matching therapy page styling */}
+<div style={{
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  gap: '16px',
+  marginBottom: '40px'
+}}>
   <img
     src={logo}
     alt="TinniTune Logo"
     style={{
-      width: '120px',
-      height: '120px',
-      borderRadius: '20px'
+      width: '80px',
+      height: '80px',
+      borderRadius: '20px',
+      boxShadow: '0 8px 24px rgba(78, 205, 196, 0.3)'
     }}
   />
+  <div>
+    <h1 style={{
+      color: '#4ECDC4',
+      margin: 0,
+      fontSize: '32px',
+      fontWeight: '700',
+      letterSpacing: '-0.5px',
+      textShadow: '0 2px 8px rgba(78, 205, 196, 0.3)'
+    }}>
+      TinniTune™
+    </h1>
+    <p style={{
+      color: 'rgba(255, 255, 255, 0.7)',
+      margin: '8px 0 0 0',
+      fontSize: '14px',
+      fontWeight: '600',
+      letterSpacing: '0.3px'
+    }}>
+      Sound therapy for tinnitus relief
+    </p>
+  </div>
 </div>
-<h1 style={{
-fontSize: '48px',
-color: '#4ECDC4',
-margin: '0 0 20px 0',
-fontWeight: 'bold'
-}}>TinniTune</h1>
-<p style={{
-color: 'rgba(255, 255, 255, 0.8)',
-fontSize: '16px',
-marginBottom: '40px'
-}}>
-Sound therapy for tinnitus relief
-</p>
 
 {/* iOS Install Prompt */}
 {showInstallPrompt && isIOS && !isStandalone && (
