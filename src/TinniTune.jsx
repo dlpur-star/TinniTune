@@ -193,8 +193,9 @@ setVolumeRight(userSettings.volumeRight);
 
 // Apply calm mode preferences
 if (userSettings.calmMode) {
-setHeartbeatBPM(userSettings.calmMode.heartbeatBPM);
-setHeartbeatVolume(userSettings.calmMode.heartbeatVolume);
+setIsCalmMode(userSettings.calmMode.enabled || false);
+setHeartbeatBPM(userSettings.calmMode.heartbeatBPM || 55);
+setHeartbeatVolume(userSettings.calmMode.heartbeatVolume || -15);
 }
 }
 }, [settingsLoaded, userSettings]);

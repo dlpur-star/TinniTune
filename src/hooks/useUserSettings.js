@@ -18,8 +18,8 @@ const DEFAULT_SETTINGS = {
   // Calm mode preferences
   calmMode: {
     enabled: false,
-    heartbeatBPM: 60,
-    heartbeatVolume: 0.3,
+    heartbeatBPM: 55,
+    heartbeatVolume: -15, // dB scale (consistent with component state)
     breathingEnabled: true
   },
 
@@ -158,7 +158,7 @@ export const useUserSettings = (profileId = null) => {
       notchIntensity: settingsToSave.notchIntensity,
       volumeLeft: settingsToSave.volumeLeft,
       volumeRight: settingsToSave.volumeRight,
-      calmMode: settingsToSave.calmMode ? { ...settingsToSave.calmMode } : { enabled: false, heartbeatBPM: 60, heartbeatVolume: 0.3, breathingEnabled: true },
+      calmMode: settingsToSave.calmMode ? { ...settingsToSave.calmMode } : { enabled: false, heartbeatBPM: 55, heartbeatVolume: -15, breathingEnabled: true },
       createdAt: new Date().toISOString()
     };
 
