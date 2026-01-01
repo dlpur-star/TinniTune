@@ -186,6 +186,14 @@ setFineFreq(userSettings.frequency);
 if (userSettings.ear) {
 setEar(userSettings.ear);
 }
+
+// Migrate old 1-5 confidence scale to percentage (one-time migration)
+if (userSettings.confidence && userSettings.confidence >= 1 && userSettings.confidence <= 5) {
+  const confidencePercentage = userSettings.confidence === 5 ? 95 : userSettings.confidence * 20;
+  saveCalibration(userSettings.frequency, userSettings.ear, confidencePercentage);
+  console.log(`Migrated confidence from ${userSettings.confidence} to ${confidencePercentage}%`);
+}
+
 // Apply therapy preferences
 setMode(userSettings.mode);
 setNotchEnabled(userSettings.notchEnabled);
@@ -200,7 +208,7 @@ setHeartbeatBPM(userSettings.calmMode.heartbeatBPM || 55);
 setHeartbeatVolume(userSettings.calmMode.heartbeatVolume || -15);
 }
 }
-}, [settingsLoaded, userSettings]);
+}, [settingsLoaded, userSettings, saveCalibration]);
 
 // Detect iOS and check if already installed
 React.useEffect(() => {
@@ -1124,8 +1132,12 @@ const handleCalibrationComplete = () => {
   }
   setFrequency(finalFreq);
 
+  // Convert 1-5 confidence scale to percentage (to match 3AFC format)
+  // 1 → 20%, 2 → 40%, 3 → 60%, 4 → 80%, 5 → 95%
+  const confidencePercentage = confidence === 5 ? 95 : confidence * 20;
+
   // Save calibration to user settings
-  saveCalibration(finalFreq, ear, confidence);
+  saveCalibration(finalFreq, ear, confidencePercentage);
 
   // Clear calibration progress
   localStorage.removeItem('tinnitune_calibration_progress');
