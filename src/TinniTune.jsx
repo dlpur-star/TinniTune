@@ -1534,10 +1534,16 @@ Sound therapy for tinnitus relief
               // Handle calm mode based on favorite settings
               setTimeout(async () => {
                 if (fav.calmMode?.enabled) {
-                  // This favorite has calm mode enabled - start it
-                  if (!isCalmMode) {
+                  // This favorite has calm mode enabled - apply settings and start it
+                  // Explicitly set calm mode values from favorite before starting
+                  setHeartbeatBPM(fav.calmMode.heartbeatBPM || 55);
+                  setHeartbeatVolume(fav.calmMode.heartbeatVolume || -15);
+                  setIsCalmMode(true);
+
+                  // Wait for state updates to propagate, then start calm mode
+                  setTimeout(async () => {
                     await startCalmMode();
-                  }
+                  }, 100);
                 } else {
                   // This favorite doesn't have calm mode - stop it if running
                   if (isCalmMode) {
@@ -5800,10 +5806,16 @@ Great session! Help us track your progress by rating your tinnitus.
                 // Handle calm mode based on favorite settings
                 setTimeout(async () => {
                   if (fav.calmMode?.enabled) {
-                    // This favorite has calm mode enabled - start it
-                    if (!isCalmMode) {
+                    // This favorite has calm mode enabled - apply settings and start it
+                    // Explicitly set calm mode values from favorite before starting
+                    setHeartbeatBPM(fav.calmMode.heartbeatBPM || 55);
+                    setHeartbeatVolume(fav.calmMode.heartbeatVolume || -15);
+                    setIsCalmMode(true);
+
+                    // Wait for state updates to propagate, then start calm mode
+                    setTimeout(async () => {
                       await startCalmMode();
-                    }
+                    }, 100);
                   } else {
                     // This favorite doesn't have calm mode - stop it if running
                     if (isCalmMode) {
