@@ -8,11 +8,12 @@ import FeedbackModal from './components/FeedbackModal';
 import { getAudioEngine } from './audio-engine/TinniTuneAudioEngine';
 import { ThreeAFCTester } from './audio-engine/ThreeAFCTester';
 import { ClinicalTherapyModule } from './audio-engine/ClinicalTherapyModule';
-import { SafetyMonitor } from './audio-engine/CalibrationSafetyModule';
 
-// User Settings Hooks
-import { useUserSettings } from './hooks/useUserSettings';
+// Hooks
 import { useUserProfiles } from './hooks/useUserProfiles';
+import { useUserSettings } from './hooks/useUserSettings';
+import useTherapyGoals from './hooks/useTherapyGoals';
+import { SafetyMonitor } from './audio-engine/CalibrationSafetyModule';
 
 export default function TinniTune() {
 // Initialize profile management
@@ -43,6 +44,22 @@ const {
   renameFavorite,
   updateFavorite
 } = useUserSettings(activeProfileId);
+
+// Initialize therapy goals and progress tracking
+const therapyGoalsHook = useTherapyGoals(sessions);
+const {
+  goals: therapyGoals,
+  isLoaded: goalsLoaded,
+  newAchievements,
+  initializeTherapy,
+  updateStreak,
+  recordSession,
+  checkAchievements,
+  getTodayProgress,
+  getWeekProgress,
+  getProgressTrends,
+  getHabituationStage
+} = therapyGoalsHook;
 
 const [step, setStep] = useState('welcome'); // 'welcome', 'setup', 'therapy', 'history'
 const [activeFavoriteId, setActiveFavoriteId] = useState(null); // Track currently loaded favorite
@@ -455,7 +472,7 @@ if (duration < 30) return; // Don't save sessions shorter than 30 seconds
 
 const session = {
   id: Date.now(),
-  date: new Date().toISOString(),
+  timestamp: new Date().toISOString(), // Changed from 'date' to 'timestamp' for consistency
   duration: duration, // in seconds
   frequency: frequency,
   ear: ear,
@@ -476,6 +493,24 @@ try {
   setSessions(updatedSessions);
   localStorage.setItem('tinnitune_sessions', JSON.stringify(updatedSessions));
   console.log('Session saved:', session);
+
+  // Update therapy goals and progress tracking
+  if (goalsLoaded) {
+    // Initialize therapy start date on first session
+    initializeTherapy();
+
+    // Record the session
+    recordSession(duration);
+
+    // Update streak based on session date
+    updateStreak(session.timestamp);
+
+    // Check for newly unlocked achievements
+    // Note: setTimeout ensures sessions state has updated
+    setTimeout(() => {
+      checkAchievements();
+    }, 100);
+  }
 } catch (error) {
   console.error('Error saving session:', error);
 }
@@ -1374,6 +1409,270 @@ backdropFilter: 'blur(10px)'
     </p>
   </div>
 </div>
+
+{/* Therapy Goals & Progress Section */}
+{goalsLoaded && sessions.length > 0 && (
+  <div style={{
+    marginBottom: '30px',
+    textAlign: 'left'
+  }}>
+    <h2 style={{
+      color: '#4ECDC4',
+      fontSize: '20px',
+      fontWeight: '700',
+      marginBottom: '20px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px'
+    }}>
+      🎯 Your Therapy Goals
+    </h2>
+
+    {/* Today's Progress */}
+    {(() => {
+      const todayProgress = getTodayProgress();
+      const progressPercent = Math.min(100, todayProgress.percentage);
+      const minutes = Math.floor(todayProgress.totalSeconds / 60);
+      const goalMinutes = Math.floor(todayProgress.goalSeconds / 60);
+
+      return (
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(78, 205, 196, 0.15), rgba(78, 205, 196, 0.08))',
+          padding: '20px',
+          borderRadius: '12px',
+          marginBottom: '15px',
+          border: '1px solid rgba(78, 205, 196, 0.3)'
+        }}>
+          <div style={{
+            color: 'rgba(255,255,255,0.9)',
+            fontSize: '14px',
+            fontWeight: '600',
+            marginBottom: '10px'
+          }}>
+            Today's Progress
+          </div>
+
+          {/* Progress Bar */}
+          <div style={{
+            background: 'rgba(0,0,0,0.3)',
+            borderRadius: '10px',
+            height: '20px',
+            overflow: 'hidden',
+            marginBottom: '8px'
+          }}>
+            <div style={{
+              background: todayProgress.goalMet
+                ? 'linear-gradient(90deg, #4ECDC4, #44B3AA)'
+                : 'linear-gradient(90deg, #FFB74D, #FFA726)',
+              height: '100%',
+              width: `${progressPercent}%`,
+              transition: 'width 0.5s ease',
+              borderRadius: '10px'
+            }} />
+          </div>
+
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px' }}>
+              {minutes} min / {goalMinutes} min
+            </span>
+            <span style={{ color: '#4ECDC4', fontSize: '13px', fontWeight: '600' }}>
+              {progressPercent.toFixed(0)}%
+            </span>
+          </div>
+
+          {/* Encouragement Message */}
+          <div style={{
+            marginTop: '10px',
+            color: 'rgba(255,255,255,0.8)',
+            fontSize: '12px',
+            fontStyle: 'italic'
+          }}>
+            {minutes < 30 ? "Great start! Keep going 💪" :
+             minutes < 60 ? "Halfway there! 🎯" :
+             minutes < 90 ? "Almost at your goal! 🌟" :
+             minutes >= goalMinutes ? "Goal reached! Excellent work ✨" :
+             "Keep up the great work! 🔥"}
+          </div>
+        </div>
+      );
+    })()}
+
+    {/* This Week */}
+    {(() => {
+      const weekProgress = getWeekProgress();
+
+      return (
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(102, 126, 234, 0.08))',
+          padding: '20px',
+          borderRadius: '12px',
+          marginBottom: '15px',
+          border: '1px solid rgba(102, 126, 234, 0.3)'
+        }}>
+          <div style={{
+            color: 'rgba(255,255,255,0.9)',
+            fontSize: '14px',
+            fontWeight: '600',
+            marginBottom: '10px'
+          }}>
+            This Week
+          </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '10px',
+            fontSize: '13px'
+          }}>
+            <div style={{ color: 'rgba(255,255,255,0.7)' }}>
+              • {weekProgress.daysActive}/7 days active
+            </div>
+            <div style={{ color: 'rgba(255,255,255,0.7)' }}>
+              • {Math.floor(weekProgress.totalSeconds / 3600)} hours total
+            </div>
+          </div>
+
+          {therapyGoals.currentStreak > 0 && (
+            <div style={{
+              marginTop: '10px',
+              color: '#FFB74D',
+              fontSize: '13px',
+              fontWeight: '600'
+            }}>
+              🔥 {therapyGoals.currentStreak}-day streak!
+            </div>
+          )}
+        </div>
+      );
+    })()}
+
+    {/* Habituation Journey */}
+    {(() => {
+      const stage = getHabituationStage();
+      const monthsElapsed = therapyGoals.therapyStartDate
+        ? Math.floor((Date.now() - new Date(therapyGoals.therapyStartDate)) / (1000 * 60 * 60 * 24 * 30))
+        : 0;
+
+      if (stage.stage === 0) return null; // Don't show if therapy hasn't started
+
+      return (
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(240, 147, 251, 0.15), rgba(240, 147, 251, 0.08))',
+          padding: '20px',
+          borderRadius: '12px',
+          marginBottom: '15px',
+          border: '1px solid rgba(240, 147, 251, 0.3)'
+        }}>
+          <div style={{
+            color: 'rgba(255,255,255,0.9)',
+            fontSize: '14px',
+            fontWeight: '600',
+            marginBottom: '8px'
+          }}>
+            {stage.emoji} Habituation Journey
+          </div>
+
+          <div style={{
+            color: 'rgba(255,255,255,0.8)',
+            fontSize: '13px',
+            marginBottom: '10px'
+          }}>
+            {stage.name} • Month {monthsElapsed + 1}
+          </div>
+
+          {/* Progress Bar for Current Stage */}
+          <div style={{
+            background: 'rgba(0,0,0,0.3)',
+            borderRadius: '10px',
+            height: '8px',
+            overflow: 'hidden',
+            marginBottom: '8px'
+          }}>
+            <div style={{
+              background: 'linear-gradient(90deg, #f093fb, #f5576c)',
+              height: '100%',
+              width: `${(monthsElapsed / 12) * 100}%`,
+              borderRadius: '10px'
+            }} />
+          </div>
+
+          <div style={{
+            color: 'rgba(255,255,255,0.7)',
+            fontSize: '12px',
+            fontStyle: 'italic'
+          }}>
+            {stage.message}
+          </div>
+        </div>
+      );
+    })()}
+
+    {/* Progress Trends */}
+    {(() => {
+      const trends = getProgressTrends();
+
+      if (!trends) return null;
+
+      return (
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(252, 227, 138, 0.15), rgba(252, 227, 138, 0.08))',
+          padding: '20px',
+          borderRadius: '12px',
+          border: '1px solid rgba(252, 227, 138, 0.3)'
+        }}>
+          <div style={{
+            color: 'rgba(255,255,255,0.9)',
+            fontSize: '14px',
+            fontWeight: '600',
+            marginBottom: '10px'
+          }}>
+            Recent Progress
+          </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gap: '10px',
+            fontSize: '13px',
+            color: 'rgba(255,255,255,0.8)'
+          }}>
+            <div>
+              Loudness: {trends.loudness.earlier.toFixed(1)} → {trends.loudness.recent.toFixed(1)}
+              <span style={{
+                color: trends.loudness.improving ? '#4ECDC4' : '#FFB74D',
+                marginLeft: '5px'
+              }}>
+                ({trends.loudness.change > 0 ? '-' : '+'}{Math.abs(trends.loudness.change).toFixed(0)}%)
+              </span>
+            </div>
+            <div>
+              Distress: {trends.distress.earlier.toFixed(1)} → {trends.distress.recent.toFixed(1)}
+              <span style={{
+                color: trends.distress.improving ? '#4ECDC4' : '#FFB74D',
+                marginLeft: '5px'
+              }}>
+                ({trends.distress.change > 0 ? '-' : '+'}{Math.abs(trends.distress.change).toFixed(0)}%)
+              </span>
+            </div>
+          </div>
+
+          <div style={{
+            marginTop: '8px',
+            color: trends.loudness.improving || trends.distress.improving ? '#4ECDC4' : '#FFB74D',
+            fontSize: '12px',
+            fontWeight: '600'
+          }}>
+            {trends.loudness.improving || trends.distress.improving ? '↓ Improving trend' : '→ Tracking progress'}
+          </div>
+        </div>
+      );
+    })()}
+  </div>
+)}
 
 {/* iOS Install Prompt */}
 {showInstallPrompt && isIOS && !isStandalone && (
