@@ -1530,6 +1530,22 @@ Sound therapy for tinnitus relief
           <button
             onClick={() => {
               loadFavorite(fav.id);
+
+              // Handle calm mode based on favorite settings
+              setTimeout(async () => {
+                if (fav.calmMode?.enabled) {
+                  // This favorite has calm mode enabled - start it
+                  if (!isCalmMode) {
+                    await startCalmMode();
+                  }
+                } else {
+                  // This favorite doesn't have calm mode - stop it if running
+                  if (isCalmMode) {
+                    stopCalmMode();
+                  }
+                }
+              }, 150); // Delay to allow state updates from loadFavorite
+
               setStep('therapy');
             }}
             style={{
@@ -5780,6 +5796,22 @@ Great session! Help us track your progress by rating your tinnitus.
               key={fav.id}
               onClick={() => {
                 loadFavorite(fav.id);
+
+                // Handle calm mode based on favorite settings
+                setTimeout(async () => {
+                  if (fav.calmMode?.enabled) {
+                    // This favorite has calm mode enabled - start it
+                    if (!isCalmMode) {
+                      await startCalmMode();
+                    }
+                  } else {
+                    // This favorite doesn't have calm mode - stop it if running
+                    if (isCalmMode) {
+                      stopCalmMode();
+                    }
+                  }
+                }, 150); // Delay to allow state updates from loadFavorite
+
                 if (isPlaying) {
                   stopAudio();
                   setTimeout(() => startAudio(), 100);
