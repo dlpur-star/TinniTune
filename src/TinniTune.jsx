@@ -40,10 +40,12 @@ const {
   saveFavorite,
   loadFavorite,
   deleteFavorite,
-  renameFavorite
+  renameFavorite,
+  updateFavorite
 } = useUserSettings(activeProfileId);
 
 const [step, setStep] = useState('welcome'); // 'welcome', 'setup', 'therapy', 'history'
+const [activeFavoriteId, setActiveFavoriteId] = useState(null); // Track currently loaded favorite
 const [showWizard, setShowWizard] = useState(false); // Show therapy setup wizard
 const [frequency, setFrequency] = useState(4000);
 const [ear, setEar] = useState('both');
@@ -1530,6 +1532,7 @@ Sound therapy for tinnitus relief
           <button
             onClick={() => {
               loadFavorite(fav.id);
+              setActiveFavoriteId(fav.id); // Track which favorite is loaded
 
               // Handle calm mode based on favorite settings
               setTimeout(async () => {
@@ -5802,6 +5805,7 @@ Great session! Help us track your progress by rating your tinnitus.
               key={fav.id}
               onClick={() => {
                 loadFavorite(fav.id);
+                setActiveFavoriteId(fav.id); // Track which favorite is loaded
 
                 // Handle calm mode based on favorite settings
                 setTimeout(async () => {
@@ -5868,30 +5872,76 @@ Great session! Help us track your progress by rating your tinnitus.
       </div>
     )}
 
-    {/* Save Current Settings as Favorite Button */}
-    <button
-      onClick={() => setShowSaveFavoriteModal(true)}
-      style={{
-        width: '100%',
-        padding: '12px',
-        background: 'rgba(252, 227, 138, 0.1)',
-        border: '1px dashed rgba(252, 227, 138, 0.4)',
-        borderRadius: '12px',
-        color: '#FCE38A',
-        fontSize: '13px',
-        fontWeight: '600',
-        cursor: 'pointer',
-        marginBottom: '20px',
-        touchAction: 'manipulation',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '6px'
-      }}
-    >
-      <span>⭐</span>
-      <span>Save Current Settings as Favorite</span>
-    </button>
+    {/* Update/Save Favorite Buttons */}
+    <div style={{
+      display: 'flex',
+      gap: '10px',
+      marginBottom: '20px'
+    }}>
+      {activeFavoriteId && (
+        <button
+          onClick={() => {
+            const favName = userSettings.favorites.find(f => f.id === activeFavoriteId)?.name || 'favorite';
+            if (window.confirm(`Update "${favName}" with current settings?`)) {
+              updateFavorite(activeFavoriteId, {
+                mode,
+                notchEnabled,
+                notchIntensity,
+                volumeLeft,
+                volumeRight,
+                calmMode: {
+                  enabled: isCalmMode,
+                  heartbeatBPM,
+                  heartbeatVolume,
+                  breathingEnabled: true
+                }
+              });
+            }
+          }}
+          style={{
+            flex: 1,
+            padding: '12px',
+            background: 'linear-gradient(135deg, rgba(78, 205, 196, 0.25), rgba(78, 205, 196, 0.15))',
+            border: '2px solid rgba(78, 205, 196, 0.5)',
+            borderRadius: '12px',
+            color: '#4ECDC4',
+            fontSize: '13px',
+            fontWeight: '700',
+            cursor: 'pointer',
+            touchAction: 'manipulation',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px'
+          }}
+        >
+          <span>✓</span>
+          <span>Update Favorite</span>
+        </button>
+      )}
+      <button
+        onClick={() => setShowSaveFavoriteModal(true)}
+        style={{
+          flex: 1,
+          padding: '12px',
+          background: 'rgba(252, 227, 138, 0.1)',
+          border: '1px dashed rgba(252, 227, 138, 0.4)',
+          borderRadius: '12px',
+          color: '#FCE38A',
+          fontSize: '13px',
+          fontWeight: '600',
+          cursor: 'pointer',
+          touchAction: 'manipulation',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '6px'
+        }}
+      >
+        <span>⭐</span>
+        <span>Save as New</span>
+      </button>
+    </div>
 
     {/* Notch Therapy Controls - Clean Mobile Layout */}
     <div style={{
