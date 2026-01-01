@@ -214,6 +214,31 @@ export const useUserSettings = (profileId = null) => {
     }));
   }, []);
 
+  /**
+   * Update an existing favorite preset with new settings
+   * @param {string} favoriteId - ID of the favorite to update
+   * @param {Object} currentSettings - Current therapy settings to save
+   */
+  const updateFavorite = useCallback((favoriteId, currentSettings = null) => {
+    const settingsToSave = currentSettings || settings;
+
+    setSettings(prev => ({
+      ...prev,
+      favorites: prev.favorites.map(f =>
+        f.id === favoriteId ? {
+          ...f,
+          mode: settingsToSave.mode,
+          notchEnabled: settingsToSave.notchEnabled,
+          notchIntensity: settingsToSave.notchIntensity,
+          volumeLeft: settingsToSave.volumeLeft,
+          volumeRight: settingsToSave.volumeRight,
+          calmMode: settingsToSave.calmMode ? { ...settingsToSave.calmMode } : { enabled: false, heartbeatBPM: 55, heartbeatVolume: -15, breathingEnabled: true },
+          updatedAt: new Date().toISOString()
+        } : f
+      )
+    }));
+  }, [settings]);
+
   return {
     settings,
     isLoaded,
@@ -225,7 +250,8 @@ export const useUserSettings = (profileId = null) => {
     saveFavorite,
     loadFavorite,
     deleteFavorite,
-    renameFavorite
+    renameFavorite,
+    updateFavorite
   };
 };
 
