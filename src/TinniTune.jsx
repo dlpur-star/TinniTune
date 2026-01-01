@@ -46,7 +46,7 @@ const {
 } = useUserSettings(activeProfileId);
 
 // Initialize therapy goals and progress tracking
-const therapyGoalsHook = useTherapyGoals(sessions);
+const therapyGoalsHook = useTherapyGoals();
 const {
   goals: therapyGoals,
   isLoaded: goalsLoaded,
@@ -505,10 +505,9 @@ try {
     // Update streak based on session date
     updateStreak(session.timestamp);
 
-    // Check for newly unlocked achievements
-    // Note: setTimeout ensures sessions state has updated
+    // Check for newly unlocked achievements with updated sessions
     setTimeout(() => {
-      checkAchievements();
+      checkAchievements(updatedSessions);
     }, 100);
   }
 } catch (error) {
@@ -1430,7 +1429,7 @@ backdropFilter: 'blur(10px)'
 
     {/* Today's Progress */}
     {(() => {
-      const todayProgress = getTodayProgress();
+      const todayProgress = getTodayProgress(sessions);
       const progressPercent = Math.min(100, todayProgress.percentage);
       const minutes = Math.floor(todayProgress.totalSeconds / 60);
       const goalMinutes = Math.floor(todayProgress.goalSeconds / 60);
@@ -1503,7 +1502,7 @@ backdropFilter: 'blur(10px)'
 
     {/* This Week */}
     {(() => {
-      const weekProgress = getWeekProgress();
+      const weekProgress = getWeekProgress(sessions);
 
       return (
         <div style={{
@@ -1613,7 +1612,7 @@ backdropFilter: 'blur(10px)'
 
     {/* Progress Trends */}
     {(() => {
-      const trends = getProgressTrends();
+      const trends = getProgressTrends(sessions);
 
       if (!trends) return null;
 

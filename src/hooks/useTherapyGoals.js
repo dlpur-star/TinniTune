@@ -227,10 +227,9 @@ function isConsecutiveDay(date1, date2) {
 
 /**
  * Custom hook for managing therapy goals and progress
- * @param {Array} sessions - Array of therapy sessions
  * @returns {Object} Goals data and methods
  */
-export const useTherapyGoals = (sessions = []) => {
+export const useTherapyGoals = () => {
   const [goals, setGoals] = useState(DEFAULT_GOALS);
   const [isLoaded, setIsLoaded] = useState(false);
   const [newAchievements, setNewAchievements] = useState([]);
@@ -318,8 +317,9 @@ export const useTherapyGoals = (sessions = []) => {
 
   /**
    * Check and unlock achievements
+   * @param {Array} sessions - Array of therapy sessions
    */
-  const checkAchievements = useCallback(() => {
+  const checkAchievements = useCallback((sessions) => {
     const unlockedIds = goals.achievements.map(a => a.id);
     const newlyUnlocked = [];
 
@@ -343,12 +343,13 @@ export const useTherapyGoals = (sessions = []) => {
       // Clear notification after 5 seconds
       setTimeout(() => setNewAchievements([]), 5000);
     }
-  }, [goals, sessions]);
+  }, [goals]);
 
   /**
    * Get today's progress
+   * @param {Array} sessions - Array of therapy sessions
    */
-  const getTodayProgress = useCallback(() => {
+  const getTodayProgress = useCallback((sessions) => {
     const today = new Date().toDateString();
     const todaySessions = sessions.filter(s => new Date(s.timestamp).toDateString() === today);
     const totalSeconds = todaySessions.reduce((sum, s) => sum + s.duration, 0);
@@ -362,12 +363,13 @@ export const useTherapyGoals = (sessions = []) => {
       goalMet,
       sessionsCount: todaySessions.length
     };
-  }, [sessions, goals.dailyGoalSeconds]);
+  }, [goals.dailyGoalSeconds]);
 
   /**
    * Get this week's progress
+   * @param {Array} sessions - Array of therapy sessions
    */
-  const getWeekProgress = useCallback(() => {
+  const getWeekProgress = useCallback((sessions) => {
     const now = new Date();
     const weekStart = new Date(now);
     weekStart.setDate(now.getDate() - now.getDay()); // Start of week (Sunday)
@@ -395,12 +397,13 @@ export const useTherapyGoals = (sessions = []) => {
       weeklyGoalMet: daysActive >= goals.weeklyGoalDays,
       sessionsCount: weekSessions.length
     };
-  }, [sessions, goals.dailyGoalSeconds, goals.weeklyGoalDays]);
+  }, [goals.dailyGoalSeconds, goals.weeklyGoalDays]);
 
   /**
    * Get progress trends (recent vs earlier)
+   * @param {Array} sessions - Array of therapy sessions
    */
-  const getProgressTrends = useCallback(() => {
+  const getProgressTrends = useCallback((sessions) => {
     const ratedSessions = sessions.filter(s => s.loudnessAfter !== null && s.distress !== null);
 
     if (ratedSessions.length < 4) {
@@ -441,7 +444,7 @@ export const useTherapyGoals = (sessions = []) => {
         improving: distressChange > 5
       }
     };
-  }, [sessions]);
+  }, []);
 
   /**
    * Update daily goal
