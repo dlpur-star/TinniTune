@@ -1,52 +1,23 @@
-import React, { useState } from 'react';
+import React from 'react';
 import './FeedbackForm.css';
 
+// Formsubmit.co - No account needed, just email verification
+// First submission will trigger a verification email to derrick78@me.com
+// Click the link in that email to activate the form
+
 export default function FeedbackForm({ onClose }) {
-  const [submitted, setSubmitted] = useState(false);
-  const [formData, setFormData] = useState({
-    email: '',
-    reliefRating: '',
-    featureUsed: '',
-    feedback: '',
-    improvements: ''
-  });
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Netlify handles the form submission automatically
-    // Just show success message
-    setTimeout(() => {
-      setSubmitted(true);
-    }, 100);
-  };
-
-  if (submitted) {
-    return (
-      <div className="feedback-success">
-        <h3>✅ Thank you for your feedback!</h3>
-        <p>Your input helps us improve TinniTune for everyone with tinnitus.</p>
-        <button onClick={onClose} className="close-btn">Close</button>
-      </div>
-    );
-  }
-
   return (
     <div className="feedback-container">
       <form
-        name="tinnitune-feedback"
+        action="https://formsubmit.co/derrick78@me.com"
         method="POST"
-        data-netlify="true"
-        onSubmit={handleSubmit}
         className="feedback-form"
       >
-        <input type="hidden" name="form-name" value="tinnitune-feedback" />
+        {/* Formsubmit configuration */}
+        <input type="hidden" name="_subject" value="TinniTune Feedback Submission" />
+        <input type="hidden" name="_captcha" value="false" />
+        <input type="hidden" name="_template" value="box" />
+        <input type="text" name="_honey" style={{ display: 'none' }} />
 
         <div className="form-header">
           <h3>📝 Focus Group Feedback</h3>
@@ -59,8 +30,6 @@ export default function FeedbackForm({ onClose }) {
             type="email"
             name="email"
             id="email"
-            value={formData.email}
-            onChange={handleChange}
             placeholder="your@email.com"
           />
           <small>Only if you'd like us to follow up</small>
@@ -71,8 +40,6 @@ export default function FeedbackForm({ onClose }) {
           <select
             name="reliefRating"
             id="reliefRating"
-            value={formData.reliefRating}
-            onChange={handleChange}
             required
           >
             <option value="">How much relief did you experience?</option>
@@ -94,8 +61,6 @@ export default function FeedbackForm({ onClose }) {
           <select
             name="featureUsed"
             id="featureUsed"
-            value={formData.featureUsed}
-            onChange={handleChange}
             required
           >
             <option value="">Select the main feature you used</option>
@@ -113,8 +78,6 @@ export default function FeedbackForm({ onClose }) {
             name="feedback"
             id="feedback"
             rows="4"
-            value={formData.feedback}
-            onChange={handleChange}
             placeholder="Tell us about your experience with TinniTune. What worked well? What didn't?"
             required
           ></textarea>
@@ -126,8 +89,6 @@ export default function FeedbackForm({ onClose }) {
             name="improvements"
             id="improvements"
             rows="3"
-            value={formData.improvements}
-            onChange={handleChange}
             placeholder="What features or changes would make TinniTune more helpful for you?"
           ></textarea>
         </div>
