@@ -1,104 +1,28 @@
-import React, { useState } from 'react';
-import emailjs from '@emailjs/browser';
+import React from 'react';
 import './FeedbackForm.css';
 
-// EmailJS Configuration
-// To set up: https://www.emailjs.com/
-// 1. Create account and verify email
-// 2. Add email service (Gmail recommended)
-// 3. Create email template
-// 4. Get your Public Key from Account page
-const EMAILJS_CONFIG = {
-  serviceId: 'service_tinnitune',
-  templateId: 'template_feedback',
-  publicKey: 'JTTAVTLEPyzp33Cc2'
-};
+// Formsubmit.co - No account needed, just email verification
+// First submission will trigger a verification email to derrick78@me.com
+// Click the link in that email to activate the form
 
 export default function FeedbackForm({ onClose }) {
-  const [submitted, setSubmitted] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState(null);
-  const [formData, setFormData] = useState({
-    email: '',
-    reliefRating: '',
-    featureUsed: '',
-    feedback: '',
-    improvements: ''
-  });
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setError(null);
-
-    try {
-      // Send email using EmailJS
-      const templateParams = {
-        to_email: 'derrick78@me.com',
-        from_email: formData.email || 'anonymous',
-        relief_rating: formData.reliefRating,
-        feature_used: formData.featureUsed,
-        feedback: formData.feedback,
-        improvements: formData.improvements || 'None provided',
-        submission_date: new Date().toLocaleString()
-      };
-
-      await emailjs.send(
-        EMAILJS_CONFIG.serviceId,
-        EMAILJS_CONFIG.templateId,
-        templateParams,
-        EMAILJS_CONFIG.publicKey
-      );
-
-      setSubmitted(true);
-    } catch (err) {
-      console.error('Failed to send feedback:', err);
-      setError('Failed to send feedback. Please try again or email directly to derrick78@me.com');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  if (submitted) {
-    return (
-      <div className="feedback-success">
-        <h3>✅ Thank you for your feedback!</h3>
-        <p>Your input helps us improve TinniTune for everyone with tinnitus.</p>
-        <button onClick={onClose} className="close-btn">Close</button>
-      </div>
-    );
-  }
-
   return (
     <div className="feedback-container">
       <form
-        onSubmit={handleSubmit}
+        action="https://formsubmit.co/derrick78@me.com"
+        method="POST"
         className="feedback-form"
       >
+        {/* Formsubmit configuration */}
+        <input type="hidden" name="_subject" value="TinniTune Feedback Submission" />
+        <input type="hidden" name="_captcha" value="false" />
+        <input type="hidden" name="_template" value="box" />
+        <input type="text" name="_honey" style={{ display: 'none' }} />
+
         <div className="form-header">
           <h3>📝 Focus Group Feedback</h3>
           <button type="button" onClick={onClose} className="close-x">×</button>
         </div>
-
-        {error && (
-          <div style={{
-            padding: '10px',
-            marginBottom: '15px',
-            background: 'rgba(255, 68, 68, 0.1)',
-            border: '1px solid rgba(255, 68, 68, 0.3)',
-            borderRadius: '5px',
-            color: '#ff6b6b'
-          }}>
-            {error}
-          </div>
-        )}
 
         <div className="form-group">
           <label htmlFor="email">Email (optional):</label>
@@ -106,8 +30,6 @@ export default function FeedbackForm({ onClose }) {
             type="email"
             name="email"
             id="email"
-            value={formData.email}
-            onChange={handleChange}
             placeholder="your@email.com"
           />
           <small>Only if you'd like us to follow up</small>
@@ -118,8 +40,6 @@ export default function FeedbackForm({ onClose }) {
           <select
             name="reliefRating"
             id="reliefRating"
-            value={formData.reliefRating}
-            onChange={handleChange}
             required
           >
             <option value="">How much relief did you experience?</option>
@@ -141,8 +61,6 @@ export default function FeedbackForm({ onClose }) {
           <select
             name="featureUsed"
             id="featureUsed"
-            value={formData.featureUsed}
-            onChange={handleChange}
             required
           >
             <option value="">Select the main feature you used</option>
@@ -160,8 +78,6 @@ export default function FeedbackForm({ onClose }) {
             name="feedback"
             id="feedback"
             rows="4"
-            value={formData.feedback}
-            onChange={handleChange}
             placeholder="Tell us about your experience with TinniTune. What worked well? What didn't?"
             required
           ></textarea>
@@ -173,18 +89,16 @@ export default function FeedbackForm({ onClose }) {
             name="improvements"
             id="improvements"
             rows="3"
-            value={formData.improvements}
-            onChange={handleChange}
             placeholder="What features or changes would make TinniTune more helpful for you?"
           ></textarea>
         </div>
 
         <div className="form-actions">
-          <button type="button" onClick={onClose} className="cancel-btn" disabled={isSubmitting}>
+          <button type="button" onClick={onClose} className="cancel-btn">
             Cancel
           </button>
-          <button type="submit" className="submit-btn" disabled={isSubmitting}>
-            {isSubmitting ? 'Sending...' : 'Submit Feedback'}
+          <button type="submit" className="submit-btn">
+            Submit Feedback
           </button>
         </div>
       </form>
