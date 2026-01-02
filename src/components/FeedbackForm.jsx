@@ -11,7 +11,7 @@ import './FeedbackForm.css';
 const EMAILJS_CONFIG = {
   serviceId: 'service_tinnitune',
   templateId: 'template_feedback',
-  publicKey: 'YOUR_PUBLIC_KEY_HERE' // Replace with your EmailJS public key
+  publicKey: 'JTTAVTLEPyzp33Cc2'
 };
 
 export default function FeedbackForm({ onClose }) {
