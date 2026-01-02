@@ -1,8 +1,23 @@
 import React, { useState } from 'react';
+import emailjs from '@emailjs/browser';
 import './FeedbackForm.css';
+
+// EmailJS Configuration
+// To set up: https://www.emailjs.com/
+// 1. Create account and verify email
+// 2. Add email service (Gmail recommended)
+// 3. Create email template
+// 4. Get your Public Key from Account page
+const EMAILJS_CONFIG = {
+  serviceId: 'service_tinnitune',
+  templateId: 'template_feedback',
+  publicKey: 'YOUR_PUBLIC_KEY_HERE' // Replace with your EmailJS public key
+};
 
 export default function FeedbackForm({ onClose }) {
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
     email: '',
     reliefRating: '',
@@ -18,13 +33,37 @@ export default function FeedbackForm({ onClose }) {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Netlify handles the form submission automatically
-    // Just show success message
-    setTimeout(() => {
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      // Send email using EmailJS
+      const templateParams = {
+        to_email: 'derrick78@me.com',
+        from_email: formData.email || 'anonymous',
+        relief_rating: formData.reliefRating,
+        feature_used: formData.featureUsed,
+        feedback: formData.feedback,
+        improvements: formData.improvements || 'None provided',
+        submission_date: new Date().toLocaleString()
+      };
+
+      await emailjs.send(
+        EMAILJS_CONFIG.serviceId,
+        EMAILJS_CONFIG.templateId,
+        templateParams,
+        EMAILJS_CONFIG.publicKey
+      );
+
       setSubmitted(true);
-    }, 100);
+    } catch (err) {
+      console.error('Failed to send feedback:', err);
+      setError('Failed to send feedback. Please try again or email directly to derrick78@me.com');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (submitted) {
@@ -40,18 +79,26 @@ export default function FeedbackForm({ onClose }) {
   return (
     <div className="feedback-container">
       <form
-        name="tinnitune-feedback"
-        method="POST"
-        data-netlify="true"
         onSubmit={handleSubmit}
         className="feedback-form"
       >
-        <input type="hidden" name="form-name" value="tinnitune-feedback" />
-
         <div className="form-header">
           <h3>📝 Focus Group Feedback</h3>
           <button type="button" onClick={onClose} className="close-x">×</button>
         </div>
+
+        {error && (
+          <div style={{
+            padding: '10px',
+            marginBottom: '15px',
+            background: 'rgba(255, 68, 68, 0.1)',
+            border: '1px solid rgba(255, 68, 68, 0.3)',
+            borderRadius: '5px',
+            color: '#ff6b6b'
+          }}>
+            {error}
+          </div>
+        )}
 
         <div className="form-group">
           <label htmlFor="email">Email (optional):</label>
@@ -133,11 +180,11 @@ export default function FeedbackForm({ onClose }) {
         </div>
 
         <div className="form-actions">
-          <button type="button" onClick={onClose} className="cancel-btn">
+          <button type="button" onClick={onClose} className="cancel-btn" disabled={isSubmitting}>
             Cancel
           </button>
-          <button type="submit" className="submit-btn">
-            Submit Feedback
+          <button type="submit" className="submit-btn" disabled={isSubmitting}>
+            {isSubmitting ? 'Sending...' : 'Submit Feedback'}
           </button>
         </div>
       </form>
