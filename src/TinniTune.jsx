@@ -8,6 +8,7 @@ import NotificationSettings from './components/NotificationSettings';
 import SoundSelector from './components/SoundSelector';
 import ProgramTracker from './components/ProgramTracker';
 import InsightsPanel from './components/InsightsPanel';
+import QuickCheckIn, { QuickCheckInButton } from './components/QuickCheckIn';
 
 // New Audio Engine Imports
 import { getAudioEngine } from './audio-engine/TinniTuneAudioEngine';
@@ -109,6 +110,10 @@ const [showFeedback, setShowFeedback] = useState(false);
 // Program tracker state
 const [showProgramTracker, setShowProgramTracker] = useState(false);
 
+// Quick check-in state
+const [showQuickCheckIn, setShowQuickCheckIn] = useState(false);
+const [emaCheckIns, setEmaCheckIns] = useState([]);
+
 // Profile management state
 const [showProfileManager, setShowProfileManager] = useState(false);
 const [showNewProfileModal, setShowNewProfileModal] = useState(false);
@@ -188,6 +193,18 @@ setSessions(JSON.parse(savedSessions));
 }
 } catch (error) {
 console.error('Error loading sessions:', error);
+}
+}, []);
+
+// Load EMA check-ins from localStorage on mount
+React.useEffect(() => {
+try {
+const savedCheckIns = localStorage.getItem('tinnitune_ema_checkins');
+if (savedCheckIns) {
+setEmaCheckIns(JSON.parse(savedCheckIns));
+}
+} catch (error) {
+console.error('Error loading EMA check-ins:', error);
 }
 }, []);
 
@@ -7064,6 +7081,28 @@ Great session! Help us track your progress by rating your tinnitus.
           onClose={() => setShowProgramTracker(false)}
         />
       </div>
+    )}
+
+    {/* Quick Check-In Modal */}
+    {showQuickCheckIn && (
+      <QuickCheckIn
+        onComplete={(checkIn) => {
+          setEmaCheckIns([...emaCheckIns, checkIn]);
+          setShowQuickCheckIn(false);
+        }}
+        onCancel={() => setShowQuickCheckIn(false)}
+      />
+    )}
+
+    {/* Quick Check-In Floating Button (shown on therapy and welcome screens) */}
+    {(step === 'therapy' || step === 'welcome') && (
+      <QuickCheckInButton
+        onClick={() => setShowQuickCheckIn(true)}
+        checkInCount={emaCheckIns.filter(c => {
+          const today = new Date().toDateString();
+          return new Date(c.timestamp).toDateString() === today;
+        }).length}
+      />
     )}
 
     {/* New Profile Modal */}
