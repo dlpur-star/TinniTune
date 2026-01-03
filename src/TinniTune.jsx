@@ -6,6 +6,7 @@ import FeedbackModal from './components/FeedbackModal';
 import AchievementCelebration from './components/AchievementCelebration';
 import NotificationSettings from './components/NotificationSettings';
 import SoundSelector from './components/SoundSelector';
+import ProgramTracker from './components/ProgramTracker';
 
 // New Audio Engine Imports
 import { getAudioEngine } from './audio-engine/TinniTuneAudioEngine';
@@ -103,6 +104,9 @@ const [isStandalone, setIsStandalone] = useState(false);
 
 // Feedback form state
 const [showFeedback, setShowFeedback] = useState(false);
+
+// Program tracker state
+const [showProgramTracker, setShowProgramTracker] = useState(false);
 
 // Profile management state
 const [showProfileManager, setShowProfileManager] = useState(false);
@@ -1772,6 +1776,87 @@ backdropFilter: 'blur(10px)'
 
     {/* Notification Settings */}
     <NotificationSettings sessions={sessions} />
+
+    {/* 8-Week Program Button */}
+    <div style={{
+      background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%)',
+      border: '2px solid #667eea',
+      borderRadius: '15px',
+      padding: '24px',
+      marginTop: '20px',
+      textAlign: 'left',
+      cursor: 'pointer',
+      transition: 'all 0.3s ease'
+    }}
+    onClick={() => setShowProgramTracker(true)}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.transform = 'translateY(-2px)';
+      e.currentTarget.style.boxShadow = '0 8px 24px rgba(102, 126, 234, 0.4)';
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.transform = 'translateY(0)';
+      e.currentTarget.style.boxShadow = 'none';
+    }}
+    >
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        marginBottom: '12px'
+      }}>
+        <div style={{ fontSize: '32px' }}>📚</div>
+        <div>
+          <h3 style={{
+            color: '#667eea',
+            margin: 0,
+            fontSize: '20px',
+            fontWeight: '700'
+          }}>
+            8-Week Habituation Program
+          </h3>
+          <p style={{
+            color: 'rgba(255, 255, 255, 0.7)',
+            margin: '4px 0 0 0',
+            fontSize: '13px'
+          }}>
+            Structured guidance for lasting relief
+          </p>
+        </div>
+      </div>
+      <p style={{
+        color: 'rgba(255, 255, 255, 0.8)',
+        margin: '0 0 12px 0',
+        fontSize: '14px',
+        lineHeight: '1.6'
+      }}>
+        Follow our evidence-based program with daily educational modules, exercises, and progressive therapy targets. Research shows structured programs improve outcomes by 40%.
+      </p>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setShowProgramTracker(true);
+        }}
+        style={{
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          color: 'white',
+          border: 'none',
+          padding: '12px 24px',
+          borderRadius: '8px',
+          fontSize: '14px',
+          fontWeight: '600',
+          cursor: 'pointer',
+          transition: 'all 0.2s'
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.transform = 'scale(1.05)';
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.transform = 'scale(1)';
+        }}
+      >
+        View Program →
+      </button>
+    </div>
   </div>
 )}
 
@@ -6901,6 +6986,29 @@ Great session! Help us track your progress by rating your tinnitus.
         soundEnabled={true}
       />
     ))}
+
+    {/* 8-Week Program Tracker */}
+    {showProgramTracker && (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0, 0, 0, 0.9)',
+        zIndex: 2000,
+        overflowY: 'auto',
+        padding: '20px'
+      }}>
+        <ProgramTracker
+          onStartModule={(module) => {
+            // When user starts a module, could potentially start a therapy session
+            console.log('Starting module:', module);
+          }}
+          onClose={() => setShowProgramTracker(false)}
+        />
+      </div>
+    )}
 
     {/* New Profile Modal */}
     {showNewProfileModal && (
