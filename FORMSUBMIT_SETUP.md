@@ -1,92 +1,124 @@
-# Formsubmit.co Setup for TinniTune Feedback Form
+# Jotform Setup for TinniTune Feedback Form
 
-The feedback form uses **Formsubmit.co** to send submissions directly to **derrick78@me.com**.
+The feedback form uses **Jotform** to collect user feedback with reliable email notifications and data storage.
 
-## ✨ Super Simple Setup (No Account Needed!)
+## ✅ Current Setup
 
-### How It Works
+**Form URL:** https://form.jotform.com/260024569118051
+**Email Notifications:** derrick78@me.com
+**Status:** Active and working
 
-1. The form is already configured to send to `derrick78@me.com`
-2. On the **first submission**, Formsubmit will send a verification email to `derrick78@me.com`
-3. Click the activation link in that email
-4. That's it! The form will work from then on
+## How It Works
 
-### Setup Steps
+1. User clicks "Feedback" button in TinniTune
+2. Modal opens explaining the feedback process
+3. User clicks "Open Feedback Form"
+4. Jotform opens in a new tab
+5. User completes and submits the form
+6. Submission is:
+   - Stored in Jotform dashboard
+   - Emailed to derrick78@me.com
+   - Available for export (CSV, Excel, PDF)
 
-1. **Deploy the site:**
-   ```bash
-   npm run build
-   npm run deploy
-   ```
+## Form Fields
 
-2. **Test the form:**
-   - Visit your deployed site on GitHub Pages
-   - Fill out and submit the feedback form
-   - This will trigger the verification email
+The form collects:
+- **Email** (optional) - For follow-up
+- **Relief Level** (required) - 1-10 scale rating
+- **Primary Feature Used** (required) - Which feature they used
+- **Your Experience** (required) - Open-ended feedback
+- **Suggested Improvements** (optional) - Feature requests
 
-3. **Check your email:**
-   - Look for an email from Formsubmit.co in `derrick78@me.com`
-   - Subject: "Activate Form Submission"
-   - Click the activation link
+## Accessing Submissions
 
-4. **Done!**
-   - All future submissions will go straight to `derrick78@me.com`
-   - No further action needed
+### Via Email
+- All submissions are sent to **derrick78@me.com**
+- Instant delivery (no delays like Formsubmit)
 
-## Email Format
+### Via Jotform Dashboard
+1. Log in to Jotform.com
+2. Go to "My Forms"
+3. Click on "TinniTune Feedback Form"
+4. View submissions with analytics:
+   - Response rates
+   - Completion times
+   - Drop-off analysis
+   - Charts and graphs
 
-You'll receive emails with this format:
+### Export Data
+- CSV for spreadsheets
+- Excel for advanced analysis
+- PDF for reports
+- Google Sheets integration available
 
-**Subject:** TinniTune Feedback Submission
+## Advantages Over Previous Solutions
 
-**Body:**
+**vs. Formsubmit.co:**
+- ✅ **Reliable delivery** - Enterprise-grade (Formsubmit was not delivering emails)
+- ✅ **Data storage** - Keep all submissions in one place
+- ✅ **Analytics** - See trends and insights
+- ✅ **Better UX** - Professional, mobile-optimized form
+
+**vs. EmailJS:**
+- ✅ **Simpler setup** - No API keys or templates needed
+- ✅ **Better data management** - Built-in dashboard
+
+**vs. Netlify Forms:**
+- ✅ **Works on GitHub Pages** - Not locked to Netlify hosting
+
+## Updating the Form
+
+To modify the form fields or settings:
+
+1. Log in to Jotform.com
+2. Go to "My Forms" → "TinniTune Feedback Form"
+3. Click "Edit Form"
+4. Make changes in the visual editor
+5. Click "Publish"
+6. No code changes needed! The URL stays the same
+
+## Changing the Form URL
+
+If you create a new form or want to use a different one:
+
+Edit `src/components/FeedbackForm.jsx` line 11:
+```javascript
+window.open('https://form.jotform.com/YOUR_NEW_FORM_ID', '_blank');
 ```
-Email: user@example.com (or empty if not provided)
-Relief Rating: 8
-Feature Used: notched-therapy
-Feedback: [User's feedback text]
-Improvements: [User's suggestions]
-```
 
-## Features Included
+## Free Tier Limits
 
-✅ **Spam Protection** - Honeypot field blocks bots
-✅ **No CAPTCHA** - Disabled for better UX
-✅ **Nice Formatting** - Uses "box" template for readable emails
-✅ **Custom Subject** - All emails have "TinniTune Feedback Submission" subject
-✅ **Free Forever** - No limits, no account needed
+- **100 submissions/month** - More than enough for focus group
+- **5 forms** - Can create additional forms if needed
+- **100MB storage** - Plenty for text responses
+- Upgrade available if you need more
+
+## Privacy & Security
+
+- Jotform is GDPR/HIPAA compliant
+- SSL encrypted submissions
+- Data hosted securely
+- Can delete submissions anytime
+- Export and delete account if needed
 
 ## Troubleshooting
 
-### Not receiving emails?
-
-1. Check spam/junk folder in `derrick78@me.com`
-2. Make sure you clicked the activation link in the first email
-3. Try submitting another test
-
-### Form not submitting?
-
+### Form not opening?
 1. Check browser console for errors
-2. Make sure all required fields are filled (*Relief Level, *Feature Used, *Feedback)
-3. Verify the site is deployed to GitHub Pages (not running locally)
+2. Verify popup blocker isn't blocking new tab
+3. Test the URL directly: https://form.jotform.com/260024569118051
 
-### Want to change the destination email?
+### Not receiving email notifications?
+1. Check spam folder in derrick78@me.com
+2. Verify email settings in Jotform dashboard
+3. Submissions are still saved in Jotform even if email fails
 
-Edit `src/components/FeedbackForm.jsx` line 12:
-```javascript
-action="https://formsubmit.co/YOUR_NEW_EMAIL@example.com"
-```
-
-Then rebuild and deploy. You'll need to activate the new email address.
-
-## Advantages Over Other Solutions
-
-- **EmailJS**: Required complex dashboard setup, templates, and API keys
-- **Netlify Forms**: Only works on Netlify hosting (not GitHub Pages)
-- **Formsubmit.co**: ✅ Works on GitHub Pages, zero config, just works!
+### Want to test the form?
+Just click the feedback button in the app or visit:
+https://form.jotform.com/260024569118051
 
 ## More Info
 
-- Formsubmit Docs: https://formsubmit.co/
-- Free tier: Unlimited submissions
-- Privacy: Formsubmit doesn't store form data, just forwards to email
+- Jotform Docs: https://www.jotform.com/help/
+- Free tier: 100 submissions/month
+- Support: Available via Jotform dashboard
