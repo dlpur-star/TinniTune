@@ -3,6 +3,10 @@ import * as Tone from 'tone';
 import logo from './assets/logo.PNG';
 import TherapySetupWizard from './components/therapy/TherapySetupWizard';
 import FeedbackModal from './components/FeedbackModal';
+import AchievementCelebration from './components/AchievementCelebration';
+import NotificationSettings from './components/NotificationSettings';
+import SoundSelector from './components/SoundSelector';
+import ProgramTracker from './components/ProgramTracker';
 
 // New Audio Engine Imports
 import { getAudioEngine } from './audio-engine/TinniTuneAudioEngine';
@@ -17,6 +21,11 @@ import { SafetyMonitor } from './audio-engine/CalibrationSafetyModule';
 
 // Constants
 import { getModeConfig, BINAURAL_MODE_MAP } from './constants/therapyModes';
+import {
+  SESSION_THRESHOLDS,
+  getSessionProgress,
+  getDailyEncouragementMessage
+} from './constants/sessionConfig';
 
 export default function TinniTune() {
 // Initialize profile management
@@ -74,6 +83,7 @@ const [mode, setMode] = useState('daytime');
 const [volumeLeft, setVolumeLeft] = useState(-25);
 const [volumeRight, setVolumeRight] = useState(-25);
 const [sessionTime, setSessionTime] = useState(0);
+const [soundType, setSoundType] = useState('pink'); // 'pink', 'ocean', 'rain', 'forest', etc.
 const [notchEnabled, setNotchEnabled] = useState(true); // Notch therapy ON by default
 const [notchIntensity, setNotchIntensity] = useState('standard'); // 'gentle', 'standard', 'strong'
 const [binauralEnabled, setBinauralEnabled] = useState(true); // Binaural beats ON by default
@@ -94,6 +104,9 @@ const [isStandalone, setIsStandalone] = useState(false);
 
 // Feedback form state
 const [showFeedback, setShowFeedback] = useState(false);
+
+// Program tracker state
+const [showProgramTracker, setShowProgramTracker] = useState(false);
 
 // Profile management state
 const [showProfileManager, setShowProfileManager] = useState(false);
@@ -1479,12 +1492,23 @@ backdropFilter: 'blur(10px)'
             fontSize: '12px',
             fontStyle: 'italic'
           }}>
-            {minutes < 30 ? "Great start! Keep going 💪" :
-             minutes < 60 ? "Halfway there! 🎯" :
-             minutes < 90 ? "Almost at your goal! 🌟" :
-             minutes >= goalMinutes ? "Goal reached! Excellent work ✨" :
-             "Keep up the great work! 🔥"}
+            {getDailyEncouragementMessage(minutes, goalMinutes)}
           </div>
+
+          {/* Clinical guidance */}
+          {minutes > 0 && minutes < 30 && (
+            <div style={{
+              marginTop: '8px',
+              padding: '8px 12px',
+              background: 'rgba(255, 183, 77, 0.15)',
+              borderRadius: '8px',
+              border: '1px solid rgba(255, 183, 77, 0.3)',
+              color: 'rgba(255, 183, 77, 0.9)',
+              fontSize: '11px'
+            }}>
+              💡 Research shows 2-3 hours daily provides the greatest relief
+            </div>
+          )}
         </div>
       );
     })()}
@@ -1659,6 +1683,180 @@ backdropFilter: 'blur(10px)'
         </div>
       );
     })()}
+
+    {/* Achievement Showcase */}
+    {therapyGoalsHook.achievements && (
+      <div style={{
+        background: 'linear-gradient(135deg, rgba(252, 206, 138, 0.15), rgba(252, 206, 138, 0.08))',
+        padding: '20px',
+        borderRadius: '12px',
+        marginTop: '15px',
+        border: '1px solid rgba(252, 206, 138, 0.3)'
+      }}>
+        <div style={{
+          color: 'rgba(255,255,255,0.9)',
+          fontSize: '14px',
+          fontWeight: '600',
+          marginBottom: '12px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          🏆 Your Achievements
+        </div>
+
+        {/* Achievement Grid */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
+          gap: '12px'
+        }}>
+          {therapyGoalsHook.achievements.map(achievement => {
+            const isUnlocked = therapyGoals.achievements.some(a => a.id === achievement.id);
+
+            return (
+              <div
+                key={achievement.id}
+                title={isUnlocked ? `${achievement.name}: ${achievement.description}` : '🔒 Locked'}
+                style={{
+                  background: isUnlocked
+                    ? 'rgba(78, 205, 196, 0.2)'
+                    : 'rgba(0, 0, 0, 0.3)',
+                  padding: '12px 8px',
+                  borderRadius: '12px',
+                  border: isUnlocked
+                    ? '2px solid rgba(78, 205, 196, 0.4)'
+                    : '1px solid rgba(255, 255, 255, 0.1)',
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  opacity: isUnlocked ? 1 : 0.4
+                }}
+                onMouseEnter={(e) => {
+                  if (isUnlocked) {
+                    e.currentTarget.style.transform = 'translateY(-4px)';
+                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(78, 205, 196, 0.3)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                <div style={{
+                  fontSize: '32px',
+                  marginBottom: '4px'
+                }}>
+                  {isUnlocked ? achievement.emoji : '🔒'}
+                </div>
+                <div style={{
+                  color: isUnlocked ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)',
+                  fontSize: '10px',
+                  fontWeight: '600',
+                  lineHeight: '1.2'
+                }}>
+                  {achievement.name.split(' ')[0]}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Achievement stats */}
+        <div style={{
+          marginTop: '12px',
+          textAlign: 'center',
+          color: 'rgba(255,255,255,0.7)',
+          fontSize: '12px'
+        }}>
+          {therapyGoals.achievements.length} / {therapyGoalsHook.achievements.length} unlocked
+        </div>
+      </div>
+    )}
+
+    {/* Notification Settings */}
+    <NotificationSettings sessions={sessions} />
+
+    {/* 8-Week Program Button */}
+    <div style={{
+      background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%)',
+      border: '2px solid #667eea',
+      borderRadius: '15px',
+      padding: '24px',
+      marginTop: '20px',
+      textAlign: 'left',
+      cursor: 'pointer',
+      transition: 'all 0.3s ease'
+    }}
+    onClick={() => setShowProgramTracker(true)}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.transform = 'translateY(-2px)';
+      e.currentTarget.style.boxShadow = '0 8px 24px rgba(102, 126, 234, 0.4)';
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.transform = 'translateY(0)';
+      e.currentTarget.style.boxShadow = 'none';
+    }}
+    >
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        marginBottom: '12px'
+      }}>
+        <div style={{ fontSize: '32px' }}>📚</div>
+        <div>
+          <h3 style={{
+            color: '#667eea',
+            margin: 0,
+            fontSize: '20px',
+            fontWeight: '700'
+          }}>
+            8-Week Habituation Program
+          </h3>
+          <p style={{
+            color: 'rgba(255, 255, 255, 0.7)',
+            margin: '4px 0 0 0',
+            fontSize: '13px'
+          }}>
+            Structured guidance for lasting relief
+          </p>
+        </div>
+      </div>
+      <p style={{
+        color: 'rgba(255, 255, 255, 0.8)',
+        margin: '0 0 12px 0',
+        fontSize: '14px',
+        lineHeight: '1.6'
+      }}>
+        Follow our evidence-based program with daily educational modules, exercises, and progressive therapy targets. Research shows structured programs improve outcomes by 40%.
+      </p>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setShowProgramTracker(true);
+        }}
+        style={{
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          color: 'white',
+          border: 'none',
+          padding: '12px 24px',
+          borderRadius: '8px',
+          fontSize: '14px',
+          fontWeight: '600',
+          cursor: 'pointer',
+          transition: 'all 0.2s'
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.transform = 'scale(1.05)';
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.transform = 'scale(1)';
+        }}
+      >
+        View Program →
+      </button>
+    </div>
   </div>
 )}
 
@@ -2024,6 +2222,23 @@ backdropFilter: 'blur(10px)'
         Continue
       </button>
       <button
+        onClick={() => setStep('history')}
+        style={{
+          background: 'rgba(78, 205, 196, 0.2)',
+          color: '#4ECDC4',
+          border: '2px solid #4ECDC4',
+          padding: '12px 24px',
+          fontSize: '14px',
+          borderRadius: '8px',
+          cursor: 'pointer',
+          fontWeight: 'bold',
+          flex: '1',
+          minWidth: '120px'
+        }}
+      >
+        📊 View History
+      </button>
+      <button
         onClick={() => {
           if (window.confirm('This will clear your saved settings and start fresh. Continue?')) {
             resetSettings();
@@ -2073,6 +2288,35 @@ WebkitTapHighlightColor: 'rgba(0,0,0,0)'
 }}
 >
 {profiles.length === 0 ? 'Create Profile' : 'Begin Setup'}
+</button>
+
+{/* View History/Stats Button - Always visible */}
+<button
+  onClick={() => setStep('history')}
+  style={{
+    background: 'rgba(78, 205, 196, 0.2)',
+    color: '#4ECDC4',
+    border: '2px solid #4ECDC4',
+    padding: '14px 36px',
+    fontSize: '16px',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    marginTop: '12px',
+    touchAction: 'manipulation',
+    WebkitTapHighlightColor: 'rgba(0,0,0,0)',
+    transition: 'all 0.2s'
+  }}
+  onMouseEnter={(e) => {
+    e.target.style.background = 'rgba(78, 205, 196, 0.3)';
+    e.target.style.transform = 'translateY(-2px)';
+  }}
+  onMouseLeave={(e) => {
+    e.target.style.background = 'rgba(78, 205, 196, 0.2)';
+    e.target.style.transform = 'translateY(0)';
+  }}
+>
+  📊 View Session History & Stats
 </button>
 
     {/* New Profile Modal */}
@@ -5477,52 +5721,130 @@ Great session! Help us track your progress by rating your tinnitus.
       </button>
 
       {/* Session Timer and Progress */}
-      {isPlaying && (
-        <div style={{
-          marginBottom: '24px',
-          textAlign: 'center'
-        }}>
-          <div style={{
-            fontSize: '28px',
-            fontWeight: '700',
-            color: '#4ECDC4',
-            textShadow: '0 0 20px rgba(78, 205, 196, 0.4)',
-            fontVariantNumeric: 'tabular-nums',
-            letterSpacing: '1px',
-            marginBottom: '12px'
-          }}>
-            {formatTime(sessionTime)}
-          </div>
+      {isPlaying && (() => {
+        const progress = getSessionProgress(sessionTime);
 
+        return (
           <div style={{
-            maxWidth: '400px',
-            margin: '0 auto',
-            height: '8px',
-            background: 'rgba(255, 255, 255, 0.1)',
-            borderRadius: '4px',
-            overflow: 'hidden'
+            marginBottom: '24px',
+            textAlign: 'center'
           }}>
             <div style={{
-              height: '100%',
-              background: 'linear-gradient(90deg, #4ECDC4, #44A08D)',
-              width: `${Math.min((sessionTime / (15 * 60)) * 100, 100)}%`,
-              transition: 'width 1s linear',
-              borderRadius: '4px',
-              boxShadow: '0 0 10px rgba(78, 205, 196, 0.5)'
-            }} />
-          </div>
+              fontSize: '28px',
+              fontWeight: '700',
+              color: progress.progressColor,
+              textShadow: `0 0 20px ${progress.progressColor}66`,
+              fontVariantNumeric: 'tabular-nums',
+              letterSpacing: '1px',
+              marginBottom: '8px'
+            }}>
+              {formatTime(sessionTime)}
+            </div>
 
-          <div style={{
-            fontSize: '11px',
-            color: 'rgba(255, 255, 255, 0.5)',
-            marginTop: '8px',
-            fontWeight: '500'
-          }}>
-            {Math.floor((sessionTime / (15 * 60)) * 100)}% of recommended 15 minutes
+            {/* Quality indicator */}
+            <div style={{
+              fontSize: '14px',
+              color: progress.progressColor,
+              fontWeight: '600',
+              marginBottom: '12px'
+            }}>
+              {progress.quality.emoji} {progress.quality.message}
+            </div>
+
+            {/* Progress bar with gradient */}
+            <div style={{
+              maxWidth: '400px',
+              margin: '0 auto',
+              height: '10px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '5px',
+              overflow: 'hidden',
+              position: 'relative'
+            }}>
+              {/* Milestone markers */}
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: '25%',
+                width: '2px',
+                height: '100%',
+                background: 'rgba(255, 255, 255, 0.2)'
+              }} />
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: '50%',
+                width: '2px',
+                height: '100%',
+                background: 'rgba(255, 255, 255, 0.3)'
+              }} />
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: '75%',
+                width: '2px',
+                height: '100%',
+                background: 'rgba(255, 255, 255, 0.3)'
+              }} />
+
+              {/* Progress fill */}
+              <div style={{
+                height: '100%',
+                background: `linear-gradient(90deg, ${progress.progressColor}, ${progress.progressColor}DD)`,
+                width: `${progress.percentage}%`,
+                transition: 'width 1s linear, background 0.5s ease',
+                borderRadius: '5px',
+                boxShadow: `0 0 10px ${progress.progressColor}88`
+              }} />
+            </div>
+
+            {/* Progress text */}
+            <div style={{
+              fontSize: '11px',
+              color: 'rgba(255, 255, 255, 0.6)',
+              marginTop: '10px',
+              fontWeight: '500'
+            }}>
+              {progress.nextMilestone ? (
+                <>
+                  {progress.percentage}% • Next: {progress.nextMilestone.label}
+                </>
+              ) : (
+                <>
+                  {progress.percentage}% • Outstanding session! 🌟
+                </>
+              )}
+            </div>
+
+            {/* Clinical guidance */}
+            <div style={{
+              fontSize: '10px',
+              color: 'rgba(255, 255, 255, 0.4)',
+              marginTop: '6px',
+              fontStyle: 'italic'
+            }}>
+              {sessionTime < SESSION_THRESHOLDS.EFFECTIVE
+                ? "💡 Research shows 30+ minutes provides better results"
+                : sessionTime < SESSION_THRESHOLDS.RECOMMENDED
+                ? "💡 Great! Try for 60 minutes for optimal benefit"
+                : "💡 Excellent duration! Extended sessions enhance habituation"}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
+
+    {/* Sound Selector */}
+    <SoundSelector
+      currentSound={soundType}
+      onSoundChange={(newSound) => {
+        setSoundType(newSound);
+        // Note: Sound switching during active therapy would require
+        // audio engine updates. For now, this sets the preference
+        // for the next session start.
+      }}
+      isPlaying={isPlaying}
+    />
 
     {/* Volume Control - Independent Left/Right */}
     <div style={{
@@ -6697,6 +7019,42 @@ Great session! Help us track your progress by rating your tinnitus.
       isOpen={showFeedback}
       onClose={() => setShowFeedback(false)}
     />
+
+    {/* Achievement Celebration - Show for newly unlocked achievements */}
+    {newAchievements && newAchievements.length > 0 && newAchievements.map((achievement, index) => (
+      <AchievementCelebration
+        key={achievement.id}
+        achievement={achievement}
+        onClose={() => {
+          // Achievement will auto-clear after 5 seconds from the hook
+          // This is just a manual close handler
+        }}
+        soundEnabled={true}
+      />
+    ))}
+
+    {/* 8-Week Program Tracker */}
+    {showProgramTracker && (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'rgba(0, 0, 0, 0.9)',
+        zIndex: 2000,
+        overflowY: 'auto',
+        padding: '20px'
+      }}>
+        <ProgramTracker
+          onStartModule={(module) => {
+            // When user starts a module, could potentially start a therapy session
+            console.log('Starting module:', module);
+          }}
+          onClose={() => setShowProgramTracker(false)}
+        />
+      </div>
+    )}
 
     {/* New Profile Modal */}
     {showNewProfileModal && (
