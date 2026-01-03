@@ -17,6 +17,11 @@ import { SafetyMonitor } from './audio-engine/CalibrationSafetyModule';
 
 // Constants
 import { getModeConfig, BINAURAL_MODE_MAP } from './constants/therapyModes';
+import {
+  SESSION_THRESHOLDS,
+  getSessionProgress,
+  getDailyEncouragementMessage
+} from './constants/sessionConfig';
 
 export default function TinniTune() {
 // Initialize profile management
@@ -1479,12 +1484,23 @@ backdropFilter: 'blur(10px)'
             fontSize: '12px',
             fontStyle: 'italic'
           }}>
-            {minutes < 30 ? "Great start! Keep going 💪" :
-             minutes < 60 ? "Halfway there! 🎯" :
-             minutes < 90 ? "Almost at your goal! 🌟" :
-             minutes >= goalMinutes ? "Goal reached! Excellent work ✨" :
-             "Keep up the great work! 🔥"}
+            {getDailyEncouragementMessage(minutes, goalMinutes)}
           </div>
+
+          {/* Clinical guidance */}
+          {minutes > 0 && minutes < 30 && (
+            <div style={{
+              marginTop: '8px',
+              padding: '8px 12px',
+              background: 'rgba(255, 183, 77, 0.15)',
+              borderRadius: '8px',
+              border: '1px solid rgba(255, 183, 77, 0.3)',
+              color: 'rgba(255, 183, 77, 0.9)',
+              fontSize: '11px'
+            }}>
+              💡 Research shows 2-3 hours daily provides the greatest relief
+            </div>
+          )}
         </div>
       );
     })()}
@@ -5477,51 +5493,117 @@ Great session! Help us track your progress by rating your tinnitus.
       </button>
 
       {/* Session Timer and Progress */}
-      {isPlaying && (
-        <div style={{
-          marginBottom: '24px',
-          textAlign: 'center'
-        }}>
-          <div style={{
-            fontSize: '28px',
-            fontWeight: '700',
-            color: '#4ECDC4',
-            textShadow: '0 0 20px rgba(78, 205, 196, 0.4)',
-            fontVariantNumeric: 'tabular-nums',
-            letterSpacing: '1px',
-            marginBottom: '12px'
-          }}>
-            {formatTime(sessionTime)}
-          </div>
+      {isPlaying && (() => {
+        const progress = getSessionProgress(sessionTime);
 
+        return (
           <div style={{
-            maxWidth: '400px',
-            margin: '0 auto',
-            height: '8px',
-            background: 'rgba(255, 255, 255, 0.1)',
-            borderRadius: '4px',
-            overflow: 'hidden'
+            marginBottom: '24px',
+            textAlign: 'center'
           }}>
             <div style={{
-              height: '100%',
-              background: 'linear-gradient(90deg, #4ECDC4, #44A08D)',
-              width: `${Math.min((sessionTime / (15 * 60)) * 100, 100)}%`,
-              transition: 'width 1s linear',
-              borderRadius: '4px',
-              boxShadow: '0 0 10px rgba(78, 205, 196, 0.5)'
-            }} />
-          </div>
+              fontSize: '28px',
+              fontWeight: '700',
+              color: progress.progressColor,
+              textShadow: `0 0 20px ${progress.progressColor}66`,
+              fontVariantNumeric: 'tabular-nums',
+              letterSpacing: '1px',
+              marginBottom: '8px'
+            }}>
+              {formatTime(sessionTime)}
+            </div>
 
-          <div style={{
-            fontSize: '11px',
-            color: 'rgba(255, 255, 255, 0.5)',
-            marginTop: '8px',
-            fontWeight: '500'
-          }}>
-            {Math.floor((sessionTime / (15 * 60)) * 100)}% of recommended 15 minutes
+            {/* Quality indicator */}
+            <div style={{
+              fontSize: '14px',
+              color: progress.progressColor,
+              fontWeight: '600',
+              marginBottom: '12px'
+            }}>
+              {progress.quality.emoji} {progress.quality.message}
+            </div>
+
+            {/* Progress bar with gradient */}
+            <div style={{
+              maxWidth: '400px',
+              margin: '0 auto',
+              height: '10px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: '5px',
+              overflow: 'hidden',
+              position: 'relative'
+            }}>
+              {/* Milestone markers */}
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: '25%',
+                width: '2px',
+                height: '100%',
+                background: 'rgba(255, 255, 255, 0.2)'
+              }} />
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: '50%',
+                width: '2px',
+                height: '100%',
+                background: 'rgba(255, 255, 255, 0.3)'
+              }} />
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: '75%',
+                width: '2px',
+                height: '100%',
+                background: 'rgba(255, 255, 255, 0.3)'
+              }} />
+
+              {/* Progress fill */}
+              <div style={{
+                height: '100%',
+                background: `linear-gradient(90deg, ${progress.progressColor}, ${progress.progressColor}DD)`,
+                width: `${progress.percentage}%`,
+                transition: 'width 1s linear, background 0.5s ease',
+                borderRadius: '5px',
+                boxShadow: `0 0 10px ${progress.progressColor}88`
+              }} />
+            </div>
+
+            {/* Progress text */}
+            <div style={{
+              fontSize: '11px',
+              color: 'rgba(255, 255, 255, 0.6)',
+              marginTop: '10px',
+              fontWeight: '500'
+            }}>
+              {progress.nextMilestone ? (
+                <>
+                  {progress.percentage}% • Next: {progress.nextMilestone.label}
+                </>
+              ) : (
+                <>
+                  {progress.percentage}% • Outstanding session! 🌟
+                </>
+              )}
+            </div>
+
+            {/* Clinical guidance */}
+            <div style={{
+              fontSize: '10px',
+              color: 'rgba(255, 255, 255, 0.4)',
+              marginTop: '6px',
+              fontStyle: 'italic'
+            }}>
+              {sessionTime < SESSION_THRESHOLDS.EFFECTIVE
+                ? "💡 Research shows 30+ minutes provides better results"
+                : sessionTime < SESSION_THRESHOLDS.RECOMMENDED
+                ? "💡 Great! Try for 60 minutes for optimal benefit"
+                : "💡 Excellent duration! Extended sessions enhance habituation"}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
 
     {/* Volume Control - Independent Left/Right */}
