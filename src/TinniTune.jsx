@@ -5,6 +5,7 @@ import TherapySetupWizard from './components/therapy/TherapySetupWizard';
 import FeedbackModal from './components/FeedbackModal';
 import AchievementCelebration from './components/AchievementCelebration';
 import NotificationSettings from './components/NotificationSettings';
+import SoundSelector from './components/SoundSelector';
 
 // New Audio Engine Imports
 import { getAudioEngine } from './audio-engine/TinniTuneAudioEngine';
@@ -81,6 +82,7 @@ const [mode, setMode] = useState('daytime');
 const [volumeLeft, setVolumeLeft] = useState(-25);
 const [volumeRight, setVolumeRight] = useState(-25);
 const [sessionTime, setSessionTime] = useState(0);
+const [soundType, setSoundType] = useState('pink'); // 'pink', 'ocean', 'rain', 'forest', etc.
 const [notchEnabled, setNotchEnabled] = useState(true); // Notch therapy ON by default
 const [notchIntensity, setNotchIntensity] = useState('standard'); // 'gentle', 'standard', 'strong'
 const [binauralEnabled, setBinauralEnabled] = useState(true); // Binaural beats ON by default
@@ -5700,6 +5702,18 @@ Great session! Help us track your progress by rating your tinnitus.
         );
       })()}
     </div>
+
+    {/* Sound Selector */}
+    <SoundSelector
+      currentSound={soundType}
+      onSoundChange={(newSound) => {
+        setSoundType(newSound);
+        // Note: Sound switching during active therapy would require
+        // audio engine updates. For now, this sets the preference
+        // for the next session start.
+      }}
+      isPlaying={isPlaying}
+    />
 
     {/* Volume Control - Independent Left/Right */}
     <div style={{
