@@ -15,6 +15,9 @@ import { useUserSettings } from './hooks/useUserSettings';
 import useTherapyGoals from './hooks/useTherapyGoals';
 import { SafetyMonitor } from './audio-engine/CalibrationSafetyModule';
 
+// Constants
+import { getModeConfig, BINAURAL_MODE_MAP } from './constants/therapyModes';
+
 export default function TinniTune() {
 // Initialize profile management
 const {
@@ -444,15 +447,6 @@ const secs = seconds % 60;
 return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
-const getModeConfig = (m) => {
-const modes = {
-daytime: { name: 'Daytime Focus', freq: 10, color: '#667eea', emoji: '☀️' },
-evening: { name: 'Evening Calm', freq: 6, color: '#f093fb', emoji: '🌅' },
-sleep: { name: 'Deep Sleep', freq: 2, color: '#4ECDC4', emoji: '🌙' }
-};
-return modes[m];
-};
-
 // Get Q-factor for notch filter based on intensity
 // Gentle = wide notch (1.5 octaves, Q=0.92)
 // Standard = medium notch (1 octave, Q=1.41) - clinically proven
@@ -841,12 +835,7 @@ const startAudioEngine = async () => {
     const engineIntensity = intensityMap[notchIntensity] || 'moderate';
 
     // Map mode to binaural mode
-    const binauralMap = {
-      'daytime': 'focus',
-      'evening': 'calm',
-      'sleep': 'sleep'  // Fixed: was 'bedtime', should be 'sleep'
-    };
-    const binauralMode = binauralMap[mode] || 'focus';
+    const binauralMode = BINAURAL_MODE_MAP[mode] || 'focus';
 
     // Create therapy module
     const therapy = new ClinicalTherapyModule(engineInstance, {
@@ -6013,95 +6002,6 @@ Great session! Help us track your progress by rating your tinnitus.
       </div>
     )}
 
-    {/* Mode Selection - Premium cards with better depth */}
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(3, 1fr)',
-      gap: '12px',
-      marginBottom: '24px'
-    }}>
-      {['daytime', 'evening', 'sleep'].map(m => {
-        const config = getModeConfig(m);
-        const isActive = mode === m;
-        return (
-          <div
-            key={m}
-            onClick={() => {
-              if (isPlaying) {
-                stopAudio();
-                setMode(m);
-                setTimeout(() => startAudio(), 100);
-              } else {
-                setMode(m);
-              }
-            }}
-            style={{
-              background: isActive 
-                ? `linear-gradient(135deg, ${config.color}dd, ${config.color}99)`
-                : 'linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%)',
-              padding: '20px 16px',
-              borderRadius: '16px',
-              cursor: 'pointer',
-              border: isActive ? `1.5px solid ${config.color}80` : '1px solid rgba(255,255,255,0.08)',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              textAlign: 'center',
-              backdropFilter: 'blur(10px)',
-              boxShadow: isActive 
-                ? `0 8px 32px ${config.color}30, inset 0 1px 0 rgba(255,255,255,0.2)`
-                : '0 4px 12px rgba(0,0,0,0.15)',
-              transform: isActive ? 'translateY(-2px)' : 'translateY(0)',
-              position: 'relative',
-              overflow: 'hidden'
-            }}
-            onMouseEnter={(e) => {
-              if (!isActive) {
-                e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0.04) 100%)';
-                e.currentTarget.style.transform = 'translateY(-2px)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isActive) {
-                e.currentTarget.style.background = 'linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.02) 100%)';
-                e.currentTarget.style.transform = 'translateY(0)';
-              }
-            }}
-          >
-            {isActive && (
-              <div style={{
-                position: 'absolute',
-                top: 0,
-                left: '-100%',
-                width: '200%',
-                height: '100%',
-                background: `linear-gradient(90deg, transparent, ${config.color}20, transparent)`,
-                animation: 'shimmer 3s infinite'
-              }}/>
-            )}
-            <div style={{ fontSize: '28px', marginBottom: '8px' }}>{config.emoji}</div>
-            <div style={{ 
-              color: 'white', 
-              fontSize: '14px', 
-              fontWeight: '600',
-              marginBottom: '2px',
-              letterSpacing: '-0.3px'
-            }}>
-              {config.name}
-            </div>
-            {ear === 'both' && (
-              <div style={{ 
-                color: isActive ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)', 
-                fontSize: '11px',
-                fontWeight: '500',
-                letterSpacing: '0.3px'
-              }}>
-                {config.freq}Hz binaural
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </div>
-
     {/* Favorite Therapy Presets */}
     {userSettings.favorites && userSettings.favorites.length > 0 && (
       <div style={{
@@ -6626,12 +6526,7 @@ Great session! Help us track your progress by rating your tinnitus.
 
                   // Update in real-time if using new engine and playing
                   if (isPlaying && therapyEngine === 'engine' && therapyModuleRef.current) {
-                    const binauralMap = {
-                      'daytime': 'focus',
-                      'evening': 'calm',
-                      'sleep': 'sleep'
-                    };
-                    const binauralMode = binauralMap[modeKey] || 'focus';
+                    const binauralMode = BINAURAL_MODE_MAP[modeKey] || 'focus';
                     therapyModuleRef.current.updateBinauralMode(binauralMode);
                     console.log('🎛️ Binaural mode updated to:', binauralMode);
                   } else if (isPlaying && therapyEngine === 'legacy') {

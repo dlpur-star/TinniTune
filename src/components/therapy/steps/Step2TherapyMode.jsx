@@ -1,38 +1,8 @@
 import React from 'react';
+import { getAllModes } from '../../../constants/therapyModes';
 
 export default function Step2TherapyMode({ config, updateConfig, nextStep, prevStep }) {
-  const modes = [
-    {
-      id: 'daytime',
-      name: 'Daytime Focus',
-      emoji: '☀️',
-      description: 'Best for: Work, concentration, alertness',
-      frequency: '10 Hz (Alpha)',
-      duration: '15-60 minutes',
-      color: '#667eea',
-      benefits: ['Enhanced focus', 'Mental clarity', 'Reduced anxiety']
-    },
-    {
-      id: 'evening',
-      name: 'Evening Calm',
-      emoji: '🌅',
-      description: 'Best for: Relaxation, winding down',
-      frequency: '6 Hz (Theta)',
-      duration: '30-60 minutes',
-      color: '#f093fb',
-      benefits: ['Deep relaxation', 'Stress relief', 'Peaceful state']
-    },
-    {
-      id: 'sleep',
-      name: 'Deep Sleep',
-      emoji: '🌙',
-      description: 'Best for: Before bed, deep relaxation',
-      frequency: '2 Hz (Delta)',
-      duration: '30-120 minutes',
-      color: '#4ECDC4',
-      benefits: ['Better sleep', 'Complete calm', 'Deep rest']
-    }
-  ];
+  const modes = getAllModes();
 
   const handleSelectMode = (modeId) => {
     updateConfig({ therapyMode: modeId });
