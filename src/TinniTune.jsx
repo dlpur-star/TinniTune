@@ -6490,17 +6490,6 @@ Great session! Help us track your progress by rating your tinnitus.
             marginBottom: '8px'
           }}>
             🧠 Brainwave Entrainment
-            <span style={{
-              color: '#F38181',
-              fontSize: '11px',
-              marginLeft: '8px',
-              padding: '2px 8px',
-              background: 'rgba(243, 129, 129, 0.2)',
-              borderRadius: '4px',
-              fontWeight: '700'
-            }}>
-              NEW ENGINE
-            </span>
           </div>
           <div style={{
             color: 'rgba(255,255,255,0.7)',
