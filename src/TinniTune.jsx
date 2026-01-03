@@ -9,6 +9,7 @@ import SoundSelector from './components/SoundSelector';
 import ProgramTracker from './components/ProgramTracker';
 import InsightsPanel from './components/InsightsPanel';
 import QuickCheckIn, { QuickCheckInButton } from './components/QuickCheckIn';
+import OfflineIndicator from './components/OfflineIndicator';
 
 // New Audio Engine Imports
 import { getAudioEngine } from './audio-engine/TinniTuneAudioEngine';
@@ -7104,6 +7105,9 @@ Great session! Help us track your progress by rating your tinnitus.
         }).length}
       />
     )}
+
+    {/* Offline Indicator */}
+    <OfflineIndicator />
 
     {/* New Profile Modal */}
     {showNewProfileModal && (

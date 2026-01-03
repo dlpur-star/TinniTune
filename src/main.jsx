@@ -3,27 +3,35 @@ import ReactDOM from 'react-dom/client'
 import TinniTune from './TinniTune.jsx'
 import './index.css'
 
-// TEMPORARILY DISABLED: Service workers are causing blank page issues
-// Will re-enable once the caching bugs are fully resolved
+// Register Service Worker for offline support and performance
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    // Unregister ALL service workers to fix blank page
-    navigator.serviceWorker.getRegistrations().then((registrations) => {
-      registrations.forEach((registration) => {
-        console.log('Unregistering service worker:', registration.scope);
-        registration.unregister();
-      });
-    });
+    navigator.serviceWorker.register('/sw.js')
+      .then((registration) => {
+        console.log('[Main] Service Worker registered successfully:', registration.scope);
 
-    // Clear all caches
-    if ('caches' in window) {
-      caches.keys().then((cacheNames) => {
-        cacheNames.forEach((cacheName) => {
-          console.log('Clearing cache:', cacheName);
-          caches.delete(cacheName);
+        // Check for updates periodically
+        setInterval(() => {
+          registration.update();
+        }, 60000); // Check every minute
+
+        // Listen for messages from service worker
+        navigator.serviceWorker.addEventListener('message', (event) => {
+          if (event.data.type === 'SYNC_DATA') {
+            console.log('[Main] Sync request from service worker:', event.data.message);
+            // Trigger data sync in app if needed
+          }
         });
+      })
+      .catch((error) => {
+        console.error('[Main] Service Worker registration failed:', error);
       });
-    }
+
+    // Handle service worker updates
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      console.log('[Main] New service worker activated, reloading...');
+      window.location.reload();
+    });
   });
 }
 
