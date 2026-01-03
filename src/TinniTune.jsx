@@ -3,6 +3,7 @@ import * as Tone from 'tone';
 import logo from './assets/logo.PNG';
 import TherapySetupWizard from './components/therapy/TherapySetupWizard';
 import FeedbackModal from './components/FeedbackModal';
+import AchievementCelebration from './components/AchievementCelebration';
 
 // New Audio Engine Imports
 import { getAudioEngine } from './audio-engine/TinniTuneAudioEngine';
@@ -1675,6 +1676,96 @@ backdropFilter: 'blur(10px)'
         </div>
       );
     })()}
+
+    {/* Achievement Showcase */}
+    {therapyGoalsHook.achievements && (
+      <div style={{
+        background: 'linear-gradient(135deg, rgba(252, 206, 138, 0.15), rgba(252, 206, 138, 0.08))',
+        padding: '20px',
+        borderRadius: '12px',
+        marginTop: '15px',
+        border: '1px solid rgba(252, 206, 138, 0.3)'
+      }}>
+        <div style={{
+          color: 'rgba(255,255,255,0.9)',
+          fontSize: '14px',
+          fontWeight: '600',
+          marginBottom: '12px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px'
+        }}>
+          🏆 Your Achievements
+        </div>
+
+        {/* Achievement Grid */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
+          gap: '12px'
+        }}>
+          {therapyGoalsHook.achievements.map(achievement => {
+            const isUnlocked = therapyGoals.achievements.some(a => a.id === achievement.id);
+
+            return (
+              <div
+                key={achievement.id}
+                title={isUnlocked ? `${achievement.name}: ${achievement.description}` : '🔒 Locked'}
+                style={{
+                  background: isUnlocked
+                    ? 'rgba(78, 205, 196, 0.2)'
+                    : 'rgba(0, 0, 0, 0.3)',
+                  padding: '12px 8px',
+                  borderRadius: '12px',
+                  border: isUnlocked
+                    ? '2px solid rgba(78, 205, 196, 0.4)'
+                    : '1px solid rgba(255, 255, 255, 0.1)',
+                  textAlign: 'center',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  opacity: isUnlocked ? 1 : 0.4
+                }}
+                onMouseEnter={(e) => {
+                  if (isUnlocked) {
+                    e.currentTarget.style.transform = 'translateY(-4px)';
+                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(78, 205, 196, 0.3)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                <div style={{
+                  fontSize: '32px',
+                  marginBottom: '4px'
+                }}>
+                  {isUnlocked ? achievement.emoji : '🔒'}
+                </div>
+                <div style={{
+                  color: isUnlocked ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)',
+                  fontSize: '10px',
+                  fontWeight: '600',
+                  lineHeight: '1.2'
+                }}>
+                  {achievement.name.split(' ')[0]}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Achievement stats */}
+        <div style={{
+          marginTop: '12px',
+          textAlign: 'center',
+          color: 'rgba(255,255,255,0.7)',
+          fontSize: '12px'
+        }}>
+          {therapyGoals.achievements.length} / {therapyGoalsHook.achievements.length} unlocked
+        </div>
+      </div>
+    )}
   </div>
 )}
 
@@ -6779,6 +6870,19 @@ Great session! Help us track your progress by rating your tinnitus.
       isOpen={showFeedback}
       onClose={() => setShowFeedback(false)}
     />
+
+    {/* Achievement Celebration - Show for newly unlocked achievements */}
+    {newAchievements && newAchievements.length > 0 && newAchievements.map((achievement, index) => (
+      <AchievementCelebration
+        key={achievement.id}
+        achievement={achievement}
+        onClose={() => {
+          // Achievement will auto-clear after 5 seconds from the hook
+          // This is just a manual close handler
+        }}
+        soundEnabled={true}
+      />
+    ))}
 
     {/* New Profile Modal */}
     {showNewProfileModal && (
