@@ -7,6 +7,7 @@ import AchievementCelebration from './components/AchievementCelebration';
 import NotificationSettings from './components/NotificationSettings';
 import SoundSelector from './components/SoundSelector';
 import ProgramTracker from './components/ProgramTracker';
+import InsightsPanel from './components/InsightsPanel';
 
 // New Audio Engine Imports
 import { getAudioEngine } from './audio-engine/TinniTuneAudioEngine';
@@ -1776,6 +1777,15 @@ backdropFilter: 'blur(10px)'
 
     {/* Notification Settings */}
     <NotificationSettings sessions={sessions} />
+
+    {/* AI Insights Panel - Compact View */}
+    {sessions.length > 0 && (
+      <InsightsPanel
+        sessions={sessions}
+        userStartDate={therapyGoals.createdAt || Date.now()}
+        compact={true}
+      />
+    )}
 
     {/* 8-Week Program Button */}
     <div style={{
