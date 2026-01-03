@@ -2222,6 +2222,23 @@ backdropFilter: 'blur(10px)'
         Continue
       </button>
       <button
+        onClick={() => setStep('history')}
+        style={{
+          background: 'rgba(78, 205, 196, 0.2)',
+          color: '#4ECDC4',
+          border: '2px solid #4ECDC4',
+          padding: '12px 24px',
+          fontSize: '14px',
+          borderRadius: '8px',
+          cursor: 'pointer',
+          fontWeight: 'bold',
+          flex: '1',
+          minWidth: '120px'
+        }}
+      >
+        📊 View History
+      </button>
+      <button
         onClick={() => {
           if (window.confirm('This will clear your saved settings and start fresh. Continue?')) {
             resetSettings();
@@ -2271,6 +2288,35 @@ WebkitTapHighlightColor: 'rgba(0,0,0,0)'
 }}
 >
 {profiles.length === 0 ? 'Create Profile' : 'Begin Setup'}
+</button>
+
+{/* View History/Stats Button - Always visible */}
+<button
+  onClick={() => setStep('history')}
+  style={{
+    background: 'rgba(78, 205, 196, 0.2)',
+    color: '#4ECDC4',
+    border: '2px solid #4ECDC4',
+    padding: '14px 36px',
+    fontSize: '16px',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    marginTop: '12px',
+    touchAction: 'manipulation',
+    WebkitTapHighlightColor: 'rgba(0,0,0,0)',
+    transition: 'all 0.2s'
+  }}
+  onMouseEnter={(e) => {
+    e.target.style.background = 'rgba(78, 205, 196, 0.3)';
+    e.target.style.transform = 'translateY(-2px)';
+  }}
+  onMouseLeave={(e) => {
+    e.target.style.background = 'rgba(78, 205, 196, 0.2)';
+    e.target.style.transform = 'translateY(0)';
+  }}
+>
+  📊 View Session History & Stats
 </button>
 
     {/* New Profile Modal */}
