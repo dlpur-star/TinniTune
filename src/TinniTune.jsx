@@ -4,6 +4,7 @@ import logo from './assets/logo.PNG';
 import TherapySetupWizard from './components/therapy/TherapySetupWizard';
 import FeedbackModal from './components/FeedbackModal';
 import AchievementCelebration from './components/AchievementCelebration';
+import NotificationSettings from './components/NotificationSettings';
 
 // New Audio Engine Imports
 import { getAudioEngine } from './audio-engine/TinniTuneAudioEngine';
@@ -1766,6 +1767,9 @@ backdropFilter: 'blur(10px)'
         </div>
       </div>
     )}
+
+    {/* Notification Settings */}
+    <NotificationSettings sessions={sessions} />
   </div>
 )}
 
