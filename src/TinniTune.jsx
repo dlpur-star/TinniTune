@@ -10,8 +10,10 @@ import ProgramTracker from './components/ProgramTracker';
 import InsightsPanel from './components/InsightsPanel';
 import QuickCheckIn, { QuickCheckInButton } from './components/QuickCheckIn';
 import OfflineIndicator from './components/OfflineIndicator';
+import SoundMixer from './components/SoundMixer';
 
 // New Audio Engine Imports
+import AmbientSoundGenerator from './audio-engine/AmbientSoundGenerator';
 import { getAudioEngine } from './audio-engine/TinniTuneAudioEngine';
 import { ThreeAFCTester } from './audio-engine/ThreeAFCTester';
 import { ClinicalTherapyModule } from './audio-engine/ClinicalTherapyModule';
@@ -115,6 +117,10 @@ const [showProgramTracker, setShowProgramTracker] = useState(false);
 const [showQuickCheckIn, setShowQuickCheckIn] = useState(false);
 const [emaCheckIns, setEmaCheckIns] = useState([]);
 
+// Sound mixer state
+const [showSoundMixer, setShowSoundMixer] = useState(false);
+const ambientGeneratorRef = useRef(null);
+
 // Profile management state
 const [showProfileManager, setShowProfileManager] = useState(false);
 const [showNewProfileModal, setShowNewProfileModal] = useState(false);
@@ -207,6 +213,27 @@ setEmaCheckIns(JSON.parse(savedCheckIns));
 } catch (error) {
 console.error('Error loading EMA check-ins:', error);
 }
+}, []);
+
+// Initialize ambient sound generator
+React.useEffect(() => {
+const initAmbient = async () => {
+if (!ambientGeneratorRef.current) {
+ambientGeneratorRef.current = new AmbientSoundGenerator();
+await ambientGeneratorRef.current.initialize();
+console.log('[TinniTune] Ambient sound generator initialized');
+}
+};
+
+initAmbient();
+
+// Cleanup on unmount
+return () => {
+if (ambientGeneratorRef.current) {
+ambientGeneratorRef.current.dispose();
+ambientGeneratorRef.current = null;
+}
+};
 }, []);
 
 // Load calibration progress from localStorage
@@ -2345,6 +2372,35 @@ WebkitTapHighlightColor: 'rgba(0,0,0,0)'
   }}
 >
   📊 View Session History & Stats
+</button>
+
+{/* Sound Mixer Button - Always visible */}
+<button
+  onClick={() => setShowSoundMixer(true)}
+  style={{
+    background: 'rgba(138, 43, 226, 0.2)',
+    color: '#A78BFA',
+    border: '2px solid #A78BFA',
+    padding: '14px 36px',
+    fontSize: '16px',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    marginTop: '12px',
+    touchAction: 'manipulation',
+    WebkitTapHighlightColor: 'rgba(0,0,0,0)',
+    transition: 'all 0.2s'
+  }}
+  onMouseEnter={(e) => {
+    e.target.style.background = 'rgba(138, 43, 226, 0.3)';
+    e.target.style.transform = 'translateY(-2px)';
+  }}
+  onMouseLeave={(e) => {
+    e.target.style.background = 'rgba(138, 43, 226, 0.2)';
+    e.target.style.transform = 'translateY(0)';
+  }}
+>
+  🎛️ Sound Mixer & Layering
 </button>
 
     {/* New Profile Modal */}
@@ -7108,6 +7164,23 @@ Great session! Help us track your progress by rating your tinnitus.
 
     {/* Offline Indicator */}
     <OfflineIndicator />
+
+    {/* Sound Mixer Modal */}
+    {showSoundMixer && (
+      <SoundMixer
+        ambientGenerator={ambientGeneratorRef.current}
+        therapyActive={isActive}
+        therapyVolume={mode === 'legacy' ? volumeLeft : -20}
+        onTherapyVolumeChange={(newVolume) => {
+          if (mode === 'legacy') {
+            setVolumeLeft(newVolume);
+            setVolumeRight(newVolume);
+            updateVolumes(newVolume, newVolume);
+          }
+        }}
+        onClose={() => setShowSoundMixer(false)}
+      />
+    )}
 
     {/* New Profile Modal */}
     {showNewProfileModal && (
