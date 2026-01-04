@@ -1411,7 +1411,7 @@ fontFamily: 'system-ui, sans-serif'
 width: '100%',
 maxWidth: '1200px',
 background: 'rgba(255, 255, 255, 0.1)',
-padding: '40px 20px',
+padding: '30px 15px',
 borderRadius: '20px',
 textAlign: 'center',
 backdropFilter: 'blur(10px)'
@@ -1488,7 +1488,7 @@ backdropFilter: 'blur(10px)'
     </p>
     <div style={{
       display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))',
       gap: '10px'
     }}>
       {userSettings.favorites.map(fav => (
@@ -1627,7 +1627,7 @@ backdropFilter: 'blur(10px)'
       {/* Compact Stats Grid */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(2, 1fr)',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))',
         gap: '8px',
         marginBottom: '12px',
         fontSize: '13px',
@@ -2008,7 +2008,7 @@ backdropFilter: 'blur(10px)'
             cursor: 'pointer',
             fontWeight: profile.id === activeProfileId ? 'bold' : 'normal',
             flex: '1',
-            minWidth: '100px'
+            minWidth: '80px'
           }}
         >
           {profile.name}
@@ -2098,7 +2098,7 @@ backdropFilter: 'blur(10px)'
           cursor: 'pointer',
           fontWeight: 'bold',
           flex: '1',
-          minWidth: '120px'
+          minWidth: '90px'
         }}
       >
         Continue
@@ -2115,7 +2115,7 @@ backdropFilter: 'blur(10px)'
           cursor: 'pointer',
           fontWeight: 'bold',
           flex: '1',
-          minWidth: '120px'
+          minWidth: '90px'
         }}
       >
         📊 View History
@@ -2137,7 +2137,7 @@ backdropFilter: 'blur(10px)'
           cursor: 'pointer',
           fontWeight: 'bold',
           flex: '1',
-          minWidth: '120px'
+          minWidth: '90px'
         }}
       >
         Reset & Recalibrate
