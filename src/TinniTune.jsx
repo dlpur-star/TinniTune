@@ -1411,7 +1411,7 @@ fontFamily: 'system-ui, sans-serif'
 width: '100%',
 maxWidth: '1200px',
 background: 'rgba(255, 255, 255, 0.1)',
-padding: '60px 40px',
+padding: '40px 20px',
 borderRadius: '20px',
 textAlign: 'center',
 backdropFilter: 'blur(10px)'
@@ -1457,349 +1457,319 @@ backdropFilter: 'blur(10px)'
   </div>
 </div>
 
-{/* Therapy Goals & Progress Section */}
-{goalsLoaded && sessions.length > 0 && (
+{/* Quick Access Favorites - MOVED TO TOP FOR PRIORITY */}
+{settingsLoaded && hasCalibration() && activeProfile && userSettings.favorites && userSettings.favorites.length > 0 && (
   <div style={{
-    marginBottom: '30px',
+    background: 'linear-gradient(135deg, rgba(252, 227, 138, 0.15), rgba(252, 227, 138, 0.08))',
+    padding: '20px',
+    borderRadius: '12px',
+    marginBottom: '20px',
+    border: '2px solid rgba(252, 227, 138, 0.4)',
     textAlign: 'left'
   }}>
-    <h2 style={{
-      color: '#4ECDC4',
-      fontSize: '20px',
-      fontWeight: '700',
-      marginBottom: '20px',
+    <h3 style={{
+      color: '#FCE38A',
+      margin: '0 0 15px 0',
+      fontSize: '18px',
+      fontWeight: 'bold',
       display: 'flex',
       alignItems: 'center',
       gap: '8px'
     }}>
-      🎯 Your Therapy Goals
-    </h2>
-
-    {/* Today's Progress */}
-    {(() => {
-      const todayProgress = getTodayProgress(sessions);
-      const progressPercent = Math.min(100, todayProgress.percentage);
-      const minutes = Math.floor(todayProgress.totalSeconds / 60);
-      const goalMinutes = Math.floor(todayProgress.goalSeconds / 60);
-
-      return (
-        <div style={{
-          background: 'linear-gradient(135deg, rgba(78, 205, 196, 0.15), rgba(78, 205, 196, 0.08))',
-          padding: '20px',
-          borderRadius: '12px',
-          marginBottom: '15px',
-          border: '1px solid rgba(78, 205, 196, 0.3)'
-        }}>
-          <div style={{
-            color: 'rgba(255,255,255,0.9)',
-            fontSize: '14px',
-            fontWeight: '600',
-            marginBottom: '10px'
-          }}>
-            Today's Progress
-          </div>
-
-          {/* Progress Bar */}
-          <div style={{
-            background: 'rgba(0,0,0,0.3)',
-            borderRadius: '10px',
-            height: '20px',
-            overflow: 'hidden',
-            marginBottom: '8px'
-          }}>
+      <span>⭐</span>
+      <span>Quick Start</span>
+    </h3>
+    <p style={{
+      color: 'rgba(255, 255, 255, 0.7)',
+      fontSize: '13px',
+      marginBottom: '15px'
+    }}>
+      Jump straight into therapy with your saved presets:
+    </p>
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+      gap: '10px'
+    }}>
+      {userSettings.favorites.map(fav => (
+        <div key={fav.id} style={{ position: 'relative' }}>
+          <button
+            onClick={() => {
+              loadFavorite(fav.id);
+              setActiveFavoriteId(fav.id);
+              setTimeout(async () => {
+                if (fav.calmMode?.enabled) {
+                  setHeartbeatBPM(fav.calmMode.heartbeatBPM || 55);
+                  setHeartbeatVolume(fav.calmMode.heartbeatVolume || -15);
+                  setIsCalmMode(true);
+                  setTimeout(async () => {
+                    await startCalmMode();
+                  }, 100);
+                } else {
+                  if (isCalmMode) {
+                    stopCalmMode();
+                  }
+                }
+              }, 150);
+              setStep('therapy');
+            }}
+            style={{
+              background: 'linear-gradient(135deg, rgba(252, 227, 138, 0.25), rgba(252, 227, 138, 0.15))',
+              border: '2px solid rgba(252, 227, 138, 0.5)',
+              borderRadius: '12px',
+              padding: '16px 12px',
+              color: 'white',
+              fontSize: '14px',
+              fontWeight: '700',
+              cursor: 'pointer',
+              touchAction: 'manipulation',
+              textAlign: 'center',
+              transition: 'all 0.2s',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '6px',
+              alignItems: 'center',
+              width: '100%'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(252, 227, 138, 0.35), rgba(252, 227, 138, 0.25))';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(252, 227, 138, 0.25), rgba(252, 227, 138, 0.15))';
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
+          >
+            <div style={{ fontSize: '24px' }}>
+              {fav.mode === 'daytime' ? '☀️' : fav.mode === 'evening' ? '🌆' : '🌙'}
+            </div>
+            <div>{fav.name}</div>
             <div style={{
-              background: todayProgress.goalMet
-                ? 'linear-gradient(90deg, #4ECDC4, #44B3AA)'
-                : 'linear-gradient(90deg, #FFB74D, #FFA726)',
-              height: '100%',
-              width: `${progressPercent}%`,
-              transition: 'width 0.5s ease',
-              borderRadius: '10px'
-            }} />
-          </div>
-
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}>
-            <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '13px' }}>
-              {minutes} min / {goalMinutes} min
-            </span>
-            <span style={{ color: '#4ECDC4', fontSize: '13px', fontWeight: '600' }}>
-              {progressPercent.toFixed(0)}%
-            </span>
-          </div>
-
-          {/* Encouragement Message */}
-          <div style={{
-            marginTop: '10px',
-            color: 'rgba(255,255,255,0.8)',
-            fontSize: '12px',
-            fontStyle: 'italic'
-          }}>
-            {getDailyEncouragementMessage(minutes, goalMinutes)}
-          </div>
-
-          {/* Clinical guidance */}
-          {minutes > 0 && minutes < 30 && (
-            <div style={{
-              marginTop: '8px',
-              padding: '8px 12px',
-              background: 'rgba(255, 183, 77, 0.15)',
-              borderRadius: '8px',
-              border: '1px solid rgba(255, 183, 77, 0.3)',
-              color: 'rgba(255, 183, 77, 0.9)',
-              fontSize: '11px'
+              fontSize: '11px',
+              opacity: 0.7,
+              fontWeight: '500'
             }}>
-              💡 Research shows 2-3 hours daily provides the greatest relief
+              {fav.mode.charAt(0).toUpperCase() + fav.mode.slice(1)} • {fav.notchEnabled ? 'Notch ON' : 'No Notch'}
             </div>
-          )}
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (window.confirm(`Delete "${fav.name}"?`)) {
+                deleteFavorite(fav.id);
+              }
+            }}
+            style={{
+              position: 'absolute',
+              top: '6px',
+              right: '6px',
+              background: 'rgba(255, 107, 107, 0.9)',
+              border: 'none',
+              borderRadius: '50%',
+              width: '24px',
+              height: '24px',
+              color: 'white',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              touchAction: 'manipulation',
+              zIndex: 10,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 107, 107, 1)';
+              e.currentTarget.style.transform = 'scale(1.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 107, 107, 0.9)';
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+          >
+            ×
+          </button>
         </div>
-      );
-    })()}
+      ))}
+    </div>
+  </div>
+)}
 
-    {/* This Week */}
-    {(() => {
-      const weekProgress = getWeekProgress(sessions);
+{/* Compact Progress Card - Condensed from 270+ lines */}
+{goalsLoaded && sessions.length > 0 && (() => {
+  const todayProgress = getTodayProgress(sessions);
+  const weekProgress = getWeekProgress(sessions);
+  const stage = getHabituationStage();
+  const progressPercent = Math.min(100, todayProgress.percentage);
 
-      return (
+  return (
+    <div style={{
+      background: 'linear-gradient(135deg, rgba(78, 205, 196, 0.15), rgba(102, 126, 234, 0.08))',
+      padding: '16px',
+      borderRadius: '12px',
+      marginBottom: '20px',
+      border: '1px solid rgba(78, 205, 196, 0.3)',
+      textAlign: 'left'
+    }}>
+      <h3 style={{
+        color: '#4ECDC4',
+        fontSize: '16px',
+        fontWeight: '700',
+        margin: '0 0 12px 0',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px'
+      }}>
+        📊 This Week
+      </h3>
+
+      {/* Compact Stats Grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(2, 1fr)',
+        gap: '8px',
+        marginBottom: '12px',
+        fontSize: '13px',
+        color: 'rgba(255,255,255,0.9)'
+      }}>
+        <div>
+          <span style={{ opacity: 0.7 }}>Days:</span> <strong>{weekProgress.daysActive}/7</strong>
+        </div>
+        <div>
+          <span style={{ opacity: 0.7 }}>Hours:</span> <strong>{Math.floor(weekProgress.totalSeconds / 3600)}</strong>
+        </div>
+      </div>
+
+      {/* Simple Progress Bar */}
+      <div style={{
+        background: 'rgba(0,0,0,0.3)',
+        borderRadius: '8px',
+        height: '6px',
+        overflow: 'hidden',
+        marginBottom: '8px'
+      }}>
         <div style={{
-          background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(102, 126, 234, 0.08))',
-          padding: '20px',
-          borderRadius: '12px',
-          marginBottom: '15px',
-          border: '1px solid rgba(102, 126, 234, 0.3)'
-        }}>
-          <div style={{
-            color: 'rgba(255,255,255,0.9)',
-            fontSize: '14px',
-            fontWeight: '600',
-            marginBottom: '10px'
-          }}>
-            This Week
-          </div>
+          background: 'linear-gradient(90deg, #4ECDC4, #667eea)',
+          height: '100%',
+          width: `${progressPercent}%`,
+          transition: 'width 0.5s ease',
+          borderRadius: '8px'
+        }} />
+      </div>
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '10px',
-            fontSize: '13px'
-          }}>
-            <div style={{ color: 'rgba(255,255,255,0.7)' }}>
-              • {weekProgress.daysActive}/7 days active
-            </div>
-            <div style={{ color: 'rgba(255,255,255,0.7)' }}>
-              • {Math.floor(weekProgress.totalSeconds / 3600)} hours total
-            </div>
-          </div>
+      {/* Compact Info Row */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        fontSize: '12px',
+        color: 'rgba(255,255,255,0.8)'
+      }}>
+        <span>{Math.floor(todayProgress.totalSeconds / 60)} / {Math.floor(todayProgress.goalSeconds / 60)} min today</span>
+        {therapyGoals.currentStreak > 0 && (
+          <span style={{ color: '#FFB74D', fontWeight: '600' }}>
+            🔥 {therapyGoals.currentStreak}-day streak
+          </span>
+        )}
+      </div>
 
-          {therapyGoals.currentStreak > 0 && (
+      {/* Habituation Stage (Compact) */}
+      {stage.stage > 0 && (() => {
+        const monthsElapsed = therapyGoals.therapyStartDate
+          ? Math.floor((Date.now() - new Date(therapyGoals.therapyStartDate)) / (1000 * 60 * 60 * 24 * 30))
+          : 0;
+
+        return (
+          <div style={{
+            marginTop: '12px',
+            paddingTop: '12px',
+            borderTop: '1px solid rgba(255,255,255,0.1)'
+          }}>
             <div style={{
-              marginTop: '10px',
-              color: '#FFB74D',
-              fontSize: '13px',
-              fontWeight: '600'
+              fontSize: '12px',
+              color: 'rgba(255,255,255,0.9)',
+              marginBottom: '6px'
             }}>
-              🔥 {therapyGoals.currentStreak}-day streak!
+              {stage.emoji} <strong>{stage.name}</strong> • Month {monthsElapsed + 1}
             </div>
-          )}
-        </div>
-      );
-    })()}
-
-    {/* Habituation Journey */}
-    {(() => {
-      const stage = getHabituationStage();
-      const monthsElapsed = therapyGoals.therapyStartDate
-        ? Math.floor((Date.now() - new Date(therapyGoals.therapyStartDate)) / (1000 * 60 * 60 * 24 * 30))
-        : 0;
-
-      if (stage.stage === 0) return null; // Don't show if therapy hasn't started
-
-      return (
-        <div style={{
-          background: 'linear-gradient(135deg, rgba(240, 147, 251, 0.15), rgba(240, 147, 251, 0.08))',
-          padding: '20px',
-          borderRadius: '12px',
-          marginBottom: '15px',
-          border: '1px solid rgba(240, 147, 251, 0.3)'
-        }}>
-          <div style={{
-            color: 'rgba(255,255,255,0.9)',
-            fontSize: '14px',
-            fontWeight: '600',
-            marginBottom: '8px'
-          }}>
-            {stage.emoji} Habituation Journey
-          </div>
-
-          <div style={{
-            color: 'rgba(255,255,255,0.8)',
-            fontSize: '13px',
-            marginBottom: '10px'
-          }}>
-            {stage.name} • Month {monthsElapsed + 1}
-          </div>
-
-          {/* Progress Bar for Current Stage */}
-          <div style={{
-            background: 'rgba(0,0,0,0.3)',
-            borderRadius: '10px',
-            height: '8px',
-            overflow: 'hidden',
-            marginBottom: '8px'
-          }}>
             <div style={{
-              background: 'linear-gradient(90deg, #f093fb, #f5576c)',
-              height: '100%',
-              width: `${(monthsElapsed / 12) * 100}%`,
-              borderRadius: '10px'
-            }} />
-          </div>
-
-          <div style={{
-            color: 'rgba(255,255,255,0.7)',
-            fontSize: '12px',
-            fontStyle: 'italic'
-          }}>
-            {stage.message}
-          </div>
-        </div>
-      );
-    })()}
-
-    {/* Progress Trends */}
-    {(() => {
-      const trends = getProgressTrends(sessions);
-
-      if (!trends) return null;
-
-      return (
-        <div style={{
-          background: 'linear-gradient(135deg, rgba(252, 227, 138, 0.15), rgba(252, 227, 138, 0.08))',
-          padding: '20px',
-          borderRadius: '12px',
-          border: '1px solid rgba(252, 227, 138, 0.3)'
-        }}>
-          <div style={{
-            color: 'rgba(255,255,255,0.9)',
-            fontSize: '14px',
-            fontWeight: '600',
-            marginBottom: '10px'
-          }}>
-            Recent Progress
-          </div>
-
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '10px',
-            fontSize: '13px',
-            color: 'rgba(255,255,255,0.8)'
-          }}>
-            <div>
-              Loudness: {trends.loudness.earlier.toFixed(1)} → {trends.loudness.recent.toFixed(1)}
-              <span style={{
-                color: trends.loudness.improving ? '#4ECDC4' : '#FFB74D',
-                marginLeft: '5px'
-              }}>
-                ({trends.loudness.change > 0 ? '-' : '+'}{Math.abs(trends.loudness.change).toFixed(0)}%)
-              </span>
-            </div>
-            <div>
-              Distress: {trends.distress.earlier.toFixed(1)} → {trends.distress.recent.toFixed(1)}
-              <span style={{
-                color: trends.distress.improving ? '#4ECDC4' : '#FFB74D',
-                marginLeft: '5px'
-              }}>
-                ({trends.distress.change > 0 ? '-' : '+'}{Math.abs(trends.distress.change).toFixed(0)}%)
-              </span>
+              background: 'rgba(0,0,0,0.3)',
+              borderRadius: '6px',
+              height: '4px',
+              overflow: 'hidden'
+            }}>
+              <div style={{
+                background: 'linear-gradient(90deg, #f093fb, #f5576c)',
+                height: '100%',
+                width: `${Math.min(100, (monthsElapsed / 12) * 100)}%`,
+                borderRadius: '6px'
+              }} />
             </div>
           </div>
+        );
+      })()}
+    </div>
+  );
+})()}
 
-          <div style={{
-            marginTop: '8px',
-            color: trends.loudness.improving || trends.distress.improving ? '#4ECDC4' : '#FFB74D',
-            fontSize: '12px',
-            fontWeight: '600'
-          }}>
-            {trends.loudness.improving || trends.distress.improving ? '↓ Improving trend' : '→ Tracking progress'}
-          </div>
-        </div>
-      );
-    })()}
-
-    {/* Achievement Showcase */}
-    {therapyGoalsHook.achievements && (
+    {/* Achievement Preview - Compact (Show first 3 only) */}
+    {therapyGoalsHook.achievements && therapyGoalsHook.achievements.length > 0 && (
       <div style={{
         background: 'linear-gradient(135deg, rgba(252, 206, 138, 0.15), rgba(252, 206, 138, 0.08))',
-        padding: '20px',
+        padding: '16px',
         borderRadius: '12px',
-        marginTop: '15px',
-        border: '1px solid rgba(252, 206, 138, 0.3)'
+        marginBottom: '20px',
+        border: '1px solid rgba(252, 206, 138, 0.3)',
+        textAlign: 'left'
       }}>
         <div style={{
           color: 'rgba(255,255,255,0.9)',
           fontSize: '14px',
           fontWeight: '600',
-          marginBottom: '12px',
+          marginBottom: '10px',
           display: 'flex',
           alignItems: 'center',
-          gap: '8px'
+          justifyContent: 'space-between'
         }}>
-          🏆 Your Achievements
+          <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            🏆 Achievements
+          </span>
+          <span style={{ fontSize: '11px', opacity: 0.7 }}>
+            {therapyGoals.achievements.length}/{therapyGoalsHook.achievements.length}
+          </span>
         </div>
 
-        {/* Achievement Grid */}
+        {/* Show first 3 achievements only */}
         <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))',
-          gap: '12px'
+          display: 'flex',
+          gap: '8px',
+          justifyContent: 'center'
         }}>
-          {therapyGoalsHook.achievements.map(achievement => {
+          {therapyGoalsHook.achievements.slice(0, 3).map(achievement => {
             const isUnlocked = therapyGoals.achievements.some(a => a.id === achievement.id);
-
             return (
               <div
                 key={achievement.id}
                 title={isUnlocked ? `${achievement.name}: ${achievement.description}` : '🔒 Locked'}
                 style={{
-                  background: isUnlocked
-                    ? 'rgba(78, 205, 196, 0.2)'
-                    : 'rgba(0, 0, 0, 0.3)',
-                  padding: '12px 8px',
-                  borderRadius: '12px',
-                  border: isUnlocked
-                    ? '2px solid rgba(78, 205, 196, 0.4)'
-                    : '1px solid rgba(255, 255, 255, 0.1)',
+                  flex: 1,
+                  background: isUnlocked ? 'rgba(78, 205, 196, 0.2)' : 'rgba(0, 0, 0, 0.3)',
+                  padding: '10px',
+                  borderRadius: '10px',
+                  border: isUnlocked ? '2px solid rgba(78, 205, 196, 0.4)' : '1px solid rgba(255, 255, 255, 0.1)',
                   textAlign: 'center',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s ease',
                   opacity: isUnlocked ? 1 : 0.4
                 }}
-                onMouseEnter={(e) => {
-                  if (isUnlocked) {
-                    e.currentTarget.style.transform = 'translateY(-4px)';
-                    e.currentTarget.style.boxShadow = '0 6px 16px rgba(78, 205, 196, 0.3)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = 'none';
-                }}
               >
-                <div style={{
-                  fontSize: '32px',
-                  marginBottom: '4px'
-                }}>
+                <div style={{ fontSize: '28px' }}>
                   {isUnlocked ? achievement.emoji : '🔒'}
                 </div>
                 <div style={{
                   color: isUnlocked ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.4)',
-                  fontSize: '10px',
+                  fontSize: '9px',
                   fontWeight: '600',
-                  lineHeight: '1.2'
+                  marginTop: '4px'
                 }}>
                   {achievement.name.split(' ')[0]}
                 </div>
@@ -1808,15 +1778,18 @@ backdropFilter: 'blur(10px)'
           })}
         </div>
 
-        {/* Achievement stats */}
-        <div style={{
-          marginTop: '12px',
-          textAlign: 'center',
-          color: 'rgba(255,255,255,0.7)',
-          fontSize: '12px'
-        }}>
-          {therapyGoals.achievements.length} / {therapyGoalsHook.achievements.length} unlocked
-        </div>
+        {therapyGoalsHook.achievements.length > 3 && (
+          <div style={{
+            marginTop: '8px',
+            textAlign: 'center',
+            fontSize: '11px',
+            color: 'rgba(255,255,255,0.6)',
+            cursor: 'pointer'
+          }}
+          onClick={() => setShowProgramTracker(true)}>
+            View all achievements →
+          </div>
+        )}
       </div>
     )}
 
@@ -2062,152 +2035,6 @@ backdropFilter: 'blur(10px)'
   </div>
 )}
 
-{/* Quick Access Favorites - Show if user has calibration and favorites */}
-{settingsLoaded && hasCalibration() && activeProfile && userSettings.favorites && userSettings.favorites.length > 0 && (
-  <div style={{
-    background: 'linear-gradient(135deg, rgba(252, 227, 138, 0.15), rgba(252, 227, 138, 0.08))',
-    padding: '20px',
-    borderRadius: '12px',
-    marginBottom: '20px',
-    border: '2px solid rgba(252, 227, 138, 0.4)',
-    textAlign: 'left'
-  }}>
-    <h3 style={{
-      color: '#FCE38A',
-      margin: '0 0 15px 0',
-      fontSize: '18px',
-      fontWeight: 'bold',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px'
-    }}>
-      <span>⭐</span>
-      <span>Quick Start</span>
-    </h3>
-    <p style={{
-      color: 'rgba(255, 255, 255, 0.7)',
-      fontSize: '13px',
-      marginBottom: '15px'
-    }}>
-      Jump straight into therapy with your saved presets:
-    </p>
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-      gap: '10px'
-    }}>
-      {userSettings.favorites.map(fav => (
-        <div key={fav.id} style={{ position: 'relative' }}>
-          <button
-            onClick={() => {
-              loadFavorite(fav.id);
-              setActiveFavoriteId(fav.id); // Track which favorite is loaded
-
-              // Handle calm mode based on favorite settings
-              setTimeout(async () => {
-                if (fav.calmMode?.enabled) {
-                  // This favorite has calm mode enabled - apply settings and start it
-                  // Explicitly set calm mode values from favorite before starting
-                  setHeartbeatBPM(fav.calmMode.heartbeatBPM || 55);
-                  setHeartbeatVolume(fav.calmMode.heartbeatVolume || -15);
-                  setIsCalmMode(true);
-
-                  // Wait for state updates to propagate, then start calm mode
-                  setTimeout(async () => {
-                    await startCalmMode();
-                  }, 100);
-                } else {
-                  // This favorite doesn't have calm mode - stop it if running
-                  if (isCalmMode) {
-                    stopCalmMode();
-                  }
-                }
-              }, 150); // Delay to allow state updates from loadFavorite
-
-              setStep('therapy');
-            }}
-            style={{
-              background: 'linear-gradient(135deg, rgba(252, 227, 138, 0.25), rgba(252, 227, 138, 0.15))',
-              border: '2px solid rgba(252, 227, 138, 0.5)',
-              borderRadius: '12px',
-              padding: '16px 12px',
-              color: 'white',
-              fontSize: '14px',
-              fontWeight: '700',
-              cursor: 'pointer',
-              touchAction: 'manipulation',
-              textAlign: 'center',
-              transition: 'all 0.2s',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '6px',
-              alignItems: 'center',
-              width: '100%'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(252, 227, 138, 0.35), rgba(252, 227, 138, 0.25))';
-              e.currentTarget.style.transform = 'translateY(-2px)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'linear-gradient(135deg, rgba(252, 227, 138, 0.25), rgba(252, 227, 138, 0.15))';
-              e.currentTarget.style.transform = 'translateY(0)';
-            }}
-          >
-            <div style={{ fontSize: '24px' }}>
-              {fav.mode === 'daytime' ? '☀️' : fav.mode === 'evening' ? '🌆' : '🌙'}
-            </div>
-            <div>{fav.name}</div>
-            <div style={{
-              fontSize: '11px',
-              opacity: 0.7,
-              fontWeight: '500'
-            }}>
-              {fav.mode.charAt(0).toUpperCase() + fav.mode.slice(1)} • {fav.notchEnabled ? 'Notch ON' : 'No Notch'}
-            </div>
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (window.confirm(`Delete "${fav.name}"?`)) {
-                deleteFavorite(fav.id);
-              }
-            }}
-            style={{
-              position: 'absolute',
-              top: '6px',
-              right: '6px',
-              background: 'rgba(255, 107, 107, 0.9)',
-              border: 'none',
-              borderRadius: '50%',
-              width: '24px',
-              height: '24px',
-              color: 'white',
-              fontSize: '14px',
-              fontWeight: 'bold',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              touchAction: 'manipulation',
-              zIndex: 10,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 107, 107, 1)';
-              e.currentTarget.style.transform = 'scale(1.1)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 107, 107, 0.9)';
-              e.currentTarget.style.transform = 'scale(1)';
-            }}
-          >
-            ×
-          </button>
-        </div>
-      ))}
-    </div>
-  </div>
-)}
 
 {/* Saved Settings Display */}
 {settingsLoaded && hasCalibration() && activeProfile && (
@@ -2345,363 +2172,371 @@ WebkitTapHighlightColor: 'rgba(0,0,0,0)'
 {profiles.length === 0 ? 'Create Profile' : 'Begin Setup'}
 </button>
 
-{/* View History/Stats Button - Always visible */}
-<button
-  onClick={() => setStep('history')}
-  style={{
-    background: 'rgba(78, 205, 196, 0.2)',
-    color: '#4ECDC4',
-    border: '2px solid #4ECDC4',
-    padding: '14px 36px',
-    fontSize: '16px',
-    borderRadius: '12px',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-    marginTop: '12px',
-    touchAction: 'manipulation',
-    WebkitTapHighlightColor: 'rgba(0,0,0,0)',
-    transition: 'all 0.2s'
-  }}
-  onMouseEnter={(e) => {
-    e.target.style.background = 'rgba(78, 205, 196, 0.3)';
-    e.target.style.transform = 'translateY(-2px)';
-  }}
-  onMouseLeave={(e) => {
-    e.target.style.background = 'rgba(78, 205, 196, 0.2)';
-    e.target.style.transform = 'translateY(0)';
-  }}
->
-  📊 View Session History & Stats
-</button>
+{/* Secondary Action Buttons - Horizontal Row */}
+<div style={{
+  display: 'flex',
+  gap: '10px',
+  marginTop: '12px',
+  flexWrap: 'wrap'
+}}>
+  <button
+    onClick={() => setStep('history')}
+    style={{
+      flex: 1,
+      minWidth: '140px',
+      background: 'rgba(78, 205, 196, 0.2)',
+      color: '#4ECDC4',
+      border: '2px solid #4ECDC4',
+      padding: '12px 20px',
+      fontSize: '14px',
+      borderRadius: '10px',
+      cursor: 'pointer',
+      fontWeight: 'bold',
+      touchAction: 'manipulation',
+      WebkitTapHighlightColor: 'rgba(0,0,0,0)',
+      transition: 'all 0.2s'
+    }}
+    onMouseEnter={(e) => {
+      e.target.style.background = 'rgba(78, 205, 196, 0.3)';
+      e.target.style.transform = 'translateY(-2px)';
+    }}
+    onMouseLeave={(e) => {
+      e.target.style.background = 'rgba(78, 205, 196, 0.2)';
+      e.target.style.transform = 'translateY(0)';
+    }}
+  >
+    📊 History
+  </button>
 
-{/* Sound Mixer Button - Always visible */}
-<button
-  onClick={() => setShowSoundMixer(true)}
-  style={{
-    background: 'rgba(138, 43, 226, 0.2)',
-    color: '#A78BFA',
-    border: '2px solid #A78BFA',
-    padding: '14px 36px',
-    fontSize: '16px',
-    borderRadius: '12px',
-    cursor: 'pointer',
-    fontWeight: 'bold',
-    marginTop: '12px',
-    touchAction: 'manipulation',
-    WebkitTapHighlightColor: 'rgba(0,0,0,0)',
-    transition: 'all 0.2s'
-  }}
-  onMouseEnter={(e) => {
-    e.target.style.background = 'rgba(138, 43, 226, 0.3)';
-    e.target.style.transform = 'translateY(-2px)';
-  }}
-  onMouseLeave={(e) => {
-    e.target.style.background = 'rgba(138, 43, 226, 0.2)';
-    e.target.style.transform = 'translateY(0)';
-  }}
->
-  🎛️ Sound Mixer & Layering
-</button>
-
-    {/* New Profile Modal */}
-    {showNewProfileModal && (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'rgba(0, 0, 0, 0.8)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 10000,
-        padding: '20px'
-      }}>
-        <div style={{
-          background: 'linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%)',
-          padding: '30px',
-          borderRadius: '16px',
-          maxWidth: '400px',
-          width: '100%',
-          border: '2px solid #667eea'
-        }}>
-          <h3 style={{
-            color: 'white',
-            margin: '0 0 20px 0',
-            fontSize: '24px'
-          }}>
-            Create New Profile
-          </h3>
-          <p style={{
-            color: 'rgba(255, 255, 255, 0.7)',
-            fontSize: '14px',
-            marginBottom: '20px'
-          }}>
-            Enter a name for this user profile. Each profile stores its own calibration and preferences.
-          </p>
-          <input
-            type="text"
-            value={newProfileName}
-            onChange={(e) => setNewProfileName(e.target.value)}
-            placeholder="e.g., John, Mom, Dad"
-            maxLength={20}
-            autoFocus
-            style={{
-              width: '100%',
-              padding: '12px',
-              fontSize: '16px',
-              borderRadius: '8px',
-              border: '2px solid rgba(255, 255, 255, 0.2)',
-              background: 'rgba(255, 255, 255, 0.1)',
-              color: 'white',
-              marginBottom: '20px',
-              boxSizing: 'border-box'
-            }}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter' && newProfileName.trim()) {
-                const wasFirstProfile = profiles.length === 0;
-                const profile = createProfile(newProfileName);
-                setNewProfileName('');
-                setShowNewProfileModal(false);
-                if (wasFirstProfile) {
-                  setStep('setup');
-                }
-              }
-            }}
-          />
-          <div style={{
-            display: 'flex',
-            gap: '10px'
-          }}>
-            <button
-              onClick={() => {
-                setShowNewProfileModal(false);
-                setNewProfileName('');
-              }}
-              style={{
-                flex: 1,
-                padding: '12px',
-                fontSize: '16px',
-                borderRadius: '8px',
-                border: '2px solid rgba(255, 255, 255, 0.2)',
-                background: 'transparent',
-                color: 'white',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-                touchAction: 'manipulation'
-              }}
-            >
-              Cancel
-            </button>
-            <button
-              onClick={() => {
-                if (newProfileName.trim()) {
-                  const wasFirstProfile = profiles.length === 0;
-                  const profile = createProfile(newProfileName);
-                  setNewProfileName('');
-                  setShowNewProfileModal(false);
-                  if (wasFirstProfile) {
-                    setStep('setup');
-                  }
-                }
-              }}
-              disabled={!newProfileName.trim()}
-              style={{
-                flex: 1,
-                padding: '12px',
-                fontSize: '16px',
-                borderRadius: '8px',
-                border: 'none',
-                background: newProfileName.trim()
-                  ? 'linear-gradient(135deg, #667eea, #764ba2)'
-                  : 'rgba(255, 255, 255, 0.1)',
-                color: 'white',
-                cursor: newProfileName.trim() ? 'pointer' : 'not-allowed',
-                fontWeight: 'bold',
-                opacity: newProfileName.trim() ? 1 : 0.5,
-                touchAction: 'manipulation',
-                WebkitTapHighlightColor: 'rgba(0,0,0,0)'
-              }}
-            >
-              Create
-            </button>
-          </div>
-        </div>
-      </div>
-    )}
-
-    {/* Profile Manager Modal */}
-    {showProfileManager && (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        background: 'rgba(0, 0, 0, 0.8)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 10000,
-        padding: '20px'
-      }}>
-        <div style={{
-          background: 'linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%)',
-          padding: '30px',
-          borderRadius: '16px',
-          maxWidth: '500px',
-          width: '100%',
-          border: '2px solid #667eea',
-          maxHeight: '80vh',
-          overflowY: 'auto'
-        }}>
-          <h3 style={{
-            color: 'white',
-            margin: '0 0 20px 0',
-            fontSize: '24px'
-          }}>
-            Manage Profiles
-          </h3>
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '10px',
-            marginBottom: '20px'
-          }}>
-            {profiles.map(profile => (
-              <div
-                key={profile.id}
-                style={{
-                  background: profile.id === activeProfileId
-                    ? 'rgba(102, 126, 234, 0.2)'
-                    : 'rgba(255, 255, 255, 0.05)',
-                  padding: '15px',
-                  borderRadius: '12px',
-                  border: profile.id === activeProfileId
-                    ? '2px solid #667eea'
-                    : '1px solid rgba(255, 255, 255, 0.1)',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}
-              >
-                <div>
-                  <div style={{
-                    color: 'white',
-                    fontSize: '16px',
-                    fontWeight: 'bold',
-                    marginBottom: '5px'
-                  }}>
-                    {profile.name}
-                    {profile.id === activeProfileId && (
-                      <span style={{
-                        marginLeft: '10px',
-                        fontSize: '12px',
-                        color: '#4ECDC4',
-                        fontWeight: 'normal'
-                      }}>
-                        (Active)
-                      </span>
-                    )}
-                  </div>
-                  <div style={{
-                    color: 'rgba(255, 255, 255, 0.5)',
-                    fontSize: '12px'
-                  }}>
-                    Created: {new Date(profile.createdAt).toLocaleDateString()}
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: '5px' }}>
-                  {profile.id !== activeProfileId && (
-                    <button
-                      onClick={() => {
-                        switchProfile(profile.id);
-                      }}
-                      style={{
-                        padding: '6px 12px',
-                        fontSize: '12px',
-                        borderRadius: '6px',
-                        border: '1px solid #4ECDC4',
-                        background: 'rgba(78, 205, 196, 0.2)',
-                        color: '#4ECDC4',
-                        cursor: 'pointer',
-                        fontWeight: 'bold',
-                        touchAction: 'manipulation'
-                      }}
-                    >
-                      Switch
-                    </button>
-                  )}
-                  {profiles.length > 1 && (
-                    <button
-                      onClick={() => {
-                        if (window.confirm(`Delete profile "${profile.name}"? This will permanently remove all their calibration data.`)) {
-                          deleteProfile(profile.id);
-                        }
-                      }}
-                      style={{
-                        padding: '6px 12px',
-                        fontSize: '12px',
-                        borderRadius: '6px',
-                        border: '1px solid #ff6b6b',
-                        background: 'rgba(255, 107, 107, 0.2)',
-                        color: '#ff6b6b',
-                        cursor: 'pointer',
-                        fontWeight: 'bold',
-                        touchAction: 'manipulation'
-                      }}
-                    >
-                      Delete
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-          <button
-            onClick={() => {
-              setShowProfileManager(false);
-              setShowNewProfileModal(true);
-            }}
-            style={{
-              width: '100%',
-              padding: '12px',
-              fontSize: '16px',
-              borderRadius: '8px',
-              border: '2px dashed #667eea',
-              background: 'transparent',
-              color: '#667eea',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              marginBottom: '10px',
-              touchAction: 'manipulation'
-            }}
-          >
-            + Add New Profile
-          </button>
-          <button
-            onClick={() => setShowProfileManager(false)}
-            style={{
-              width: '100%',
-              padding: '12px',
-              fontSize: '16px',
-              borderRadius: '8px',
-              border: '2px solid rgba(255, 255, 255, 0.2)',
-              background: 'transparent',
-              color: 'white',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-              touchAction: 'manipulation'
-            }}
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    )}
-
+  <button
+    onClick={() => setShowSoundMixer(true)}
+    style={{
+      flex: 1,
+      minWidth: '140px',
+      background: 'rgba(138, 43, 226, 0.2)',
+      color: '#A78BFA',
+      border: '2px solid #A78BFA',
+      padding: '12px 20px',
+      fontSize: '14px',
+      borderRadius: '10px',
+      cursor: 'pointer',
+      fontWeight: 'bold',
+      touchAction: 'manipulation',
+      WebkitTapHighlightColor: 'rgba(0,0,0,0)',
+      transition: 'all 0.2s'
+    }}
+    onMouseEnter={(e) => {
+      e.target.style.background = 'rgba(138, 43, 226, 0.3)';
+      e.target.style.transform = 'translateY(-2px)';
+    }}
+    onMouseLeave={(e) => {
+      e.target.style.background = 'rgba(138, 43, 226, 0.2)';
+      e.target.style.transform = 'translateY(0)';
+    }}
+  >
+    🎛️ Mixer
+  </button>
 </div>
+
+
+{/* New Profile Modal */}
+{showNewProfileModal && (
+  <div style={{
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'rgba(0, 0, 0, 0.8)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10000,
+    padding: '20px'
+  }}>
+    <div style={{
+      background: 'linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%)',
+      padding: '30px',
+      borderRadius: '16px',
+      maxWidth: '400px',
+      width: '100%',
+      border: '2px solid #667eea'
+    }}>
+      <h3 style={{
+        color: 'white',
+        margin: '0 0 20px 0',
+        fontSize: '24px'
+      }}>
+        Create New Profile
+      </h3>
+      <p style={{
+        color: 'rgba(255, 255, 255, 0.7)',
+        fontSize: '14px',
+        marginBottom: '20px'
+      }}>
+        Enter a name for this user profile. Each profile stores its own calibration and preferences.
+      </p>
+      <input
+        type="text"
+        value={newProfileName}
+        onChange={(e) => setNewProfileName(e.target.value)}
+        placeholder="e.g., John, Mom, Dad"
+        maxLength={20}
+        autoFocus
+        style={{
+          width: '100%',
+          padding: '12px',
+          fontSize: '16px',
+          borderRadius: '8px',
+          border: '2px solid rgba(255, 255, 255, 0.2)',
+          background: 'rgba(255, 255, 255, 0.1)',
+          color: 'white',
+          marginBottom: '20px',
+          boxSizing: 'border-box'
+        }}
+        onKeyPress={(e) => {
+          if (e.key === 'Enter' && newProfileName.trim()) {
+            const wasFirstProfile = profiles.length === 0;
+            const profile = createProfile(newProfileName);
+            setNewProfileName('');
+            setShowNewProfileModal(false);
+            if (wasFirstProfile) {
+              setStep('setup');
+            }
+          }
+        }}
+      />
+      <div style={{
+        display: 'flex',
+        gap: '10px'
+      }}>
+        <button
+          onClick={() => {
+            setShowNewProfileModal(false);
+            setNewProfileName('');
+          }}
+          style={{
+            flex: 1,
+            padding: '12px',
+            fontSize: '16px',
+            borderRadius: '8px',
+            border: '2px solid rgba(255, 255, 255, 0.2)',
+            background: 'transparent',
+            color: 'white',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            touchAction: 'manipulation'
+          }}
+        >
+          Cancel
+        </button>
+        <button
+          onClick={() => {
+            if (newProfileName.trim()) {
+              const wasFirstProfile = profiles.length === 0;
+              const profile = createProfile(newProfileName);
+              setNewProfileName('');
+              setShowNewProfileModal(false);
+              if (wasFirstProfile) {
+                setStep('setup');
+              }
+            }
+          }}
+          disabled={!newProfileName.trim()}
+          style={{
+            flex: 1,
+            padding: '12px',
+            fontSize: '16px',
+            borderRadius: '8px',
+            border: 'none',
+            background: newProfileName.trim()
+              ? 'linear-gradient(135deg, #667eea, #764ba2)'
+              : 'rgba(255, 255, 255, 0.1)',
+            color: 'white',
+            cursor: newProfileName.trim() ? 'pointer' : 'not-allowed',
+            fontWeight: 'bold',
+            opacity: newProfileName.trim() ? 1 : 0.5,
+            touchAction: 'manipulation',
+            WebkitTapHighlightColor: 'rgba(0,0,0,0)'
+          }}
+        >
+          Create
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+{/* Profile Manager Modal */}
+{showProfileManager && (
+  <div style={{
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'rgba(0, 0, 0, 0.8)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10000,
+    padding: '20px'
+  }}>
+    <div style={{
+      background: 'linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%)',
+      padding: '30px',
+      borderRadius: '16px',
+      maxWidth: '500px',
+      width: '100%',
+      border: '2px solid #667eea',
+      maxHeight: '80vh',
+      overflowY: 'auto'
+    }}>
+      <h3 style={{
+        color: 'white',
+        margin: '0 0 20px 0',
+        fontSize: '24px'
+      }}>
+        Manage Profiles
+      </h3>
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '10px',
+        marginBottom: '20px'
+      }}>
+        {profiles.map(profile => (
+          <div
+            key={profile.id}
+            style={{
+              background: profile.id === activeProfileId
+                ? 'rgba(102, 126, 234, 0.2)'
+                : 'rgba(255, 255, 255, 0.05)',
+              padding: '15px',
+              borderRadius: '12px',
+              border: profile.id === activeProfileId
+                ? '2px solid #667eea'
+                : '1px solid rgba(255, 255, 255, 0.1)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}
+          >
+            <div>
+              <div style={{
+                color: 'white',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                marginBottom: '5px'
+              }}>
+                {profile.name}
+                {profile.id === activeProfileId && (
+                  <span style={{
+                    marginLeft: '10px',
+                    fontSize: '12px',
+                    color: '#4ECDC4',
+                    fontWeight: 'normal'
+                  }}>
+                    (Active)
+                  </span>
+                )}
+              </div>
+              <div style={{
+                color: 'rgba(255, 255, 255, 0.5)',
+                fontSize: '12px'
+              }}>
+                Created: {new Date(profile.createdAt).toLocaleDateString()}
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '5px' }}>
+              {profile.id !== activeProfileId && (
+                <button
+                  onClick={() => {
+                    switchProfile(profile.id);
+                  }}
+                  style={{
+                    padding: '6px 12px',
+                    fontSize: '12px',
+                    borderRadius: '6px',
+                    border: '1px solid #4ECDC4',
+                    background: 'rgba(78, 205, 196, 0.2)',
+                    color: '#4ECDC4',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                    touchAction: 'manipulation'
+                  }}
+                >
+                  Switch
+                </button>
+              )}
+              {profiles.length > 1 && (
+                <button
+                  onClick={() => {
+                    if (window.confirm(`Delete profile "${profile.name}"? This will permanently remove all their calibration data.`)) {
+                      deleteProfile(profile.id);
+                    }
+                  }}
+                  style={{
+                    padding: '6px 12px',
+                    fontSize: '12px',
+                    borderRadius: '6px',
+                    border: '1px solid #ff6b6b',
+                    background: 'rgba(255, 107, 107, 0.2)',
+                    color: '#ff6b6b',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                    touchAction: 'manipulation'
+                  }}
+                >
+                  Delete
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+      <button
+        onClick={() => {
+          setShowProfileManager(false);
+          setShowNewProfileModal(true);
+        }}
+        style={{
+          width: '100%',
+          padding: '12px',
+          fontSize: '16px',
+          borderRadius: '8px',
+          border: '2px dashed #667eea',
+          background: 'transparent',
+          color: '#667eea',
+          cursor: 'pointer',
+          fontWeight: 'bold',
+          marginBottom: '10px',
+          touchAction: 'manipulation'
+        }}
+      >
+        + Add New Profile
+      </button>
+      <button
+        onClick={() => setShowProfileManager(false)}
+        style={{
+          width: '100%',
+          padding: '12px',
+          fontSize: '16px',
+          borderRadius: '8px',
+          border: '2px solid rgba(255, 255, 255, 0.2)',
+          background: 'transparent',
+          color: 'white',
+          cursor: 'pointer',
+          fontWeight: 'bold',
+          touchAction: 'manipulation'
+        }}
+      >
+        Close
+      </button>
+    </div>
+  </div>
+)}
+
 </div>
 );
 }
